@@ -91,6 +91,8 @@ ln -s /path/to/flutter-forge ~/.cc-switch/skills/flutter-forge
 
 ## Quick Start
 
+以下示例只是推荐开场方式，不是固定调用格式。用户也可以直接用自然语言描述 Flutter 开发任务，`flutter-forge` 应自行判断任务类型并进入对应流程。
+
 ### 老项目首次接入
 
 直接这样开始：
@@ -157,6 +159,11 @@ ln -s /path/to/flutter-forge ~/.cc-switch/skills/flutter-forge
 - 默认只加载 `SKILL.md`
 - 按需再读取 `references/` 中的细节文件
 - 小任务不应一次性加载全部 references 和 memory
+
+另外有两条默认兼容规则：
+
+- 需要委托官方 Flutter skills 时，先检查当前环境是否已安装对应 skill；未安装时回退到 Flutter Forge 内置流程
+- 输入包含设计图时，先判断当前环境是否具备可靠视觉理解能力；如果不具备，则降级为文字结构说明或相似页面代码驱动
 
 ## 老项目怎么用
 

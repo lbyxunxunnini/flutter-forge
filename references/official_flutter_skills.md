@@ -11,6 +11,21 @@ Flutter 官方维护了 `flutter/skills` 仓库，Flutter 文档也明确建议�
 
 Flutter Forge 负责总控和项目内决策，不负责替代所有 Flutter 通用技能。
 
+默认先检查**当前环境是否已安装**对应官方 Flutter skill，而不是每次联网查询官方仓库。
+
+如果环境里已安装对应 skill：
+
+- 优先委托官方 skill
+- 再由 Flutter Forge 做项目内适配和最终收口
+
+如果环境里未安装：
+
+- 不阻塞任务
+- 明确告知当前环境缺少对应官方 skill
+- 回退到 Flutter Forge 自己的参考规则和本地流程
+
+只有在维护 `flutter-forge` 本身或更新委托映射时，才需要检查官方仓库最新变化。
+
 当以下类型的子任务出现时，如果工作区已经安装了对应官方 Flutter skill，应优先委托给官方 skill 提供实现蓝图，再由 Flutter Forge 结合项目上下文收口：
 
 - 架构分层与重构
