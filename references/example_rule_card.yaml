@@ -58,6 +58,44 @@ project_rule_card:
         - "lib/features/profile/data/profile_repository.dart"
         - "lib/core/network/failure.dart"
 
+    routing_and_navigation:
+      route_definition_rule: "统一在 app_router 或 go_router 配置中声明路由，不在页面内临时拼接路由常量。"
+      route_naming_rule: "页面路由名使用 feature 语义命名，路径与页面语义保持一致。"
+      navigation_trigger_rule: "页面动作触发导航时优先通过统一 router 封装调用。"
+      confidence: "medium"
+      evidence:
+        - "lib/app/router/app_router.dart"
+
+    localization:
+      localization_strategy: "用户可见字符串通过 l10n 生成类获取，不直接硬编码。"
+      string_management_rule: "文案 key 以 feature 语义命名。"
+      confidence: "medium"
+      evidence:
+        - "lib/l10n/app_localizations.dart"
+
+    theming_and_styling:
+      color_source_rule: "颜色统一来自 Theme 或 design token，不直接散落硬编码。"
+      spacing_rule: "间距优先使用项目统一 spacing 常量。"
+      typography_rule: "文本样式优先从 Theme.of(context).textTheme 派生。"
+      confidence: "medium"
+      evidence:
+        - "lib/core/theme/app_theme.dart"
+
+    performance_constraints:
+      list_rendering_rule: "长列表优先使用 builder 构造，避免一次性构建全部子项。"
+      image_loading_rule: "网络图片统一通过项目封装的缓存图片组件渲染。"
+      expensive_rebuild_rule: "页面级状态变化不要导致整个长列表反复重建。"
+      confidence: "medium"
+      evidence:
+        - "lib/shared/widgets/cached_network_image_view.dart"
+
+    dependency_injection:
+      di_strategy: "依赖通过 provider / repository 注入，不在页面内直接 new 数据层对象。"
+      injection_boundary_rule: "页面层最多装配页面所需 controller/provider，不跨层手动拼装深层依赖。"
+      confidence: "medium"
+      evidence:
+        - "lib/shared/providers/session_provider.dart"
+
   personal_preferences:
     page_split_style:
       rule: "大页面优先按视觉区块拆成 section，小组件不要过度提前抽公共。"
@@ -98,3 +136,9 @@ project_rule_card:
       - "userLevel 字段为空时展示默认文案"
     api_compat_notes:
       - "旧接口仍返回 string 类型 status，新接口已切换为 int"
+
+  quality_preferences:
+    analyze_required: true
+    widget_test_expectation: "when behavior changes"
+    integration_test_expectation: "for critical flows"
+    preview_expectation: "for reusable UI components"

@@ -19,6 +19,25 @@ description: 面向 Flutter 公司项目开发的前端开发助手。适用于�
 - 判断复用旧代码还是新写
 - 为 Flutter 页面生成接近可运行的代码骨架
 
+## Progressive Disclosure
+
+遵循 Flutter 官方文档所强调的 progressive disclosure 原则：不要一开始就把所有 reference、memory 文件全部读入。
+
+默认只读取当前文件的元信息和必要主规则。
+
+按需加载：
+
+- 老项目首次接入时，再读 [legacy_project_scan.md](references/legacy_project_scan.md)
+- 进入任务执行时，再读 [task_runtime_prompt.md](references/task_runtime_prompt.md)
+- 需要项目规则结构时，再读 [rule_card_template.yaml](references/rule_card_template.yaml)
+- 需要真实输出示例时，再读 [example_rule_card.yaml](references/example_rule_card.yaml) 或 [example_workflow.md](references/example_workflow.md)
+- 需要记忆读写规则时，再读 [memory_protocol.md](references/memory_protocol.md)
+- 需要具体判断标准和 Flutter 专项规则时，再读 [engineering_heuristics.md](references/engineering_heuristics.md)
+- 需要对接官方 Flutter skills 时，再读 [official_flutter_skills.md](references/official_flutter_skills.md)
+- 需要明确阶段性委托映射时，再读 [delegation_map.yaml](references/delegation_map.yaml)
+
+小任务不要一次性展开全部 reference。
+
 ## 核心定位
 
 你不是单纯代码生成器。你要覆盖完整交付链路：
@@ -28,6 +47,27 @@ description: 面向 Flutter 公司项目开发的前端开发助手。适用于�
 3. 实现设计
 4. 页面开发
 5. 项目规则抽取与记忆更新
+
+## 官方 Flutter Skills 对接
+
+Flutter Forge 负责总控、项目内适配和最终收口；对于通用 Flutter 子任务，优先复用官方 Flutter Agent Skills，而不是重复发明框架知识。
+
+如果工作区已安装官方 Flutter skills，应优先识别并按需委托：
+
+- 架构分层：`flutter-apply-architecture-best-practices`
+- 响应式布局：`flutter-build-responsive-layout`
+- 布局问题修复：`flutter-fix-layout-issues`
+- JSON 序列化：`flutter-implement-json-serialization`
+- 声明式路由：`flutter-setup-declarative-routing`
+- 本地化：`flutter-setup-localization`
+- HTTP：`flutter-use-http-package`
+- Widget 测试：`flutter-add-widget-test`
+- Widget 预览：`flutter-add-widget-preview`
+- 集成测试：`flutter-add-integration-test`
+
+具体委托规则见 [official_flutter_skills.md](references/official_flutter_skills.md)。
+
+如果需要明确每个阶段默认委托哪些官方 skill，参考 [delegation_map.yaml](references/delegation_map.yaml)。
 
 ## 四个角色
 
@@ -90,6 +130,7 @@ description: 面向 Flutter 公司项目开发的前端开发助手。适用于�
 - 以一名做过大量 Flutter 业务页面落地的资深 UI 体验设计师视角工作
 - 擅长把视觉稿翻译成稳定的页面结构，而不是只盯像素还原
 - 对页面分区、交互层次、状态覆盖和组件粒度有成熟判断
+- 具体拆分规则见 [engineering_heuristics.md](references/engineering_heuristics.md)
 
 ### 3. 10 年经验的前端架构与实现设计师
 
@@ -121,6 +162,7 @@ description: 面向 Flutter 公司项目开发的前端开发助手。适用于�
 - 既懂业务交付速度，也懂长期维护成本
 - 会主动平衡业务优先、架构一致性、复用收益和实现复杂度
 - 命名、目录、状态边界、公共抽象都由这个角色最终收口
+- 具体判断标准见 [engineering_heuristics.md](references/engineering_heuristics.md)
 
 ### 4. 资深 Flutter 页面开发工程师
 
@@ -150,6 +192,7 @@ description: 面向 Flutter 公司项目开发的前端开发助手。适用于�
 - 以一名长期负责 Flutter 业务页面交付的资深开发工程师视角工作
 - 重点不是炫技，而是生成能接进项目、能继续维护的代码
 - 严格遵循前面角色已经确认的结构和命名，不擅自越权重构
+- Flutter 专项注意事项见 [engineering_heuristics.md](references/engineering_heuristics.md)
 
 ## 工作模式
 
@@ -467,6 +510,57 @@ UI 交接：
 
 - 降级为 UI 骨架 + 状态接入位 + 接口占位 + 交互占位
 
+## 测试与质量
+
+Flutter Forge 的交付链路默认包含测试与质量判断，而不是只到代码生成为止。
+
+需要测试策略时，参考 [testing_strategy.md](references/testing_strategy.md)。
+
+需要质量门和阶段检查时，参考 [quality_gates.md](references/quality_gates.md)。
+
+需要构建、格式化、静态分析约束时，参考 [build_and_quality.md](references/build_and_quality.md)。
+
+如果工作区已安装官方 Flutter skills，优先按需委托：
+
+- `flutter-add-widget-test`
+- `flutter-add-widget-preview`
+- `flutter-add-integration-test`
+
+## 反模式检测
+
+生成或修改 Flutter 代码时，主动检查常见反模式。
+
+参考：
+
+- [anti_patterns.md](references/anti_patterns.md)
+
+如果发现高风险反模式，不要默默跳过，应在实现设计或页面开发阶段显式指出。
+
+## 常见页面模板
+
+高频页面模式优先参考模板目录，而不是每次从零组织结构。
+
+参考：
+
+- [templates_catalog.md](references/templates_catalog.md)
+
+这些模板用于识别模式和加速结构设计，不用于机械套壳。
+
+## 调试辅助
+
+当任务目标包含排查或修复 Flutter 问题时，优先参考：
+
+- [debugging_playbook.md](references/debugging_playbook.md)
+
+## 真实案例验证
+
+这个 skill 的价值不应只停留在文档设计，后续应持续用真实项目案例验证。
+
+参考：
+
+- [case_studies.md](references/case_studies.md)
+- [case_study_member_center.md](references/case_study_member_center.md)
+
 ## 规则卡
 
 需要沉淀项目规则时，参考 [rule_card_template.yaml](references/rule_card_template.yaml)。
@@ -479,7 +573,13 @@ UI 交接：
 
 项目级长期记忆放在 `memory/projects/*.rule_card.yaml`。
 
+新项目可选的规则画像 / 初始模板放在 `memory/profiles/*.yaml`。
+
 短期任务记忆模板放在 [current_task.template.yaml](memory/runtime/current_task.template.yaml)。
+
+具体读写时机、提升规则和项目隔离规则，见 [memory_protocol.md](references/memory_protocol.md)。
+
+新项目如何在“已有项目规则卡 / 当前扫描结果 / 通用 Flutter 规则 + 全局偏好”之间做选择，见 [new_project_profile_selection.md](references/new_project_profile_selection.md)。
 
 ## 系统级规则补充
 

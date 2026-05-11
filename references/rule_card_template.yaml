@@ -44,6 +44,39 @@ project_rule_card:
       confidence: "low|medium|high"
       evidence: []
 
+    routing_and_navigation:
+      route_definition_rule: ""
+      route_naming_rule: ""
+      navigation_trigger_rule: ""
+      confidence: "low|medium|high"
+      evidence: []
+
+    localization:
+      localization_strategy: ""
+      string_management_rule: ""
+      confidence: "low|medium|high"
+      evidence: []
+
+    theming_and_styling:
+      color_source_rule: ""
+      spacing_rule: ""
+      typography_rule: ""
+      confidence: "low|medium|high"
+      evidence: []
+
+    performance_constraints:
+      list_rendering_rule: ""
+      image_loading_rule: ""
+      expensive_rebuild_rule: ""
+      confidence: "low|medium|high"
+      evidence: []
+
+    dependency_injection:
+      di_strategy: ""
+      injection_boundary_rule: ""
+      confidence: "low|medium|high"
+      evidence: []
+
   personal_preferences:
     page_split_style:
       rule: ""
@@ -67,3 +100,9 @@ project_rule_card:
     temporary_business_rules: []
     field_special_cases: []
     api_compat_notes: []
+
+  quality_preferences:
+    analyze_required: true
+    widget_test_expectation: "when behavior changes"
+    integration_test_expectation: "for critical flows"
+    preview_expectation: "for reusable UI components"
