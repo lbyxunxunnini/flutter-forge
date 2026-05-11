@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.4.0
+
+- 同步 `system_prompt.md`、`legacy_project_scan.md`、`task_runtime_prompt.md`，避免旧 reference 漂移
+- 补充网络层与 API 规则参考
+- 补充路由与导航规则参考
+- 强化 `templates_catalog.md` 中的列表页与表单页结构建议
+- 将记忆协议调整为“仓库内模板 + 仓库外真实记忆目录”
+- 明确 skill 的核心能力与辅助参考边界，避免功能过度具象化
+- 补充 Quick Start 与远程安装说明
+- 完成 `0.4.0` 中文版本发布与 tag
+
 ## 0.3.0
 
 - 明确定位为 Flutter 项目内编排 skill，而不是通用代码生成器

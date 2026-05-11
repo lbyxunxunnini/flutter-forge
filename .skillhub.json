@@ -1,5 +1,5 @@
 {
   "name": "flutter-forge",
   "description": "面向 Flutter 公司项目开发的前端开发助手，支持老项目扫描、新页面开发、结构拆解、命名决策和规则记忆。",
-  "version": "0.3.0"
+  "version": "0.4.0"
 }
