@@ -1,0 +1,69 @@
+project_rule_card:
+  project:
+    name: ""
+    type: "flutter"
+    status: "new|legacy"
+    overall_confidence: "low|medium|high"
+
+  team_rules:
+    directory_structure:
+      rule: ""
+      confidence: "low|medium|high"
+      evidence: []
+
+    module_boundaries:
+      rule: ""
+      confidence: "low|medium|high"
+      evidence: []
+
+    naming_conventions:
+      pages: ""
+      widgets: ""
+      states: ""
+      models: ""
+      helpers: ""
+      confidence: "low|medium|high"
+      evidence: []
+
+    state_management:
+      primary_pattern: ""
+      scope_rules: ""
+      confidence: "low|medium|high"
+      evidence: []
+
+    component_boundaries:
+      shared_component_rule: ""
+      page_private_component_rule: ""
+      confidence: "low|medium|high"
+      evidence: []
+
+    api_integration:
+      request_layer_rule: ""
+      model_mapping_rule: ""
+      error_handling_rule: ""
+      confidence: "low|medium|high"
+      evidence: []
+
+  personal_preferences:
+    page_split_style:
+      rule: ""
+      confidence: "low|medium|high"
+
+    private_widget_naming:
+      rule: ""
+      confidence: "low|medium|high"
+
+  inferred_rules:
+    active_rules: []
+    low_confidence_rules: []
+    conflicts_to_watch: []
+
+  reuse_knowledge:
+    similar_pages: []
+    reusable_patterns: []
+    avoid_reuse_targets: []
+
+  task_only_context:
+    temporary_business_rules: []
+    field_special_cases: []
+    api_compat_notes: []
