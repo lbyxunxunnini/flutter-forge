@@ -28,6 +28,32 @@
 - 需要决定模块归属、文件结构、组件边界、命名方案
 - 需要判断先复用旧代码还是新写
 
+## 远程安装
+
+当前推荐方式是直接把仓库 clone 到 `cc-switch` 的 skills 目录中。
+
+首次安装：
+
+```bash
+rm -rf ~/.cc-switch/skills/flutter-forge
+git clone https://github.com/lbyxunxunnini/flutter-forge ~/.cc-switch/skills/flutter-forge
+```
+
+更新：
+
+```bash
+git -C ~/.cc-switch/skills/flutter-forge pull
+```
+
+如果你正在本地开发这个 skill，更适合用软链接：
+
+```bash
+rm -rf ~/.cc-switch/skills/flutter-forge
+ln -s /path/to/flutter-forge ~/.cc-switch/skills/flutter-forge
+```
+
+安装后，重启或刷新你的 agent 环境，让它重新发现 skill。
+
 ## Quick Start
 
 ### 老项目首次接入
@@ -163,6 +189,11 @@ Flutter Forge 的完整交付链路默认包含测试与质量判断：
 - `references/build_and_quality.md`
 - `references/quality_gates.md`
 
+网络层与路由层项目规则参考：
+
+- `references/network_and_api.md`
+- `references/routing_and_navigation.md`
+
 ## 输入不完整时
 
 - 只给 PRD / 需求文档：先做需求理解，再判断是否必须补设计图
@@ -173,17 +204,21 @@ Flutter Forge 的完整交付链路默认包含测试与质量判断：
 
 Flutter Forge 使用纯文件记忆：
 
-- `memory/global_preferences.yaml`
+- 仓库内 `memory/`
+  - 只作为模板、画像和示例来源
+  - 不建议直接作为真实用户记忆目录
+
+- `${FLUTTER_FORGE_HOME:-~/.flutter-forge}/global_preferences.yaml`
   - 跨项目长期偏好
 
-- `memory/projects/*.rule_card.yaml`
+- `${FLUTTER_FORGE_HOME:-~/.flutter-forge}/projects/*.rule_card.yaml`
   - 项目级长期记忆
 
-- `memory/profiles/*.yaml`
-  - 新项目可选的规则画像 / 初始模板
+- `${FLUTTER_FORGE_HOME:-~/.flutter-forge}/profiles/*.yaml`
+  - 用户自定义规则画像（可选）
 
-- `memory/runtime/current_task.template.yaml`
-  - 短期任务记忆模板
+- `${FLUTTER_FORGE_HOME:-~/.flutter-forge}/runtime/current_task.yaml`
+  - 短期任务运行时记忆
 
 具体的读取时机、写入时机、提升条件和项目隔离规则见：
 

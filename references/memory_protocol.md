@@ -2,13 +2,32 @@
 
 这个文件定义 Flutter Forge 的记忆读写协议，避免 memory 目录只停留在“有模板，没有时机”。
 
+## 核心原则
+
+skill 仓库内的 `memory/` 目录应视为：
+
+- 内置模板
+- 示例规则卡
+- 默认画像
+
+真实用户记忆不应默认写回 skill 仓库目录。
+
+默认真实存储目录建议为：
+
+- `${FLUTTER_FORGE_HOME:-~/.flutter-forge}`
+
+也就是说：
+
+- 仓库内 `memory/` = seed / example
+- 仓库外 `~/.flutter-forge/` = persisted user state
+
 ## 记忆分层
 
 ### 1. 跨项目长期记忆
 
 文件：
 
-- `memory/global_preferences.yaml`
+- `${FLUTTER_FORGE_HOME:-~/.flutter-forge}/global_preferences.yaml`
 
 只存：
 
@@ -28,7 +47,7 @@
 
 文件：
 
-- `memory/projects/<project_name>.rule_card.yaml`
+- `${FLUTTER_FORGE_HOME:-~/.flutter-forge}/projects/<project_name>.rule_card.yaml`
 
 只存该项目的：
 
@@ -62,7 +81,8 @@
 
 模板：
 
-- `memory/runtime/current_task.template.yaml`
+- 仓库模板：`memory/runtime/current_task.template.yaml`
+- 真实运行时：`${FLUTTER_FORGE_HOME:-~/.flutter-forge}/runtime/current_task.yaml`
 
 适合存：
 
@@ -95,7 +115,7 @@
 
 1. 读 `global_preferences.yaml`
 2. 扫描当前项目已有结构和依赖
-3. 读取 `memory/projects/*.rule_card.yaml` 和 `memory/profiles/*.yaml` 作为候选来源
+3. 读取外部 `projects/*.rule_card.yaml` 和仓库内 / 外部 `profiles/*.yaml` 作为候选来源
 4. 由用户选择：
    - 复制已有项目规则卡作为初始模板
    - 使用当前项目扫描结果
@@ -141,6 +161,15 @@
 
 - 默认不持久保留
 - 只有确认其已经上升为项目规则时，才写回项目规则卡
+
+## 更新策略
+
+skill 升级时：
+
+1. 不应清空外部记忆目录
+2. 不应覆盖已有项目规则卡
+3. 若模板新增字段，应采用“补缺不覆盖”的迁移方式
+4. 若需要迁移结构，优先保留旧文件并生成备份
 
 ## 提升规则
 

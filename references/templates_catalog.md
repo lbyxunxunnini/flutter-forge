@@ -12,6 +12,33 @@ Flutter Forge 可以识别以下高频页面模式，并优先按“结构模板
 - 空态
 - 错误态
 
+推荐结构：
+
+```text
+FeatureListPage
+- Scaffold / PageScaffold
+  - AppBar / Header
+  - Body
+    - RefreshIndicator
+      - ListView.builder / CustomScrollView
+        - List items
+        - Pagination loading footer
+  - Optional floating action / bottom action
+```
+
+状态接入建议：
+
+- 页面级列表状态放在页面 controller / provider / bloc
+- 列表项自身不要持有整体列表加载状态
+- 分页状态、刷新状态、首次加载状态应区分
+
+常见坑点：
+
+- 首次加载和分页加载混成同一状态
+- 长列表不用 builder
+- 空态、错误态和正常列表态切换不清
+- 列表项直接依赖全局状态导致重建范围过大
+
 ## 表单页
 
 常见元素：
@@ -20,6 +47,32 @@ Flutter Forge 可以识别以下高频页面模式，并优先按“结构模板
 - 提交按钮状态
 - 提交中 loading
 - 失败提示
+
+推荐结构：
+
+```text
+FeatureFormPage
+- Scaffold / PageScaffold
+  - AppBar
+  - Body
+    - Form
+      - Field sections
+      - Error / helper messages
+  - Bottom submit area / sticky action bar
+```
+
+状态接入建议：
+
+- 字段临时输入状态可局部保存
+- 提交状态、提交结果、接口错误优先放页面级状态层
+- 提交按钮状态应由表单有效性 + 提交中状态共同决定
+
+常见坑点：
+
+- 把所有字段状态和业务状态混在同一个大 widget state 里
+- 提交中没有禁用重复提交
+- 校验规则散落在页面各处
+- 成功 / 失败 / loading 没有清晰反馈
 
 ## 详情页
 

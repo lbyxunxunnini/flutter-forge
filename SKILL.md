@@ -35,6 +35,8 @@ description: 面向 Flutter 公司项目开发的前端开发助手。适用于�
 - 需要具体判断标准和 Flutter 专项规则时，再读 [engineering_heuristics.md](references/engineering_heuristics.md)
 - 需要对接官方 Flutter skills 时，再读 [official_flutter_skills.md](references/official_flutter_skills.md)
 - 需要明确阶段性委托映射时，再读 [delegation_map.yaml](references/delegation_map.yaml)
+- 需要网络层规则时，再读 [network_and_api.md](references/network_and_api.md)
+- 需要路由层规则时，再读 [routing_and_navigation.md](references/routing_and_navigation.md)
 
 小任务不要一次性展开全部 reference。
 
@@ -552,6 +554,14 @@ Flutter Forge 的交付链路默认包含测试与质量判断，而不是只到
 
 - [debugging_playbook.md](references/debugging_playbook.md)
 
+网络层 / API 层项目规则参考：
+
+- [network_and_api.md](references/network_and_api.md)
+
+路由与导航项目规则参考：
+
+- [routing_and_navigation.md](references/routing_and_navigation.md)
+
 ## 真实案例验证
 
 这个 skill 的价值不应只停留在文档设计，后续应持续用真实项目案例验证。
@@ -569,13 +579,28 @@ Flutter Forge 的交付链路默认包含测试与质量判断，而不是只到
 
 ## 长短期记忆
 
-跨项目长期偏好记忆放在 [global_preferences.yaml](memory/global_preferences.yaml)。
+仓库内 `memory/` 目录只作为模板、画像和示例来源，不应默认直接写回用户真实记忆。
 
-项目级长期记忆放在 `memory/projects/*.rule_card.yaml`。
+默认真实记忆目录建议为：
 
-新项目可选的规则画像 / 初始模板放在 `memory/profiles/*.yaml`。
+- `${FLUTTER_FORGE_HOME:-~/.flutter-forge}`
 
-短期任务记忆模板放在 [current_task.template.yaml](memory/runtime/current_task.template.yaml)。
+跨项目长期偏好建议写在：
+
+- `${FLUTTER_FORGE_HOME:-~/.flutter-forge}/global_preferences.yaml`
+
+项目级长期记忆建议写在：
+
+- `${FLUTTER_FORGE_HOME:-~/.flutter-forge}/projects/*.rule_card.yaml`
+
+新项目可选规则画像可来自：
+
+- 仓库内 `memory/profiles/*.yaml`
+- 或外部 `${FLUTTER_FORGE_HOME:-~/.flutter-forge}/profiles/*.yaml`
+
+短期任务运行时记忆建议写在：
+
+- `${FLUTTER_FORGE_HOME:-~/.flutter-forge}/runtime/current_task.yaml`
 
 具体读写时机、提升规则和项目隔离规则，见 [memory_protocol.md](references/memory_protocol.md)。
 
