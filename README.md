@@ -1,6 +1,6 @@
 # Flutter Forge
 
-`$flutter-forge` 是一个面向 Flutter 公司项目开发的本地前端开发 skill，用来让 agent 在真实项目里完成需求理解、UI 解析、实现设计、页面开发，以及老项目规则抽取与复用决策。
+`flutter-forge` 是一个面向 Flutter 公司项目开发的本地前端开发 skill，用来让 agent 在真实项目里完成需求理解、UI 解析、实现设计、页面开发，以及老项目规则抽取与复用决策。
 
 它不是单纯代码生成器，也不是只会搭页面骨架的 UI 助手。它更像一个偏工程交付的 Flutter 前端副手：先理解项目，再决定怎么拆页面、怎么命名、怎么复用、怎么落代码。
 
@@ -15,27 +15,27 @@
 ## 仓库结构
 
 ```text
-skills/
-  SKILL.md
-  references/
-    system_prompt.md
-    legacy_project_scan.md
-    example_rule_card.yaml
-    task_runtime_prompt.md
-    rule_card_template.yaml
-  memory/
-    global_preferences.yaml
-    projects/
-      *.rule_card.yaml
-    runtime/
-      current_task.template.yaml
+SKILL.md
+.skillhub.json
+references/
+  system_prompt.md
+  legacy_project_scan.md
+  example_rule_card.yaml
+  task_runtime_prompt.md
+  rule_card_template.yaml
+memory/
+  global_preferences.yaml
+  projects/
+    *.rule_card.yaml
+  runtime/
+    current_task.template.yaml
 CHANGELOG.md
 VERSION
 install.sh
 README.md
 ```
 
-`skills/` 是主 skill 目录。`references/` 里放的是配套提示词和规则卡模板，供 `SKILL.md` 在不同阶段引用。
+仓库根目录本身就是 `cc-switch` 可识别的 skill 目录。`references/` 里放配套提示词和规则卡模板，`memory/` 里放长期和短期记忆文件。
 
 ## 安装
 
@@ -48,7 +48,7 @@ README.md
 默认安装到：
 
 ```text
-~/.agents/skills
+~/.cc-switch/skills
 ```
 
 也可以指定安装目录：
@@ -60,13 +60,6 @@ README.md
 安装脚本会同步安装 `flutter-forge` skill：先清理目标目录里的旧 `flutter-forge`，再复制当前仓库里的版本，避免旧文件残留。
 
 安装后，重启或重新加载你的 agent 环境，让它重新发现这个 skill。
-
-## 版本
-
-当前版本见：
-
-- `VERSION`
-- `CHANGELOG.md`
 
 ## 核心能力
 
@@ -173,53 +166,63 @@ Flutter Forge 采用纯文件记忆，不依赖 Python、数据库或额外服�
 
 长期记忆和短期记忆的落点如下：
 
-- `skills/memory/global_preferences.yaml`
+- `memory/global_preferences.yaml`
   - 存跨项目长期偏好
   - 例如页面拆分习惯、私有组件命名偏好、复用倾向
 
-- `skills/memory/projects/*.rule_card.yaml`
+- `memory/projects/*.rule_card.yaml`
   - 存每个项目的项目级长期记忆
   - 例如目录结构、模块边界、命名规则、状态管理模式、组件边界
 
-- `skills/memory/runtime/current_task.template.yaml`
+- `memory/runtime/current_task.template.yaml`
   - 作为短期任务记忆模板
   - 用于当前任务的临时业务规则、字段特例、接口兼容说明
   - 默认不应跨任务长期保留
 
 ## 文件说明
 
-- `skills/SKILL.md`
+- `SKILL.md`
   - 主 skill 入口
   - 定义触发场景、工作模式、默认输出和红线
 
-- `skills/references/system_prompt.md`
+- `.skillhub.json`
+  - skill 元信息
+  - 提供名称、描述和版本
+
+- `references/system_prompt.md`
   - 主提示词参考
   - 保留完整规则定义，便于后续继续收敛或改写
 
-- `skills/references/legacy_project_scan.md`
+- `references/legacy_project_scan.md`
   - 老项目首次接入时使用
   - 先抽规则，再开发
 
-- `skills/references/task_runtime_prompt.md`
+- `references/task_runtime_prompt.md`
   - 每次具体任务执行前附加
   - 用于判断任务大小、规则是否足够、是否要先复用、是否需要用户确认
 
-- `skills/references/rule_card_template.yaml`
+- `references/rule_card_template.yaml`
   - 项目规则卡模板
   - 用于沉淀团队规则、个人偏好、临时推断和复用知识
 
-- `skills/references/example_rule_card.yaml`
+- `references/example_rule_card.yaml`
   - 规则卡示例
   - 展示一次老项目扫描后的期望输出形态
 
-- `skills/memory/global_preferences.yaml`
+- `memory/global_preferences.yaml`
   - 跨项目长期偏好记忆
 
-- `skills/memory/projects/`
+- `memory/projects/`
   - 项目级长期记忆目录
 
-- `skills/memory/runtime/current_task.template.yaml`
+- `memory/runtime/current_task.template.yaml`
   - 短期任务记忆模板
+
+- `VERSION`
+  - 当前 skill 版本号
+
+- `CHANGELOG.md`
+  - 版本变更记录
 
 - `VERSION`
   - 当前 skill 版本号

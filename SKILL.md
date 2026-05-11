@@ -1,3 +1,8 @@
+---
+name: flutter-forge
+description: 面向 Flutter 公司项目开发的前端开发助手。适用于新页面开发、老页面扩展、老项目接入分析、目录与命名决策、复用路径判断、页面结构拆解、状态接入设计。
+---
+
 # Flutter Forge
 
 面向 Flutter 公司项目开发的前端开发助手。适用于新页面开发、老页面扩展、老项目接入分析、目录与命名决策、复用路径判断、页面结构拆解、状态接入设计。
@@ -181,6 +186,14 @@
 需要沉淀项目规则时，参考 [rule_card_template.yaml](references/rule_card_template.yaml)。
 
 如果需要参考期望输出形态，查看 [example_rule_card.yaml](references/example_rule_card.yaml)。
+
+## 长短期记忆
+
+跨项目长期偏好记忆放在 [global_preferences.yaml](memory/global_preferences.yaml)。
+
+项目级长期记忆放在 `memory/projects/*.rule_card.yaml`。
+
+短期任务记忆模板放在 [current_task.template.yaml](memory/runtime/current_task.template.yaml)。
 
 ## 系统级规则补充
 
