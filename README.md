@@ -31,35 +31,10 @@ memory/
     current_task.template.yaml
 CHANGELOG.md
 VERSION
-install.sh
 README.md
 ```
 
 仓库根目录本身就是 `cc-switch` 可识别的 skill 目录。`references/` 里放配套提示词和规则卡模板，`memory/` 里放长期和短期记忆文件。
-
-## 安装
-
-进入仓库根目录后执行：
-
-```bash
-./install.sh
-```
-
-默认安装到：
-
-```text
-~/.cc-switch/skills
-```
-
-也可以指定安装目录：
-
-```bash
-./install.sh /path/to/skills
-```
-
-安装脚本会同步安装 `flutter-forge` skill：先清理目标目录里的旧 `flutter-forge`，再复制当前仓库里的版本，避免旧文件残留。
-
-安装后，重启或重新加载你的 agent 环境，让它重新发现这个 skill。
 
 ## 核心能力
 
@@ -217,12 +192,6 @@ Flutter Forge 采用纯文件记忆，不依赖 Python、数据库或额外服�
 
 - `memory/runtime/current_task.template.yaml`
   - 短期任务记忆模板
-
-- `VERSION`
-  - 当前 skill 版本号
-
-- `CHANGELOG.md`
-  - 版本变更记录
 
 - `VERSION`
   - 当前 skill 版本号
