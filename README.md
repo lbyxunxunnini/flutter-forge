@@ -152,8 +152,8 @@ Flutter Forge 不重复造轮子。它检测本地是否安装了 Flutter 官方
 
 ```
 探测顺序：
-1. 当前项目目录 (.claude/skills/, .agents/skills/)
-2. 宿主根目录 (~/.cc-switch/skills/, ~/.trae/skills/)
+1. 当前项目目录 (.claude/skills/, .agents/skills/, .cc-switch/skills/, .trae/skills/)
+2. 宿主根目录 (~/.claude/skills/, ~/.agents/skills/, ~/.cc-switch/skills/, ~/.trae/skills/)
 3. 未检测到 → 使用内置参考文档兜底
 ```
 
@@ -161,14 +161,45 @@ Flutter Forge 不重复造轮子。它检测本地是否安装了 Flutter 官方
 
 ## 安装
 
+### 方式一：npx skills（推荐）
+
+需要先安装 [Node.js](https://nodejs.org/)，然后运行：
+
 ```bash
-git clone https://github.com/lbyxunxunnini/flutter-forge ~/.cc-switch/skills/flutter-forge
+npx skills add lbyxunxunnini/flutter-forge
 ```
 
-更新：
+CLI 会自动检测你安装的 AI 编码工具（Claude Code、Trea、Cursor、Codex 等），并安装到对应目录。
+
+全局安装（所有项目共享）：
 
 ```bash
-git -C ~/.cc-switch/skills/flutter-forge pull
+npx skills add lbyxunxunnini/flutter-forge -g
+```
+
+指定工具安装：
+
+```bash
+npx skills add lbyxunxunnini/flutter-forge -a claude-code
+npx skills add lbyxunxunnini/flutter-forge -a trae -a codex
+```
+
+### 方式二：git clone
+
+```bash
+git clone https://github.com/lbyxunxunnini/flutter-forge ~/.claude/skills/flutter-forge
+```
+
+根据你的工具替换路径，可选 `~/.trae/skills/`、`~/.agents/skills/`、`~/.cc-switch/skills/`。
+
+### 更新
+
+```bash
+# npx 方式安装的
+npx skills update
+
+# git clone 方式安装的（替换为你实际的路径）
+git -C ~/.claude/skills/flutter-forge pull
 ```
 
 ## 使用
@@ -239,9 +270,11 @@ flutter-forge/
 npx skills add flutter/skills --skill '*' --agent universal
 ```
 
+`--agent universal` 会安装到 `.agents/skills/` 目录，兼容大多数 AI 编码工具。安装后 Flutter Forge 会自动探测该目录。
+
 - [flutter/skills 仓库](https://github.com/flutter/skills)
 - [Agent skills for Flutter and Dart](https://docs.flutter.dev/ai/agent-skills)
 
 ## 版本
 
-当前版本：**0.6.0** · [CHANGELOG](CHANGELOG.md)
+当前版本：**0.6.2** · [CHANGELOG](CHANGELOG.md)
