@@ -9,6 +9,11 @@
 - [legacy_project_scan.md](legacy_project_scan.md)
 - [rule_card_template.yaml](rule_card_template.yaml)
 - [example_rule_card.yaml](example_rule_card.yaml)
+- [existing_rules_discovery.md](existing_rules_discovery.md)
+
+### 相似实现检索与复用追踪
+
+- [similar_implementation_search.md](similar_implementation_search.md)
 
 ### 进入具体任务执行
 
