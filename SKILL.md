@@ -402,6 +402,33 @@ description: Flutter 项目开发的主控 skill。只要当前任务属于 Flut
 - 无相似实现：走正常设计流程
 - 多个相似实现且风格不一致：列出候选，让用户选择参考哪个，同时标注"项目中存在风格分歧"
 
+### 复用追踪与公共组件建议
+
+每次检索发现可复用的模式时，往规则卡的 `reuse_knowledge.reusable_patterns` 里记录：
+
+```yaml
+reusable_patterns:
+  - pattern: "带筛选的列表页"
+    locations:
+      - "lib/pages/order_list.dart"
+      - "lib/pages/product_list.dart"
+    count: 2
+    suggestion: "可抽取公共 FilterableList 组件"
+```
+
+触发建议的条件：
+
+- 同一模式在 `reusable_patterns` 中出现第 2 次（`count >= 2`）
+- 且满足 `engineering_heuristics.md` 中"公共组件抽取标准"的至少 2 条
+
+触发时输出：
+
+- `[flutter-forge] 发现复用模式：xxx 已在 N 处使用，建议抽取为独立组件`
+- 列出涉及的文件路径
+- 给出简要抽取建议（组件名、接收参数、保留差异点）
+
+如果没有触发建议（只出现 1 次），只静默记录，不输出提示。
+
 ### 不要做的事
 
 - 不要搜到一个相似的就直接套用，要先确认业务逻辑是否真的兼容
