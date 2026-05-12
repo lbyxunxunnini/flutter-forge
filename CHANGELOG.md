@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.6.1
+
+- 重写 README，从架构师视角增加架构总览图、核心机制详解、项目结构树
+- 小任务降噪：跳过完整启动握手和输入模型日志，只输出一行直接执行
+- 启动判定增加小任务前置判断，命中后不走四步判定
+- 兼容已有项目规则：扫描 `.claude/rules/`、`.trae/rules/`、`.agents/rules/` 等已有规则文件，作为规则卡生成和校正的一等输入
+- 规则卡模板增加 `source_rules` 字段，标注内容来源
+- 新增相似实现检索：进入任务前先搜索相似页面、组件、路由、接口
+- 复用追踪：检索发现可复用模式时记录到规则卡 `reusable_patterns`，同一模式出现第 2 次时主动建议抽取公共组件
+- 将已有项目规则发现和相似实现检索拆分为独立 reference 文件，主文档按需加载
+- 同步更新 task_runtime_prompt、legacy_project_scan、memory_protocol、engineering_heuristics、load_map
+
 ## 0.6.0
 
 - 收紧 `flutter-forge` 的主控定位与触发描述，强调 Flutter 项目任务应优先进入 `flutter-forge`，而不是先走通用编码模式
