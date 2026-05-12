@@ -52,6 +52,14 @@
 - [templates_catalog.md](templates_catalog.md)
 - [debugging_playbook.md](debugging_playbook.md)
 
+### 需要架构决策记录格式
+
+- [adr_format.md](adr_format.md)
+
+### 需要角色交接格式
+
+- [role_handoff_formats.md](role_handoff_formats.md)
+
 ### 需要案例或验证记录
 
 - [case_studies.md](case_studies.md)

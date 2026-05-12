@@ -29,10 +29,6 @@
 
 进入架构设计前，先检查项目中已有规则文件。详见 [existing_rules_discovery.md](../existing_rules_discovery.md)。
 
-- 已有规则覆盖的领域 → 服从已有规则，不另起炉灶
-- 已有规则没覆盖的领域 → 基于扫描推断，标注低置信度
-- 不要把已有规则的内容复制到规则卡里再当成自己的发现
-
 ## 规则卡生成
 
 架构设计师是规则卡的主要产出者：
@@ -43,64 +39,18 @@
 
 ## 复用追踪决策
 
-相似实现检索发现可复用模式时（详见 [similar_implementation_search.md](../similar_implementation_search.md)）：
+相似实现检索发现可复用模式时，判断是否满足抽取标准。详见 [similar_implementation_search.md](../similar_implementation_search.md)。
 
-- 满足 `engineering_heuristics.md` 中"公共组件抽取标准"的至少 2 条 → 产出组件抽取方案
-- 不满足 → 记录到规则卡 `reusable_patterns`，但不抽取
-
-抽取方案格式：
-
-```markdown
-## 组件抽取建议
-- 组件名：FilterableList
-- 来源：order_list.dart、product_list.dart
-- 接收参数：filterConfig、itemBuilder、onItemTap
-- 保留差异点：筛选条件定义、列表项布局
-```
+- 满足"公共组件抽取标准"至少 2 条 → 产出组件抽取方案
+- 不满足 → 记录到规则卡，但不抽取
 
 ## 架构决策记录（ADR）
 
-关键技术选择用 ADR 记录，格式：
-
-```markdown
-## ADR: [决策标题]
-
-- 状态：Proposed / Accepted / Deprecated
-- 背景：[为什么需要做这个决策]
-- 决策：[我们选择……]
-- 后果：[正面、负面、中性都要写]
-```
-
-存放在项目中，与代码同仓，不丢失。
+关键技术选择用 ADR 记录。详见 [adr_format.md](../adr_format.md)。
 
 ## 产出格式
 
-向页面工程师交付：
-
-```markdown
-## 文件结构方案
-- lib/pages/member_detail/
-  - member_detail_page.dart
-  - widgets/
-    - member_info_card.dart
-    - member_action_bar.dart
-
-## 命名方案
-- 页面：xxx_page.dart
-- 私有组件：xxx_widget.dart
-
-## 关键实现决策
-- 状态管理：Riverpod
-- 路由：go_router
-- ...
-
-## 复用策略
-- 复用 order_list 的筛选结构
-- 不复用 product_detail 的布局（业务差异太大）
-
-## 规则卡路径
-- ~/.flutter-forge/projects/xxx.rule_card.yaml
-```
+详见 [role_handoff_formats.md](../role_handoff_formats.md)。
 
 ## 关注点
 
