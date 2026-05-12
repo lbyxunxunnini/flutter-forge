@@ -4,7 +4,7 @@
 
 ## 场景 -> 参考文件
 
-### 老项目首次接入
+### 迭代中项目首次接入
 
 - [legacy_project_scan.md](legacy_project_scan.md)
 - [rule_card_template.yaml](rule_card_template.yaml)
@@ -59,6 +59,14 @@
 ### 需要角色交接格式
 
 - [role_handoff_formats.md](role_handoff_formats.md)
+
+### 需要处理输入不完整场景
+
+- [input_incomplete_handling.md](input_incomplete_handling.md)
+
+### 需要可见性标记或会话状态规则
+
+- [skill_visibility.md](skill_visibility.md)
 
 ### 需要案例或验证记录
 

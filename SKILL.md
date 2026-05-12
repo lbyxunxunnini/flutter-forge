@@ -1,6 +1,6 @@
 ---
 name: flutter-forge
-description: Flutter 项目开发的主控 skill。只要当前任务属于 Flutter 页面开发、模块扩展、老项目接入、PRD/设计图解析、目录命名、复用判断、状态管理接入、项目初始化或实现设计，就必须优先进入 flutter-forge，而不是先走通用编码模式。
+description: Flutter 项目开发的主控 skill。只要当前任务属于 Flutter 页面开发、模块扩展、迭代中项目接入、PRD/设计图解析、目录命名、复用判断、状态管理接入、项目初始化或实现设计，就必须优先进入 flutter-forge，而不是先走通用编码模式。
 ---
 
 # Flutter Forge
@@ -26,7 +26,7 @@ description: Flutter 项目开发的主控 skill。只要当前任务属于 Flut
 
 - 开发新页面
 - 扩展已有页面或模块
-- 首次进入老 Flutter 项目并理解规则
+- 首次进入迭代中 Flutter 项目并理解规则
 - 根据 PRD / 设计稿拆页面结构
 - 设计文件结构、组件边界、命名方案
 - 判断复用旧代码还是新写
@@ -38,23 +38,23 @@ description: Flutter 项目开发的主控 skill。只要当前任务属于 Flut
 - “这是个 flutter 大需求”
 - “先看 prd”
 - “帮我做一个 Flutter 新页面”
-- “先看看这个老 Flutter 项目结构，再开始开发”
+- “先看看这个迭代中 Flutter 项目结构，再开始开发”
 - “我给你 PRD 和设计图，先拆页面结构”
 - “这个页面能不能复用旧代码”
 - “先帮我定文件结构和命名”
 
 ## 启动判定
 
-每次进入 Flutter 任务时，**先判断是否为小任务**。
+每次进入 Flutter 任务时，**先判断是否为轻量任务**。
 
-如果是小任务，直接跳到"小任务"分支执行，不走下面的四步判定。小任务判定标准见"任务分级"章节。
+如果是轻量任务，直接跳到"轻量任务"分支执行，不走下面的四步判定。轻量任务判定标准见"任务分级"章节。
 
-如果不是小任务，再做四步最小判定：
+如果不是轻量任务，再做四步最小判定：
 
 1. 当前是否存在项目级规则卡
-2. 当前项目更像老项目还是新项目
+2. 当前项目更像迭代中项目还是新项目
 3. 当前输入是 PRD、设计图、两者都有，还是上下文不足
-4. 当前任务是小任务、中等任务还是大任务
+4. 当前任务是轻量任务、中等任务还是大任务
 
 这四步不是可选建议，而是 **skill 命中后的默认启动握手**。不要先傻等用户把任务描述得很完整，再开始判断项目状态。
 
@@ -102,18 +102,18 @@ description: Flutter 项目开发的主控 skill。只要当前任务属于 Flut
 
 常见输入日志场景：
 
-1. **老项目 + 无规则卡**
+1. **迭代中项目 + 无规则卡**
    - 先输出完整启动握手
    - 然后进入：
      - `- 输入模型：上下文不足`
      - 或 `- 输入模型：直接开发任务`
 
-2. **老项目 + 有规则卡 + Flutter skills 未就绪**
+2. **迭代中项目 + 有规则卡 + Flutter skills 未就绪**
    - 继续输出最小握手日志
    - 然后进入：
      - `- 输入模型：直接开发任务`
 
-3. **老项目 / 新项目已进入完全态**
+3. **迭代中项目 / 新项目已进入完全态**
    - 不再重复输出完整握手
    - 直接输出：
      - `[flutter-forge] 模式：进入工作阶段`
@@ -132,7 +132,7 @@ description: Flutter 项目开发的主控 skill。只要当前任务属于 Flut
 然后至少补三条最小结果日志，再决定是否继续追问或初始化：
 
 1. 项目类型
-   - `- 项目类型：老项目`
+   - `- 项目类型：迭代中项目`
    - `- 项目类型：新项目`
 2. 规则卡状态
    - `- 规则卡：已加载`
@@ -150,7 +150,7 @@ description: Flutter 项目开发的主控 skill。只要当前任务属于 Flut
 
 如果需要，再补最后一条当前分流结论：
 
-- `- 当前模式：老项目扫描`
+- `- 当前模式：迭代中项目扫描`
 - `- 当前模式：新项目初始化`
 - `- 当前模式：直接进入当前任务`
 - `- 当前模式：需求理解 -> 设计包`
@@ -214,9 +214,9 @@ description: Flutter 项目开发的主控 skill。只要当前任务属于 Flut
 
 只有在规则卡存在且 Flutter skills 状态也已就绪时，才允许静默进入下一环节。
 
-### 老项目 / 新项目判断
+### 迭代中项目 / 新项目判断
 
-- 老项目：已有明显业务目录、已有页面、已有状态管理模式、已有路由或网络层结构
+- 迭代中项目：已有明显业务目录、已有页面、已有状态管理模式、已有路由或网络层结构
 - 新项目：只有基础脚手架、业务结构未建立、项目规则未成型
 
 如果无法稳定判断：
@@ -254,11 +254,11 @@ description: Flutter 项目开发的主控 skill。只要当前任务属于 Flut
 
 不要把历史规则卡直接当成当前项目真相。
 
-### 老项目无规则卡
+### 迭代中项目无规则卡
 
-如果判断为老项目，且不存在对应规则卡：
+如果判断为迭代中项目，且不存在对应规则卡：
 
-- 自动进入老项目扫描模式
+- 自动进入迭代中项目扫描模式
 - 自动生成项目规则摘要
 - 自动生成新的项目规则卡草案
 - 只把高风险确认项抛给用户
@@ -267,12 +267,12 @@ description: Flutter 项目开发的主控 skill。只要当前任务属于 Flut
 
 启动握手后，按以下分支继续：
 
-1. **老项目 + 有规则卡**
+1. **迭代中项目 + 有规则卡**
    - 加载规则卡
    - 默认直接进入任务模式
    - 如发现当前代码与规则卡冲突，优先以实际代码为准，并提示是否更新规则卡
 
-2. **老项目 + 无规则卡**
+2. **迭代中项目 + 无规则卡**
    - 默认进入项目初始化模式
    - 先扫描项目，再生成规则摘要和规则卡草案
    - 给用户两个选择：
@@ -300,27 +300,27 @@ description: Flutter 项目开发的主控 skill。只要当前任务属于 Flut
 
 ## 任务分级
 
-### 小任务
+### 轻量任务
 
 - 直接执行
 - 少解释
 - 优先看当前模块和相似页面，不主动启用规则卡流程
 
-小任务跳过规则：
+轻量任务跳过规则：
 
 - 跳过完整启动握手（不输出项目类型、规则卡状态、Flutter skills 状态）
 - 跳过输入模型日志
-- 只输出一行：`[flutter-forge] 小任务，直接执行`
+- 只输出一行：`[ff] 轻量任务，直接执行`
 - 然后立即读相关文件 → 修改 → 验证
 
-小任务判定标准（满足任一即可）：
+轻量任务判定标准（满足任一即可）：
 
 1. 用户描述明确、范围小、不涉及新模块或新页面
 2. 改样式、改文案、改配置、修 bug、加一个小交互
 3. 用户说"帮我改一下"、"修一下"、"调一下"这类明确收口的指令
 4. 不需要设计决策，只需要定位和修改
 
-不视为小任务（应走正常流程）：
+不视为轻量任务（应走正常流程）：
 
 1. 新建页面
 2. 涉及模块边界或组件归属决策
@@ -352,79 +352,7 @@ description: Flutter 项目开发的主控 skill。只要当前任务属于 Flut
 
 ## 输入不完整处理
 
-这是本 skill 的第一优先规则。不要假装看懂设计图，也不要自动补齐需求空白。
-
-### 只给 PRD / 需求文档
-
-- 先做需求理解
-- 提炼业务目标、页面目标、核心状态、边界条件和待确认项
-- 判断是否必须补设计图才能继续高质量推进
-
-当以下情况成立时，应主动索要设计图、Figma 或截图：
-
-1. 新页面开发
-2. 页面结构强依赖视觉布局
-3. 交互细节较多
-4. 用户期望高保真还原
-5. 不看 UI 就无法稳定决定组件边界和页面结构
-
-如果暂时没有设计图，但仍可推进：
-
-- 先给页面结构树草案
-- 标注待补 UI 决策点
-- 标注哪些部分需要设计图确认
-
-### 只给设计图 / Figma / 截图
-
-先判断当前模型 / 当前环境是否具备**可靠视觉理解能力**。
-
-如果具备：
-
-- 正常进入 UI 解析流程
-
-如果不具备，或你对图像理解置信度不高：
-
-- 不要假装看懂
-- 立即进入降级流程
-
-优先请求以下任一替代输入：
-
-1. 页面结构文字描述
-2. Figma 图层或区块说明
-3. 页面模块清单
-4. 标注版截图说明
-5. 现有相似页面代码
-
-在降级模式下，先输出：
-
-- 页面结构树草案
-- 文件结构与命名草案
-- 待确认 UI 点
-- UI 解析来源说明
-
-### 同时给 PRD 和设计图
-
-- 先做需求理解
-- 再做 UI 解析
-- 再进入实现设计
-- 默认先给设计包，再进入代码
-
-### 业务和 UI 都不完整
-
-- 不直接编造完整页面方案
-- 先说明当前能确认什么
-- 再列出最少必要输入
-- 优先请求最能决定主结构的那类信息
-
-### UI 解析来源标记
-
-凡是涉及 UI 解析输出时，显式标注来源：
-
-- `真实视觉输入`
-- `用户文字化描述`
-- `设计图不可读后的结构推断`
-
-不要把“推断出来的结构”伪装成“已经准确看图后的结论”。
+详见 [input_incomplete_handling.md](references/input_incomplete_handling.md)。核心原则：不要假装看懂设计图，不要自动补齐需求空白。
 
 ## 进入工作阶段日志
 
@@ -444,74 +372,7 @@ description: Flutter 项目开发的主控 skill。只要当前任务属于 Flut
 
 ## 官方 Flutter skills
 
-Flutter Forge 负责总控和项目适配，不替代所有通用 Flutter 技能。
-
-默认先检查**当前环境是否已安装**对应官方 Flutter skills，而不是每次联网检查官方仓库。
-
-默认探测优先看：
-
-- 当前会话上下文已经明确列出的可用 skills
-- 本地映射文件 `.flutter-forge/skill_mapping.local.env`
-- 当前工作区的 `.claude/skills/`、`.agents/skills/`、`.cc-switch/skills/`、`.trae/skills/`
-- 当前宿主根目录的 `~/.claude/skills/`、`~/.agents/skills/`、`~/.cc-switch/skills/`、`~/.trae/skills/`
-
-如果当前环境中的 skill 名称和 Flutter 官方 canonical 名称不一致，允许通过本地别名映射识别等价 skill，而不是直接误判为“未安装”。
-
-如果还没有本地映射文件，优先提示用户运行：
-
-- `scripts/discover_flutter_skills.sh`
-
-如果用户明确表示：
-
-- 不想下载官方 Flutter skills
-- 不想做本地映射
-- 不想再收到安装或映射提醒
-
-则把这视为稳定偏好，并记录为跨项目长期偏好标记。之后：
-
-- 仍然继续做 Flutter skills 探测
-- 仍然输出 Flutter skills 状态
-- 但**不再提示安装命令或映射脚本**
-
-如果探测到官方 Flutter skills 已安装：
-
-- 直接进入映射使用
-- 不再反复提醒用户
-- 对命中的通用子任务优先委托官方 skill
-
-如果已安装：
-
-- 优先委托官方 skill 提供通用实现蓝图
-- 再由 Flutter Forge 做项目内收口
-
-如果未安装：
-
-- 不阻塞任务
-- 简短说明当前环境未发现对应官方 skill
-- 在启动握手阶段明确提醒一次：
-
-```text
-[flutter-forge] 当前环境未检测到官方 Flutter skills。
-我仍然可以按 Flutter Forge 内置流程继续完成任务，但架构、路由、JSON、HTTP、测试等通用子任务将无法直接复用官方技能蓝图。
-
-官方地址：
-- 仓库：https://github.com/flutter/skills
-- 文档：https://docs.flutter.dev/ai/agent-skills
-
-安装命令：
-npx skills add flutter/skills --skill '*' --agent universal
-```
-
-- 回退到 Flutter Forge 本地流程和 references
-
-只有在维护 `flutter-forge` 本身或更新委托映射时，才需要检查官方仓库。
-
-注意：
-
-- 检测到已安装官方 Flutter skills 后，应直接映射使用，而不是只保留为“理论可用能力”
-- 但项目级规则、输入不完整处理、规则卡、初始化分流仍由 Flutter Forge 主控
-- 本地别名映射见 [official_skill_aliases.yaml](references/official_skill_aliases.yaml)
-- 本地目录探测与映射根目录选择脚本见 [discover_flutter_skills.sh](scripts/discover_flutter_skills.sh)
+详见 [official_flutter_skills.md](references/official_flutter_skills.md)。核心原则：已安装时直接委托，未安装时不阻塞，回退到内置流程。
 
 ## 记忆机制
 
@@ -519,7 +380,7 @@ npx skills add flutter/skills --skill '*' --agent universal
 
 默认策略：
 
-- 小任务：不主动读写规则卡
+- 轻量任务：不主动读写规则卡
 - 单轮任务：优先看真实代码和相似页面
 - 长期协作：再启用规则卡和长期记忆
 
@@ -543,7 +404,7 @@ npx skills add flutter/skills --skill '*' --agent universal
 
 也就是说：
 
-- 你每次都要先检查“有没有规则卡、是不是老项目、要不要初始化”
+- 你每次都要先检查“有没有规则卡、是不是迭代中项目、要不要初始化”
 - 但不是每次都要读写长期记忆
 
 ## 四个角色
@@ -576,7 +437,7 @@ npx skills add flutter/skills --skill '*' --agent universal
 
 用一行短提示说明当前模式，例如：
 
-- `[flutter-forge] 模式：老项目扫描`
+- `[flutter-forge] 模式：迭代中项目扫描`
 - `[flutter-forge] 模式：需求理解 -> 设计包`
 - `[flutter-forge] 模式：直接落代码`
 
@@ -592,7 +453,7 @@ npx skills add flutter/skills --skill '*' --agent universal
 
 如果当前进入的是项目初始化而不是直接任务执行，也要明确说清楚。例如：
 
-- `[flutter-forge] 检测到老项目且无规则卡，建议先初始化项目规则`
+- `[flutter-forge] 检测到迭代中项目且无规则卡，建议先初始化项目规则`
 - `[flutter-forge] 检测到新项目，建议先选择初始规则来源`
 
 ### 不要做的事
@@ -603,7 +464,7 @@ npx skills add flutter/skills --skill '*' --agent universal
 
 ## 默认输出
 
-### 小任务
+### 轻量任务
 
 - 直接结论
 - 必要时补 1 到 2 条说明
@@ -631,6 +492,10 @@ npx skills add flutter/skills --skill '*' --agent universal
 
 - 降级为 UI 骨架 + 状态接入位 + 接口占位 + 交互占位
 
+## 可见性标记与会话状态
+
+详见 [skill_visibility.md](references/skill_visibility.md)。核心规则：`[ff]` 标记让用户感知 skill 在工作，`.flutter-forge/session.md` 记录状态供用户主动查询。
+
 ## Progressive Disclosure
 
 主文档只保留主干规则。需要细节时，再按场景读取 reference。
@@ -641,7 +506,7 @@ npx skills add flutter/skills --skill '*' --agent universal
 
 常见直接入口：
 
-- 老项目首次接入： [legacy_project_scan.md](references/legacy_project_scan.md)
+- 迭代中项目首次接入： [legacy_project_scan.md](references/legacy_project_scan.md)
 - 任务运行检查： [task_runtime_prompt.md](references/task_runtime_prompt.md)
 - 记忆读写协议： [memory_protocol.md](references/memory_protocol.md)
 - 工程判断标准： [engineering_heuristics.md](references/engineering_heuristics.md)
