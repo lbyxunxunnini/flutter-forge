@@ -1,0 +1,29 @@
+official_skill_aliases:
+  flutter-architecting-apps:
+    aliases:
+      - flutter-apply-architecture-best-practices
+
+  flutter-building-layouts:
+    aliases:
+      - flutter-build-responsive-layout
+      - flutter-fix-layout-issues
+
+  flutter-handling-http-and-json:
+    aliases:
+      - flutter-implement-json-serialization
+      - flutter-use-http-package
+
+  flutter-implementing-navigation-and-routing:
+    aliases:
+      - flutter-setup-declarative-routing
+
+  flutter-localizing-apps:
+    aliases:
+      - flutter-setup-localization
+
+  flutter-testing-apps:
+    aliases:
+      - flutter-add-widget-test
+      - flutter-add-widget-preview
+      - flutter-testing-apps
+      - flutter-add-integration-test

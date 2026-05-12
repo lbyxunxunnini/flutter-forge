@@ -7,33 +7,27 @@ delegation_map:
   ui_parsing_phase:
     owned_by: "flutter-forge"
     delegate_to:
-      - skill: "flutter-build-responsive-layout"
+      - skill: "flutter-building-layouts"
         when:
           - "需要做多端响应式布局"
           - "页面结构强依赖约束系统"
-      - skill: "flutter-fix-layout-issues"
-        when:
-          - "出现布局溢出"
-          - "复杂嵌套滚动或约束异常"
-    rule: "Flutter Forge 负责页面结构拆分；布局和约束类子问题优先参考官方 skill。"
+    rule: "Flutter Forge 负责页面结构拆分；布局、约束和常见溢出类子问题优先参考官方 layout skill。"
 
   implementation_design_phase:
     owned_by: "flutter-forge"
     delegate_to:
-      - skill: "flutter-apply-architecture-best-practices"
+      - skill: "flutter-architecting-apps"
         when:
           - "需要确定分层架构"
           - "需要做架构重构"
-      - skill: "flutter-setup-declarative-routing"
+      - skill: "flutter-implementing-navigation-and-routing"
         when:
           - "需要新增或调整路由体系"
-      - skill: "flutter-implement-json-serialization"
+      - skill: "flutter-handling-http-and-json"
         when:
           - "需要新增模型序列化"
-      - skill: "flutter-use-http-package"
-        when:
           - "需要设计 HTTP 接入方式"
-      - skill: "flutter-setup-localization"
+      - skill: "flutter-localizing-apps"
         when:
           - "页面涉及多语言接入"
     rule: "官方 skill 提供通用蓝图；Flutter Forge 负责项目内落层、命名、复用和收口。"
@@ -41,16 +35,11 @@ delegation_map:
   development_phase:
     owned_by: "flutter-forge"
     delegate_to:
-      - skill: "flutter-add-widget-test"
+      - skill: "flutter-testing-apps"
         when:
           - "新增可复用组件"
           - "新增明显交互行为"
-      - skill: "flutter-add-widget-preview"
-        when:
-          - "新增可复用 UI 组件"
           - "需要做多状态预览"
-      - skill: "flutter-add-integration-test"
-        when:
           - "涉及关键用户流程"
     rule: "页面开发阶段允许委托官方 skill 处理通用代码形态，但仍由 Flutter Forge 统一输出结构。"
 

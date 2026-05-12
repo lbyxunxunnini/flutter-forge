@@ -13,16 +13,38 @@ Flutter Forge 负责总控和项目内决策，不负责替代所有 Flutter 通
 
 默认先检查**当前环境是否已安装**对应官方 Flutter skill，而不是每次联网查询官方仓库。
 
+探测优先看：
+
+- 当前会话上下文已明确列出的可用 skills
+- 本地映射文件 `.flutter-forge/skill_mapping.local.env`
+- 当前工作区 `.claude/skills/`、`.agents/skills/`、`.cc-switch/skills/`、`.trae/skills/`
+- 当前宿主根目录 `~/.claude/skills/`、`~/.agents/skills/`、`~/.cc-switch/skills/`、`~/.trae/skills/`
+
+如果当前环境中的 skill 名称和 Flutter 官方当前名称或历史名称不一致，应优先使用兼容映射，而不是直接误判为“未安装”。
+
+别名映射见：
+
+- `references/official_skill_aliases.yaml`
+
 如果环境里已安装对应 skill：
 
 - 优先委托官方 skill
 - 再由 Flutter Forge 做项目内适配和最终收口
+- 进入实际任务时直接映射使用，不要把这层能力继续悬空
 
 如果环境里未安装：
 
 - 不阻塞任务
 - 明确告知当前环境缺少对应官方 skill
 - 回退到 Flutter Forge 自己的参考规则和本地流程
+- 并提供：
+  - 仓库：https://github.com/flutter/skills
+  - 文档：https://docs.flutter.dev/ai/agent-skills
+  - 安装命令：`npx skills add flutter/skills --skill '*' --agent universal`
+
+如果用户希望先在本机统一选择一个协作技能目录，可运行：
+
+- `scripts/discover_flutter_skills.sh`
 
 只有在维护 `flutter-forge` 本身或更新委托映射时，才需要检查官方仓库最新变化。
 
@@ -41,16 +63,91 @@ Flutter Forge 负责总控和项目内决策，不负责替代所有 Flutter 通
 
 ## 当前应优先识别的官方 Flutter skills
 
-- `flutter-apply-architecture-best-practices`
-- `flutter-build-responsive-layout`
-- `flutter-fix-layout-issues`
-- `flutter-implement-json-serialization`
-- `flutter-setup-declarative-routing`
-- `flutter-setup-localization`
-- `flutter-use-http-package`
-- `flutter-add-widget-test`
-- `flutter-add-widget-preview`
-- `flutter-add-integration-test`
+以下名称以当前 `flutter/skills` 仓库 README 为准：
+
+- `flutter-architecting-apps`
+- `flutter-building-layouts`
+- `flutter-building-forms`
+- `flutter-handling-http-and-json`
+- `flutter-implementing-navigation-and-routing`
+- `flutter-localizing-apps`
+- `flutter-managing-state`
+- `flutter-testing-apps`
+- `flutter-theming-apps`
+- `flutter-working-with-databases`
+- `flutter-caching-data`
+- `flutter-interoperating-with-native-apis`
+- `flutter-embedding-native-views`
+- `flutter-adding-home-screen-widgets`
+- `flutter-animating-apps`
+- `flutter-improving-accessibility`
+- `flutter-building-plugins`
+- `flutter-handling-concurrency`
+- `flutter-reducing-app-size`
+- `flutter-setting-up-on-linux`
+- `flutter-setting-up-on-macos`
+- `flutter-setting-up-on-windows`
+
+## 兼容名称映射
+
+本项目曾经使用过一套较旧的技能命名。现在统一以 `flutter/skills` 当前仓库名称为主，历史名称只作为兼容映射。例如：
+
+- `flutter-apply-architecture-best-practices` -> `flutter-architecting-apps`
+- `flutter-build-responsive-layout` / `flutter-fix-layout-issues` -> `flutter-building-layouts`
+- `flutter-setup-declarative-routing` -> `flutter-implementing-navigation-and-routing`
+- `flutter-implement-json-serialization` / `flutter-use-http-package` -> `flutter-handling-http-and-json`
+- `flutter-setup-localization` -> `flutter-localizing-apps`
+- `flutter-add-widget-test` / `flutter-add-widget-preview` / `flutter-add-integration-test` -> `flutter-testing-apps`
+
+因此探测逻辑应分三类：
+
+1. 当前官方 skill 名称已安装
+2. 历史兼容名称已安装
+3. 两者都未安装
+
+只有第三种情况，才应提醒用户当前环境缺少对应官方 Flutter skills。
+
+## 更新机制
+
+如果你是通过官方方式把 `flutter/skills` 安装到项目或宿主目录，更新时优先使用官方命令：
+
+```bash
+npx skills update flutter/skills
+```
+
+更新后应重新检查：
+
+- 官方技能名称是否有变动
+- `references/delegation_map.yaml` 是否仍然匹配
+- `references/official_skill_aliases.yaml` 是否仍然需要保留兼容项
+
+## 引用说明
+
+`flutter-forge` 明确引用以下官方资源：
+
+- 官方仓库：`flutter/skills`
+- 官方文档：`docs.flutter.dev/ai/agent-skills`
+
+本项目不复制官方 skill 内容作为自有实现，而是：
+
+- 在已安装时直接映射使用
+- 在未安装时给出官方安装和更新方式
+- 在项目内仅保留委托规则、兼容映射和收口策略
+
+## 同名冲突规则
+
+如果你把官方 `flutter/skills` 直接复制到多个参与发现的目录，并且保留相同 skill 名称，确实可能出现同名冲突或宿主优先级不清的问题。
+
+建议只选一种作为**权威发现源**：
+
+1. 项目内技能目录（`.claude/skills/`、`.agents/skills/`、`.cc-switch/skills/`、`.trae/skills/`）
+2. 宿主根技能目录（`~/.claude/skills/`、`~/.agents/skills/`、`~/.cc-switch/skills/`、`~/.trae/skills/`）
+
+不要同时在多个可发现目录里保留同名官方 skill 副本。
+
+如果你只是想在仓库里保留官方 skill 内容做参考，应放在**不参与 skill 发现**的目录，例如：
+
+- `.flutter-forge/vendor/flutter-skills/`
 
 ## 委托策略
 
@@ -68,8 +165,7 @@ Flutter Forge 负责总控和项目内决策，不负责替代所有 Flutter 通
 
 优先参考：
 
-- `flutter-build-responsive-layout`
-- `flutter-fix-layout-issues`
+- `flutter-building-layouts`
 
 ### 架构与实现设计阶段
 
@@ -83,11 +179,10 @@ Flutter Forge 负责总控和项目内决策，不负责替代所有 Flutter 通
 
 优先参考：
 
-- `flutter-apply-architecture-best-practices`
-- `flutter-setup-declarative-routing`
-- `flutter-implement-json-serialization`
-- `flutter-use-http-package`
-- `flutter-setup-localization`
+- `flutter-architecting-apps`
+- `flutter-implementing-navigation-and-routing`
+- `flutter-handling-http-and-json`
+- `flutter-localizing-apps`
 
 ### 页面开发阶段
 
@@ -99,9 +194,7 @@ Flutter Forge 负责总控和项目内决策，不负责替代所有 Flutter 通
 
 优先参考：
 
-- `flutter-add-widget-test`
-- `flutter-add-widget-preview`
-- `flutter-add-integration-test`
+- `flutter-testing-apps`
 
 ## 收口规则
 

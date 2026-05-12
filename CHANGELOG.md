@@ -1,5 +1,29 @@
 # Changelog
 
+## 0.6.0
+
+- 收紧 `flutter-forge` 的主控定位与触发描述，强调 Flutter 项目任务应优先进入 `flutter-forge`，而不是先走通用编码模式
+- 精简 `README`，只保留用户真正需要的信息：用途、安装、自然使用方式、推荐开场、官方 Flutter skills 可选安装，以及触发失败时的 fallback 用法
+- 增加显式触发兜底说明：支持 `ff- ...`、`使用 flutter-forge ...`、`按 flutter-forge 工作模式处理 ...`
+- 将启动流程收口为更明确的握手机制：项目类型、规则卡状态、Flutter skills 状态三项判定
+- 增加“完全态”概念：只有正式规则卡存在且 Flutter skills 状态已就绪时，后续进入项目才静默跳过完整握手
+- 增加“进入工作阶段”日志与输入模型日志，区分 `只给 PRD`、`只给设计图`、`PRD + 设计图`、`上下文不足`、`直接开发任务`
+- 强化规则卡语义：没有正式规则卡就视为项目未初始化；扫描推断、会话记忆、宿主项目记忆不得冒充“已加载规则卡”
+- 统一正式规则卡来源：只认 `~/.flutter-forge/projects/*.rule_card.yaml`，明确排除 `.claude/projects/.../memory/*.yaml` 等宿主侧记忆文件
+- 固定新项目规则卡生成时机：完成起步方式选择并产出首个设计包后，进入代码前必须生成规则卡并打印路径
+- 调整记忆协议：检查规则卡存在性始终执行，但读取 / 写入长期记忆只在长期协作或用户明确要求时启用
+- 增加 Flutter skills “已就绪 / 未就绪” 状态位，并要求该状态参与是否展开握手日志的判断
+- 新增 Flutter skills 安装 / 映射提醒抑制机制：当用户明确表示不想下载或映射时，记录跨项目偏好，后续只保留探测和状态输出，不再重复提醒安装命令或映射脚本
+- 校正官方 Flutter skills 名称基准，改为以当前 `flutter/skills` 仓库实际 skill 名称为主，旧名称降级为兼容别名
+- 新增 `references/official_skill_aliases.yaml`，统一维护官方名称与历史名称的兼容映射
+- 更新 `references/delegation_map.yaml`，按当前官方 skill 名称重写委托映射
+- 更新官方 skill 文档，明确探测顺序、更新命令、命名兼容策略，以及不要在多个可发现目录放置同名 skill 副本
+- 新增 `references/load_map.md`，把 reference 的按需加载入口从主文档中抽离，进一步落实 progressive disclosure
+- 新增 `scripts/discover_flutter_skills.sh`，用于扫描项目内与宿主根技能目录、选择 Flutter 协作技能根目录并写入本地映射文件
+- 扩展脚本探测模型，统一覆盖项目内目录与宿主根目录：`.claude/skills/`、`.agents/skills/`、`.cc-switch/skills/`、`.trae/skills/` 及其 `~/` 根目录版本
+- 补充启动握手与工作阶段的示例日志，更新 `example_workflow.md`，让接管时机、规则卡生成时机和技能状态更可见
+- 持续收敛主文档与 reference 边界，降低主文档噪音，把模型内部工作细节从用户文档中剥离
+
 ## 0.4.1
 
 - 将四个角色从主 `SKILL.md` 抽离为独立角色卡，保留主 skill 的编排器定位，减少主入口负担

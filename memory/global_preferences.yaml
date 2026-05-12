@@ -18,6 +18,10 @@ global_preferences:
     maintainability_priority_high: true
     ui_fidelity_as_advice: true
 
+  flutter_skills_preferences:
+    reminder_suppressed: false
+    notes: []
+
   reuse_preferences:
     prefer_reuse_before_rewrite: true
     allow_extract_shared_when_boundary_clear: true

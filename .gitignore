@@ -2,3 +2,4 @@
 memory/runtime/current_task.yaml
 memory/runtime/*.local.yaml
 .claude/
+.flutter-forge/

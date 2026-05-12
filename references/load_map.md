@@ -1,0 +1,54 @@
+# Flutter Forge Reference - Load Map
+
+这个文件定义主 skill 之外的按需加载映射。主 `SKILL.md` 不再重复列出大量“遇到什么就读什么”的声明。
+
+## 场景 -> 参考文件
+
+### 老项目首次接入
+
+- [legacy_project_scan.md](legacy_project_scan.md)
+- [rule_card_template.yaml](rule_card_template.yaml)
+- [example_rule_card.yaml](example_rule_card.yaml)
+
+### 进入具体任务执行
+
+- [task_runtime_prompt.md](task_runtime_prompt.md)
+
+### 需要记忆读写规则
+
+- [memory_protocol.md](memory_protocol.md)
+
+### 需要工程判断标准或 Flutter 专项规则
+
+- [engineering_heuristics.md](engineering_heuristics.md)
+
+### 需要官方 Flutter skills 委托规则
+
+- [official_flutter_skills.md](official_flutter_skills.md)
+- [delegation_map.yaml](delegation_map.yaml)
+
+### 需要网络层项目规则
+
+- [network_and_api.md](network_and_api.md)
+
+### 需要路由层项目规则
+
+- [routing_and_navigation.md](routing_and_navigation.md)
+
+### 需要测试与质量建议
+
+- [testing_strategy.md](testing_strategy.md)
+- [quality_gates.md](quality_gates.md)
+- [build_and_quality.md](build_and_quality.md)
+
+### 需要反模式、模板或调试手册
+
+- [anti_patterns.md](anti_patterns.md)
+- [templates_catalog.md](templates_catalog.md)
+- [debugging_playbook.md](debugging_playbook.md)
+
+### 需要案例或验证记录
+
+- [case_studies.md](case_studies.md)
+- [case_study_member_center.md](case_study_member_center.md)
+- [validation_log.md](validation_log.md)

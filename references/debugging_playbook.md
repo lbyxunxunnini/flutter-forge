@@ -13,7 +13,7 @@
 
 如果工作区已安装官方 skill，优先参考：
 
-- `flutter-fix-layout-issues`
+- `flutter-building-layouts`
 
 ## 状态不更新
 
