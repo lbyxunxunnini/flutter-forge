@@ -4,6 +4,7 @@ project_rule_card:
     type: "flutter"
     status: "new|legacy"
     overall_confidence: "low|medium|high"
+    source_rules: []  # 规则卡内容来源，如 [".trae/rules/rules.md", "project scan"]
 
   team_rules:
     directory_structure:

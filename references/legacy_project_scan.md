@@ -19,6 +19,7 @@
 7. 公共组件边界
 8. 路由与导航方式
 9. 国际化、主题、依赖注入等主流工程规则
+10. 已有规则文件（`.claude/rules/`、`.trae/rules/`、`.agents/rules/`、项目根目录的 `rules.md`、`analysis_rules.md` 等）
 
 ## 扫描原则
 

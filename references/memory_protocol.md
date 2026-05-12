@@ -79,6 +79,16 @@ skill 仓库内的 `memory/` 目录应视为：
 - 仓库内 `memory/projects/*.rule_card.yaml` 示例文件
 - `references/example_rule_card.yaml`
 
+但以下已有规则文件应作为规则卡生成的一等输入（不是规则卡本身，但参与校正）：
+
+- `.claude/rules/` 或 `.claude/*.md`
+- `.trae/rules/`
+- `.agents/rules/`
+- 项目根目录的 `rules.md`、`analysis_rules.md`、`CONVENTIONS.md`
+- `analysis/` 目录下的规则或分析文档
+
+如果已有规则和扫描推断冲突，优先以已有规则为准。规则卡应标注内容来源。
+
 只存该项目的：
 
 - 目录结构
