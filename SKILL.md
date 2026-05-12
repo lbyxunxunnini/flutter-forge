@@ -461,6 +461,7 @@ description: Flutter 项目开发的主控 skill。只要当前任务属于 Flut
 - 不要每一步都长篇解释
 - 不要默认输出完整角色交接文档
 - 不要为了展示 skill 存在感而制造无效仪式感
+- 不要自行省略 `[ff]` 标记（这是必选输出，不是可选装饰）
 
 ## 默认输出
 
@@ -494,7 +495,20 @@ description: Flutter 项目开发的主控 skill。只要当前任务属于 Flut
 
 ## 可见性标记与会话状态
 
-详见 [skill_visibility.md](references/skill_visibility.md)。核心规则：`[ff]` 标记让用户感知 skill 在工作，`.flutter-forge/session.md` 记录状态供用户主动查询。
+详见 [skill_visibility.md](references/skill_visibility.md)。
+
+`[ff]` 标记是**必选输出**，不可自行省略。每条 flutter-forge 介入的关键回复，必须在开头带 `[ff]` 标记：
+
+- 轻量任务：`[ff] 轻量任务，直接执行`
+- 中等任务：`[ff] 中任务，基于规则卡（{摘要}）` 或 `[ff] 基于项目现有风格`
+- 大任务：每个角色切换时 `[ff] 角色名：正在做什么`，结束时 `[ff] 完成`
+- 后续对话中 flutter-forge 继续介入时，每条关键回复开头带 `[ff]`
+
+规则卡摘要从 `rule_card.yaml` 动态读取 2-3 个关键字段（如状态管理、路由），不写死具体技术栈。没有规则卡时写 `[ff] 基于项目现有风格`。
+
+不标记的情况：纯知识问答、闲聊、确认等不涉及任务执行的对话。
+
+会话状态记录在 `.flutter-forge/session.md`，用户可主动查询，不每轮主动输出。
 
 ## Progressive Disclosure
 
@@ -516,3 +530,4 @@ description: Flutter 项目开发的主控 skill。只要当前任务属于 Flut
 1. 不在未确认的情况下重构现有公共模块
 2. 不把低置信度推断当成团队规则强行执行
 3. 不为了追求 UI 还原破坏项目架构和可维护性
+4. flutter-forge 介入的关键回复必须带 `[ff]` 标记，不可自行省略
