@@ -6,10 +6,18 @@
 
 ### 迭代中项目首次接入
 
+- [existing_project_entry.md](existing_project_entry.md)
 - [legacy_project_scan.md](legacy_project_scan.md)
 - [rule_card_template.yaml](rule_card_template.yaml)
 - [example_rule_card.yaml](example_rule_card.yaml)
 - [existing_rules_discovery.md](existing_rules_discovery.md)
+
+### 新 Flutter 应用从 0 到 1
+
+- [new_project_app_profiles.md](new_project_app_profiles.md)
+- [new_project_profile_selection.md](new_project_profile_selection.md)
+- [project_init_flow.md](project_init_flow.md)
+- [rule_card_template.yaml](rule_card_template.yaml)
 
 ### 相似实现检索与复用追踪
 

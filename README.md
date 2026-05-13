@@ -4,6 +4,31 @@
 
 Flutter Forge 是一个为 Flutter 开发提供结构化的 AI 协作工作流 skill。它不是代码生成器——它是一个**项目内编排与决策层**，在动手写代码之前先理解项目上下文、收口设计方案、统一工程规则。
 
+GitHub: [lbyxunxunnini/flutter-forge](https://github.com/lbyxunxunnini/flutter-forge) · License: MIT · 当前版本：0.7.0
+
+## 30 秒理解
+
+Flutter Forge 适合你在 AI 编码工具里长期维护 Flutter 项目时使用。它会先判断任务大小和项目状态：小改动直接做，大需求先拆需求、UI、架构和实现方案，再写代码。
+
+它解决的不是“Flutter 怎么写”，而是“AI 在你的 Flutter 项目里应该按什么规则写”。
+
+### 适合
+
+- 你用 Claude Code、Codex、Cursor、Trae 等 AI 编码工具开发 Flutter。
+- 你的项目有固定目录、命名、状态管理或组件复用规则。
+- 你经常把 PRD、设计图、页面需求交给 AI 拆解。
+- 你希望 AI 先扫描现有项目，再决定复用还是新写。
+
+### 不适合
+
+- 你只想找 Flutter UI 组件库。
+- 你只需要复制粘贴页面模板。
+- 你不用 agent skills 或类似的 AI 工作流机制。
+
+### 当前状态
+
+这是一个 0.x 阶段的工作流 skill，已经具备完整文档、任务路由、规则卡、角色协作和官方 Flutter skills 委托策略。真实 demo、截图和录屏会在后续补充；欢迎通过 issue 提交真实项目试跑反馈。
+
 ## 为什么需要它
 
 直接让 AI 写 Flutter 代码，常见问题：
@@ -109,6 +134,51 @@ git -C ~/.claude/skills/flutter-forge pull
 按 flutter-forge 工作模式处理
 ```
 
+### 两条最快入口
+
+如果你不想先读完整文档，直接按项目状态选择一个开场 prompt。
+
+**已有 Flutter 项目**
+
+```text
+这是一个迭代中的 Flutter 项目。先用 flutter-forge 扫描项目结构，生成规则卡草案，不要先写代码。
+```
+
+Flutter Forge 会优先识别目录结构、状态管理、路由、网络层、公共组件、相似页面和已有规则文件。适合后续新增页面、扩展模块、代码审查、状态管理迁移和目录命名统一。
+
+**新 Flutter 应用**
+
+```text
+新 Flutter 项目，使用 flutter-forge business profile。先定目录、状态管理、路由、网络层和首批页面结构，再开始写代码。
+```
+
+可选 profile：
+
+| Profile | 适合场景 | 默认策略 |
+|---------|----------|----------|
+| `mvp` | 快速原型、演示、想法验证 | 少规则，先跑起来 |
+| `business` | 登录、列表、详情、表单、接口接入等标准业务应用 | 默认推荐，先收口核心工程规则 |
+| `team` | 多人长期维护、规范优先、持续迭代 | 更严格的规则卡、测试和架构确认 |
+
+### 安静模式与完整模式
+
+Flutter Forge 不会对所有任务都展开四角色流程：
+
+- **运维直通**：测试、构建、分析、依赖配置、项目文档等维护任务，仍由 Flutter Forge 接管，但快速执行。
+- **安静模式**：改文案、颜色、字号、已定位 bug 等轻量任务，直接由页面工程师处理，只输出必要的 `[f-forge]` 标记。
+- **完整模式**：新页面、模块扩展、复用判断、状态管理接入、PRD/设计图解析、代码审查和迁移任务，会进入结构化流程。
+
+这保证日常小改动不被流程拖慢，大需求又不会跳过设计收口。
+
+进入完整流程时，Flutter Forge 必须说明升级原因，例如：
+
+```text
+[f-forge] 模式：页面开发
+- 升级原因：新增订单列表页，涉及页面结构、筛选状态和路由接入
+```
+
+如果说不清升级原因，就不应进入完整流程，应走运维直通、轻量执行或中等任务路径。
+
 ### 典型场景
 
 | 场景 | 说什么 |
@@ -155,13 +225,14 @@ ls ~/.agents/skills/flutter-forge/SKILL.md 2>/dev/null && echo "OK" || echo "未
 │            Flutter Forge 主控 (SKILL.md ~300行)       │
 │                                                       │
 │  ┌───────────┐  ┌──────────────┐  ┌───────────────┐ │
-│  │ 10秒测试   │  │ 快速退出条件  │  │ 完整流程触发   │ │
+│  │ 硬排除检查 │  │ 运维直通路径  │  │ 完整流程触发   │ │
 │  └─────┬─────┘  └──────┬───────┘  └───────┬───────┘ │
 │        └────────────────┼──────────────────┘         │
 │                         ▼                             │
 │  ┌─────────────────────────────────────────────────┐ │
 │  │              任务路由 & 工作模式                   │ │
 │  │                                                   │ │
+│  │  运维直通 → 快速执行                               │ │
 │  │  轻量任务 → 直接执行                               │ │
 │  │  中任务   → 设计收口 + 执行                        │ │
 │  │  大任务   → 四角色流程 + 讨论回合                   │ │
@@ -187,18 +258,22 @@ ls ~/.agents/skills/flutter-forge/SKILL.md 2>/dev/null && echo "OK" || echo "未
 ```
 任务进来
   → 是 Flutter 项目？ → 否 → 不命中，退出
+  → 硬排除？ → 是 → 普通模式处理
+  → 测试/构建/配置/文档等维护任务？ → 是 → 运维直通，快速执行
   → 能 10 秒内说清改什么？ → 是 → 轻量任务，直接执行
-  → 涉及新页面/复用/组件/状态/审查/迁移？ → 否 → 不命中，退出
-  → 是 → 完整流程，继续读后续内容
+  → 涉及新页面/复用/组件/状态/审查/迁移？ → 是 → 完整流程
+  → 中间地带 → 简短扫描后执行，必要时升级
 ```
 
-**快速退出条件**（不命中 flutter-forge）：
+**硬排除条件**（不命中 flutter-forge）：
 
 1. 不是 Flutter 项目
-2. 纯 Dart 逻辑修改（不涉及 Widget / UI）
-3. 只改配置、环境变量、CI 脚本
-4. 纯知识问答
-5. 闲聊、确认、追问
+2. 纯知识问答，且不要求结合当前项目代码
+3. 通用 git 操作，且不要求理解 Flutter 项目
+4. 闲聊、确认、追问
+5. 明确与 Flutter 项目无关的脚本、文档或环境任务
+
+测试、构建、依赖、配置、CI 和 Flutter 项目文档不再默认退出；它们走“运维直通”，保留接管但不展开重流程。
 
 ### 2. 四角色协作模型
 
@@ -379,6 +454,14 @@ npx skills add flutter/skills --skill '*' --agent universal
 - [flutter/skills 仓库](https://github.com/flutter/skills)
 - [Agent skills for Flutter and Dart](https://docs.flutter.dev/ai/agent-skills)
 
+## 参与贡献
+
+- 贡献指南：[CONTRIBUTING.md](CONTRIBUTING.md)
+- 开源发布检查：[OPEN_SOURCE_CHECKLIST.md](OPEN_SOURCE_CHECKLIST.md)
+- 真实试跑记录模板：[references/validation_log.md](references/validation_log.md)
+
+如果你在真实 Flutter 项目中试用了 Flutter Forge，优先提交 GitHub issue 中的 `Validation case`，这比泛泛的“好用/不好用”更有助于改进路由和规则卡。
+
 ## 版本
 
-当前版本：**0.6.7** · [CHANGELOG](CHANGELOG.md)
+当前版本：**0.7.0** · [CHANGELOG](CHANGELOG.md)

@@ -16,6 +16,8 @@
 
 判断为新项目且无规则卡时，主动提示用户建立规则卡。给出两个选项：
 
+如果用户是在从 0 到 1 创建新应用，先根据 [new_project_app_profiles.md](new_project_app_profiles.md) 选择 `mvp`、`business` 或 `team` profile，再决定规则来源。
+
 ### 选项 A：从已有规则复制
 
 1. 先列出可选模板与历史规则卡
