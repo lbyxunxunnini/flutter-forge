@@ -230,7 +230,7 @@ npx skills update flutter/skills
   → 检查是否已安装
   → 已安装 → 正常委托
   → 未安装 → 降级：
-    1. 输出 [ff] 降级模式：{skill_name} 未安装，使用内置流程
+    1. 输出 [f-forge] 降级模式：{skill_name} 未安装，使用内置流程
     2. 读取 flutter-forge 内置参考规则（references/ 目录）
     3. 按内置规则生成等质量输出
     4. 在规则卡 task_only_context 中记录降级事件
@@ -256,10 +256,10 @@ npx skills update flutter/skills
 
 ### 降级原则
 
-1. **透明告知**：降级时必须输出 `[ff] 降级模式：...`，用户知道当前在用降级流程
+1. **透明告知**：降级时必须输出 `[f-forge] 降级模式：...`，用户知道当前在用降级流程
 2. **质量不降**：内置规则和官方 skill 的输出标准一致，不能因为降级就降低代码质量
 3. **记录在案**：降级事件写入规则卡 `task_only_context.api_compat_notes`，后续有机会时提醒用户安装
 4. **不阻塞**：降级后立即继续执行，不等用户确认是否要安装 skill
 5. **主动提醒**：任务完成后，主动提醒用户可以安装缺失的 skill：
-   - `[ff] 提示：安装 {skill_name} 可获得更好的 {功能描述} 支持`
+   - `[f-forge] 提示：安装 {skill_name} 可获得更好的 {功能描述} 支持`
    - 安装命令：`npx skills add flutter/skills --skill '{skill_name}' --agent universal`

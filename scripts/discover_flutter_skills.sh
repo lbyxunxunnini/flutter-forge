@@ -7,7 +7,7 @@ LOCAL_MAPPING_FILE="${LOCAL_STATE_DIR}/skill_mapping.local.env"
 
 mkdir -p "${LOCAL_STATE_DIR}"
 
-echo "[flutter-forge] 正在查询需要协作的 Flutter skill..."
+echo "[f-forge] 正在查询需要协作的 Flutter skill..."
 
 COMMON_ROOTS=(
   "${PROJECT_ROOT}/.claude/skills"
@@ -55,7 +55,7 @@ done
 
 if [[ "${#FOUND_ROOTS[@]}" -eq 0 ]]; then
   cat <<'EOF'
-[flutter-forge] 未在常见目录中检测到可协作的 Flutter skills。
+[f-forge] 未在常见目录中检测到可协作的 Flutter skills。
 你可以继续使用 Flutter Forge 内置流程，但将无法直接映射官方/等价 Flutter skills。
 
 官方地址：
@@ -69,7 +69,7 @@ EOF
 fi
 
 echo
-echo "[flutter-forge] 已找到以下可选协作技能目录："
+echo "[f-forge] 已找到以下可选协作技能目录："
 for i in "${!FOUND_ROOTS[@]}"; do
   idx=$((i + 1))
   echo "  ${idx}. ${FOUND_ROOTS[$i]}"
@@ -86,7 +86,7 @@ if [[ -z "${choice}" ]]; then
 fi
 
 if ! [[ "${choice}" =~ ^[0-9]+$ ]] || (( choice < 1 || choice > ${#FOUND_ROOTS[@]} )); then
-  echo "[flutter-forge] 输入无效，取消写入映射配置。"
+  echo "[f-forge] 输入无效，取消写入映射配置。"
   exit 1
 fi
 
@@ -101,9 +101,9 @@ FLUTTER_FORGE_SKILL_SOURCE_SET_AT="$(date '+%Y-%m-%d %H:%M:%S')"
 EOF
 
 echo
-echo "[flutter-forge] 已写入本地协作技能映射："
+echo "[f-forge] 已写入本地协作技能映射："
 echo "  ${LOCAL_MAPPING_FILE}"
-echo "[flutter-forge] 当前选定类型："
+echo "[f-forge] 当前选定类型："
 echo "  ${selected_type}"
-echo "[flutter-forge] 当前选定目录："
+echo "[f-forge] 当前选定目录："
 echo "  ${selected_root}"
