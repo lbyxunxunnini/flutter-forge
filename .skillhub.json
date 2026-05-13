@@ -1,5 +1,5 @@
 {
   "name": "flutter-forge",
   "description": "Flutter 项目开发的主控 skill。凡是 Flutter 页面、模块、PRD、设计图、迭代中项目接入、目录命名、复用判断、状态管理接入、项目初始化或实现设计任务，都应优先命中 flutter-forge，而不是通用编码模式。",
-  "version": "0.6.3"
+  "version": "0.6.4"
 }

@@ -68,6 +68,30 @@
 
 - [skill_visibility.md](skill_visibility.md)
 
+### 需要启动握手输出格式
+
+- [startup_handshake.md](startup_handshake.md)
+
+### 需要规则卡协议
+
+- [rule_card_protocol.md](rule_card_protocol.md)
+
+### 需要项目初始化流程
+
+- [project_init_flow.md](project_init_flow.md)
+
+### 需要代码审查模式
+
+- [code_review_mode.md](code_review_mode.md)
+
+### 需要迁移辅助
+
+- [migration_assist.md](migration_assist.md)
+
+### 需要国际化/无障碍检查
+
+- [i18n_a11y_check.md](i18n_a11y_check.md)
+
 ### 需要案例或验证记录
 
 - [case_studies.md](case_studies.md)

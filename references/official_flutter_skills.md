@@ -210,3 +210,56 @@ npx skills update flutter/skills
 
 - 官方 Flutter skill 提供通用最佳实践
 - Flutter Forge 负责项目内适配和最终决策
+
+## 降级处理
+
+当官方 Flutter skill 不可用时，必须降级到 flutter-forge 内置流程。降级不降质量。
+
+### 降级触发条件
+
+满足以下任一条件时触发降级：
+
+1. 初始化时检测到对应 skill 未安装
+2. 架构设计师指定使用某个 skill，但调用时发现不可用
+3. skill 安装后被卸载或路径变更
+
+### 降级流程
+
+```
+需要使用 {skill_name}？
+  → 检查是否已安装
+  → 已安装 → 正常委托
+  → 未安装 → 降级：
+    1. 输出 [ff] 降级模式：{skill_name} 未安装，使用内置流程
+    2. 读取 flutter-forge 内置参考规则（references/ 目录）
+    3. 按内置规则生成等质量输出
+    4. 在规则卡 task_only_context 中记录降级事件
+    5. 任务完成后提醒用户安装
+```
+
+### 内置降级映射
+
+| skill | 降级到的内置参考 |
+|-------|----------------|
+| `flutter-managing-state` | `memory_protocol.md` + 规则卡 `state_management` |
+| `flutter-implementing-navigation-and-routing` | `routing_and_navigation.md` |
+| `flutter-building-forms` | `engineering_heuristics.md` |
+| `flutter-handling-http-and-json` | `network_and_api.md` |
+| `flutter-testing-apps` | `testing_strategy.md` |
+| `flutter-localizing-apps` | `i18n_a11y_check.md` |
+| `flutter-improving-accessibility` | `i18n_a11y_check.md` |
+| `flutter-building-layouts` | `engineering_heuristics.md` |
+| `flutter-animating-apps` | `engineering_heuristics.md` |
+| `flutter-caching-data` | `engineering_heuristics.md` |
+| `flutter-working-with-databases` | `engineering_heuristics.md` |
+| `flutter-handling-concurrency` | `engineering_heuristics.md` |
+
+### 降级原则
+
+1. **透明告知**：降级时必须输出 `[ff] 降级模式：...`，用户知道当前在用降级流程
+2. **质量不降**：内置规则和官方 skill 的输出标准一致，不能因为降级就降低代码质量
+3. **记录在案**：降级事件写入规则卡 `task_only_context.api_compat_notes`，后续有机会时提醒用户安装
+4. **不阻塞**：降级后立即继续执行，不等用户确认是否要安装 skill
+5. **主动提醒**：任务完成后，主动提醒用户可以安装缺失的 skill：
+   - `[ff] 提示：安装 {skill_name} 可获得更好的 {功能描述} 支持`
+   - 安装命令：`npx skills add flutter/skills --skill '{skill_name}' --agent universal`
