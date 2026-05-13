@@ -130,9 +130,22 @@ git -C ~/.claude/skills/flutter-forge pull
 手动触发兜底：
 
 ```
+ff- 帮我做一个订单列表页
+/flutter-forge 帮我 review 这个页面
 使用 flutter-forge 处理这个任务
 按 flutter-forge 工作模式处理
 ```
+
+继续未完成任务：
+
+```
+ff- 继续第2阶段
+ff- 继续登录页
+继续做这个需求
+继续页面开发
+```
+
+`ff-` 和 `/flutter-forge` 是显式触发标记，适合在宿主工具没有自动命中 skill 时强制进入 Flutter Forge。
 
 ### 两条最快入口
 
