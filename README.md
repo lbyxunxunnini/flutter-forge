@@ -4,7 +4,7 @@
 
 Flutter Forge 是一个为 Flutter 开发提供结构化的 AI 协作工作流 skill。它不是代码生成器——它是一个**项目内编排与决策层**，在动手写代码之前先理解项目上下文、收口设计方案、统一工程规则。
 
-GitHub: [lbyxunxunnini/flutter-forge](https://github.com/lbyxunxunnini/flutter-forge) · License: MIT · 当前版本：0.4.4
+GitHub: [lbyxunxunnini/flutter-forge](https://github.com/lbyxunxunnini/flutter-forge) · License: MIT · 当前版本：0.5.0
 
 ## 30 秒理解
 
@@ -27,7 +27,7 @@ Flutter Forge 适合你在 AI 编码工具里长期维护 Flutter 项目时使�
 
 ### 当前状态
 
-这是一个 0.x 阶段的工作流 skill，已经具备完整文档、任务路由、规则卡、角色协作和官方 Flutter skills 委托策略。真实 demo、截图和录屏会在后续补充；欢迎通过 issue 提交真实项目试跑反馈。
+这是一个 0.x 阶段的工作流 skill，已经具备完整文档、任务路由、规则卡、角色协作和官方 Flutter skills 委托策略。`0.5.0` 发布包含 `flutter-skills/` 目录下的 10 个官方 Flutter skill 本地副本，委托链路默认可离线读取。真实 demo、截图和录屏会在后续补充；欢迎通过 issue 提交真实项目试跑反馈。
 
 ## 为什么需要它
 
@@ -521,4 +521,5 @@ flutter-forge/
 
 ## 版本
 
-当前版本：**0.4.4** · [CHANGELOG](CHANGELOG.md)
+当前版本：**0.5.0** · [CHANGELOG](CHANGELOG.md)  
+版本说明：本次 `0.5.0` 同步收录 `flutter-skills/` 本地副本，并统一四角色提问预算与确认门禁。

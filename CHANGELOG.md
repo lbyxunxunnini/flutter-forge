@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.5.0
+
+统一四角色提问预算与确认门禁
+
+- 将 `flutter-skills/` 目录下的 10 个官方 Flutter skill 本地副本纳入 `0.5.0` 版本提交
+- 新增 `references/shared_workflow_gates/question_budget.md`，把 `L1-L4` 提问预算从主规则中拆出
+- `SKILL.md` 新增四角色提问预算摘要，明确完整流程不等于问题越多越好
+- `requirement_confirmation.md`、`role_gate_matrix.md` 补充预算和放行规则
+- 需求分析师与 UI 设计师角色卡补充预算说明，强调“问到够用就停”
+- 统一 `VERSION`、`.skillhub.json` 和 README 版本号到 `0.5.0`
+
 ## 0.4.4
 
 去外部依赖，Flutter skills 本地化
