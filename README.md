@@ -4,7 +4,7 @@
 
 Flutter Forge 是一个为 Flutter 开发提供结构化的 AI 协作工作流 skill。它不是代码生成器——它是一个**项目内编排与决策层**，在动手写代码之前先理解项目上下文、收口设计方案、统一工程规则。
 
-GitHub: [lbyxunxunnini/flutter-forge](https://github.com/lbyxunxunnini/flutter-forge) · License: MIT · 当前版本：0.7.1
+GitHub: [lbyxunxunnini/flutter-forge](https://github.com/lbyxunxunnini/flutter-forge) · License: MIT · 当前版本：0.7.2
 
 ## 30 秒理解
 
@@ -120,11 +120,8 @@ git -C ~/.claude/skills/flutter-forge pull
 
 ```
 - 帮我做一个 Flutter 新页面
-- 先看看这个迭代中项目结构，再开始开发
-- 我给你 PRD 和设计图，先拆页面结构
+- 先拆页面结构
 - 帮我 review 一下这段代码
-- 把 Provider 换成 Bloc
-- 统一一下项目命名
 ```
 
 硬触发：
@@ -136,23 +133,7 @@ ff- 帮我做一个订单列表页
 按 flutter-forge 工作模式处理
 ```
 
-语义触发：
-
-- Flutter 项目内的新页面、新模块、结构调整、review、迁移、命名统一
-- 从 PRD、需求说明、设计方向、页面规划开始推进任务
-- 同一页面或模块的展示、交互、结构、路由、数据接入或实现讨论在继续
-- Flutter 项目内的测试、构建、依赖、配置、CI、文档等维护任务
-
-示例表达：
-
-```
-ff- 继续第2阶段
-ff- 继续登录页
-继续做这个需求
-继续页面开发
-这个详情页怎么做
-继续讨论这个页面的展示和交互
-```
+语义触发覆盖：新页面/新模块、PRD/设计起步、新项目想法、同任务续写，以及测试/构建/依赖/配置/文档等维护任务。
 
 `ff-` 和 `/flutter-forge` 是显式触发标记，适合在宿主工具没有自动命中 skill 时强制进入 Flutter Forge。
 
@@ -199,6 +180,24 @@ Flutter Forge 会优先识别目录结构、状态管理、路由、网络层、
 - 给你推荐风格方向
 - 收口页面结构
 - 最后再生成项目
+
+### 新项目怎么分流
+
+Flutter Forge 用两个独立维度判断新项目入口：
+
+- **项目阶段**：决定是否进入共创模式
+- **架构状态**：决定规则卡是提取还是初始化
+
+默认规则很简单：
+
+- 只要已存在真实业务模块 → `迭代项目`
+- 其余默认按 `新项目`
+- 新项目下如果意图不清，会先问你要“先共创”还是“直接初始化”，默认推荐先共创
+
+完整分流、规则卡策略和“新增业务模块”的判定示例，统一放在：
+
+- [project_init_flow.md](/Users/agi00114/Desktop/AI/agent设计/flutter-forge/references/project_init_flow.md)
+- [new_project_cocreation_mode.md](/Users/agi00114/Desktop/AI/agent设计/flutter-forge/references/new_project_cocreation_mode.md)
 
 ### 安静模式与完整模式
 
@@ -510,4 +509,4 @@ npx skills add flutter/skills --skill '*' --agent universal
 
 ## 版本
 
-当前版本：**0.7.1** · [CHANGELOG](CHANGELOG.md)
+当前版本：**0.7.2** · [CHANGELOG](CHANGELOG.md)
