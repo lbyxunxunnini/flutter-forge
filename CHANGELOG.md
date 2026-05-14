@@ -1,5 +1,21 @@
 # Changelog
 
+## 0.5.2
+
+架构级任务分类与路由清理
+
+- 新增架构级任务分类：优化/重构/代码审查/迁移/依赖清理/i18n-a11y，角色流程为架构设计师 → 页面工程师
+- 运维直通重定义：仅覆盖排除场景（非 Flutter 任务），analyze/test/build 等工程任务改为轻量任务
+- 新增角色流程选择表：有 UI → 四角色，无 UI → 跳 UI 设计师，架构级 → 跳需求+UI，轻量 → 页面工程师
+- 新增"优化"关键词路由：默认进架构级任务，需求+优化进完整流程，样式+优化由 UI 设计师处理
+- 新增高风险结构决策定义：含需求分析师阻断条件
+- 修复误路由纠正与需求阶段强制重开的触发短语冲突
+- 修复组件抽取标准矛盾（architecture_designer.md 对齐 engineering_heuristics.md）
+- Description 精简为 3 行，加入角色输出格式规则
+- 模式表合并：代码审查/迁移/i18n-a11y 合并为架构级任务一个模式
+- question_budget.md 新增 LA 层级和角色流程选择表
+- 同步更新 README、skill_visibility.md、task_runtime_prompt.md、code_review_mode.md、migration_assist.md
+
 ## 0.5.1
 
 触发机制与会话管理修复
