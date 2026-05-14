@@ -13,7 +13,8 @@
 
 如果工作区已安装官方 skill，优先参考：
 
-- `flutter-building-layouts`
+- `flutter-build-responsive-layout`
+- `flutter-fix-layout-issues`
 
 ## 状态不更新
 

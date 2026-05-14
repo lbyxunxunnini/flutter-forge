@@ -116,6 +116,6 @@
 
 如果项目已安装官方 Flutter skills，以下情况优先委托：
 
-- 组件交互验证：`flutter-testing-apps`
-- 新组件展示和状态对照：`flutter-testing-apps`
-- 真实页面流程验证：`flutter-testing-apps`
+- 组件交互验证：`flutter-add-widget-test`
+- 新组件展示和状态对照：`flutter-add-widget-preview`
+- 真实页面流程验证：`flutter-add-integration-test`

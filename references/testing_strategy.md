@@ -20,7 +20,7 @@ Flutter Forge 把测试视为交付链路的一部分，而不是事后补丁。
 
 如果工作区有官方 Flutter skills，优先委托：
 
-- `flutter-testing-apps`
+- `flutter-add-widget-test`
 
 ## 何时加集成测试
 
@@ -32,7 +32,7 @@ Flutter Forge 把测试视为交付链路的一部分，而不是事后补丁。
 
 如果工作区有官方 Flutter skills，优先委托：
 
-- `flutter-testing-apps`
+- `flutter-add-integration-test`
 
 ## 测试文件放置建议
 

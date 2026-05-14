@@ -20,7 +20,7 @@ Flutter Forge 负责总控和项目内决策，不负责替代所有 Flutter 通
 - 当前工作区 `.claude/skills/`、`.agents/skills/`、`.cc-switch/skills/`、`.trae/skills/`
 - 当前宿主根目录 `~/.claude/skills/`、`~/.agents/skills/`、`~/.cc-switch/skills/`、`~/.trae/skills/`
 
-如果当前环境中的 skill 名称和 Flutter 官方当前名称或历史名称不一致，应优先使用兼容映射，而不是直接误判为“未安装”。
+如果当前环境中的 skill 名称和 Flutter 官方当前名称或历史名称不一致，应优先使用兼容映射，而不是直接误判为"未安装"。
 
 别名映射见：
 
@@ -48,56 +48,33 @@ Flutter Forge 负责总控和项目内决策，不负责替代所有 Flutter 通
 
 只有在维护 `flutter-forge` 本身或更新委托映射时，才需要检查官方仓库最新变化。
 
-当以下类型的子任务出现时，如果工作区已经安装了对应官方 Flutter skill，应优先委托给官方 skill 提供实现蓝图，再由 Flutter Forge 结合项目上下文收口：
+## 当前官方 Flutter Skills（10个）
 
-- 架构分层与重构
-- 响应式布局
-- 路由配置
-- JSON 序列化
-- HTTP 请求封装
-- 本地化
-- Widget 测试
-- Widget 预览
-- 集成测试
-- Flutter 布局问题修复
+以下名称以当前 `flutter/skills` 仓库 README 为准（2026-05-14 确认）：
 
-## 当前应优先识别的官方 Flutter skills
-
-以下名称以当前 `flutter/skills` 仓库 README 为准：
-
-- `flutter-architecting-apps`
-- `flutter-building-layouts`
-- `flutter-building-forms`
-- `flutter-handling-http-and-json`
-- `flutter-implementing-navigation-and-routing`
-- `flutter-localizing-apps`
-- `flutter-managing-state`
-- `flutter-testing-apps`
-- `flutter-theming-apps`
-- `flutter-working-with-databases`
-- `flutter-caching-data`
-- `flutter-interoperating-with-native-apis`
-- `flutter-embedding-native-views`
-- `flutter-adding-home-screen-widgets`
-- `flutter-animating-apps`
-- `flutter-improving-accessibility`
-- `flutter-building-plugins`
-- `flutter-handling-concurrency`
-- `flutter-reducing-app-size`
-- `flutter-setting-up-on-linux`
-- `flutter-setting-up-on-macos`
-- `flutter-setting-up-on-windows`
+| 官方名称 | 描述 |
+|----------|------|
+| `flutter-add-integration-test` | 配置 Flutter Driver 集成测试 |
+| `flutter-add-widget-preview` | 添加交互式 widget 预览 |
+| `flutter-add-widget-test` | 添加组件级 widget 测试 |
+| `flutter-apply-architecture-best-practices` | 分层架构（UI/Logic/Data） |
+| `flutter-build-responsive-layout` | 响应式布局 |
+| `flutter-fix-layout-issues` | 修复布局溢出等问题 |
+| `flutter-implement-json-serialization` | JSON 序列化 |
+| `flutter-setup-declarative-routing` | 声明式路由配置 |
+| `flutter-setup-localization` | 本地化配置 |
+| `flutter-use-http-package` | HTTP 请求封装 |
 
 ## 兼容名称映射
 
 本项目曾经使用过一套较旧的技能命名。现在统一以 `flutter/skills` 当前仓库名称为主，历史名称只作为兼容映射。例如：
 
-- `flutter-apply-architecture-best-practices` -> `flutter-architecting-apps`
-- `flutter-build-responsive-layout` / `flutter-fix-layout-issues` -> `flutter-building-layouts`
-- `flutter-setup-declarative-routing` -> `flutter-implementing-navigation-and-routing`
-- `flutter-implement-json-serialization` / `flutter-use-http-package` -> `flutter-handling-http-and-json`
-- `flutter-setup-localization` -> `flutter-localizing-apps`
-- `flutter-add-widget-test` / `flutter-add-widget-preview` / `flutter-add-integration-test` -> `flutter-testing-apps`
+- `flutter-architecting-apps` → `flutter-apply-architecture-best-practices`
+- `flutter-building-layouts` → `flutter-build-responsive-layout` + `flutter-fix-layout-issues`
+- `flutter-implementing-navigation-and-routing` → `flutter-setup-declarative-routing`
+- `flutter-handling-http-and-json` → `flutter-implement-json-serialization` + `flutter-use-http-package`
+- `flutter-localizing-apps` → `flutter-setup-localization`
+- `flutter-testing-apps` → `flutter-add-widget-test` + `flutter-add-widget-preview` + `flutter-add-integration-test`
 
 因此探测逻辑应分三类：
 
@@ -165,7 +142,8 @@ npx skills update flutter/skills
 
 优先参考：
 
-- `flutter-building-layouts`
+- `flutter-build-responsive-layout`
+- `flutter-fix-layout-issues`
 
 ### 架构与实现设计阶段
 
@@ -179,10 +157,11 @@ npx skills update flutter/skills
 
 优先参考：
 
-- `flutter-architecting-apps`
-- `flutter-implementing-navigation-and-routing`
-- `flutter-handling-http-and-json`
-- `flutter-localizing-apps`
+- `flutter-apply-architecture-best-practices`
+- `flutter-setup-declarative-routing`
+- `flutter-implement-json-serialization`
+- `flutter-use-http-package`
+- `flutter-setup-localization`
 
 ### 页面开发阶段
 
@@ -194,7 +173,9 @@ npx skills update flutter/skills
 
 优先参考：
 
-- `flutter-testing-apps`
+- `flutter-add-widget-test`
+- `flutter-add-widget-preview`
+- `flutter-add-integration-test`
 
 ## 收口规则
 
@@ -239,20 +220,18 @@ npx skills update flutter/skills
 
 ### 内置降级映射
 
-| skill | 降级到的内置参考 |
-|-------|----------------|
-| `flutter-managing-state` | `memory_protocol.md` + 规则卡 `state_management` |
-| `flutter-implementing-navigation-and-routing` | `routing_and_navigation.md` |
-| `flutter-building-forms` | `engineering_heuristics.md` |
-| `flutter-handling-http-and-json` | `network_and_api.md` |
-| `flutter-testing-apps` | `testing_strategy.md` |
-| `flutter-localizing-apps` | `i18n_a11y_check.md` |
-| `flutter-improving-accessibility` | `i18n_a11y_check.md` |
-| `flutter-building-layouts` | `engineering_heuristics.md` |
-| `flutter-animating-apps` | `engineering_heuristics.md` |
-| `flutter-caching-data` | `engineering_heuristics.md` |
-| `flutter-working-with-databases` | `engineering_heuristics.md` |
-| `flutter-handling-concurrency` | `engineering_heuristics.md` |
+| 官方 skill | 降级到的内置参考 |
+|-----------|----------------|
+| `flutter-apply-architecture-best-practices` | `engineering_heuristics.md` + 规则卡 `architecture` |
+| `flutter-build-responsive-layout` | `engineering_heuristics.md` |
+| `flutter-fix-layout-issues` | `engineering_heuristics.md` |
+| `flutter-implement-json-serialization` | `network_and_api.md` |
+| `flutter-use-http-package` | `network_and_api.md` |
+| `flutter-setup-declarative-routing` | `routing_and_navigation.md` |
+| `flutter-setup-localization` | `i18n_a11y_check.md` |
+| `flutter-add-widget-test` | `testing_strategy.md` |
+| `flutter-add-widget-preview` | `testing_strategy.md` |
+| `flutter-add-integration-test` | `testing_strategy.md` |
 
 ### 降级原则
 

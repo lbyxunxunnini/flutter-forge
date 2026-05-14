@@ -1,29 +1,46 @@
+# 官方 Flutter Skills 别名映射
+# 主键为官方 flutter/skills 仓库中的名称，aliases 为历史/兼容名称
+# 更新日期：2026-05-14
+
 official_skill_aliases:
-  flutter-architecting-apps:
+  # 架构
+  flutter-apply-architecture-best-practices:
     aliases:
-      - flutter-apply-architecture-best-practices
+      - flutter-architecting-apps
 
-  flutter-building-layouts:
+  # 布局
+  flutter-build-responsive-layout:
     aliases:
-      - flutter-build-responsive-layout
-      - flutter-fix-layout-issues
+      - flutter-building-layouts
 
-  flutter-handling-http-and-json:
-    aliases:
-      - flutter-implement-json-serialization
-      - flutter-use-http-package
+  flutter-fix-layout-issues:
+    aliases: []
 
-  flutter-implementing-navigation-and-routing:
+  # HTTP/JSON
+  flutter-implement-json-serialization:
     aliases:
-      - flutter-setup-declarative-routing
+      - flutter-handling-http-and-json
 
-  flutter-localizing-apps:
-    aliases:
-      - flutter-setup-localization
+  flutter-use-http-package:
+    aliases: []
 
-  flutter-testing-apps:
+  # 路由
+  flutter-setup-declarative-routing:
     aliases:
-      - flutter-add-widget-test
-      - flutter-add-widget-preview
+      - flutter-implementing-navigation-and-routing
+
+  # 本地化
+  flutter-setup-localization:
+    aliases:
+      - flutter-localizing-apps
+
+  # 测试
+  flutter-add-widget-test:
+    aliases:
       - flutter-testing-apps
-      - flutter-add-integration-test
+
+  flutter-add-widget-preview:
+    aliases: []
+
+  flutter-add-integration-test:
+    aliases: []

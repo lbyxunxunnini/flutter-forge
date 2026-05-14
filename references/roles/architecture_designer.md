@@ -120,18 +120,12 @@
 
 | 技术选型 | 对应 skill | 降级策略 |
 |---------|-----------|---------|
-| 状态管理（Bloc/Riverpod/Provider） | `flutter-managing-state` | 用内置状态管理模式参考 |
-| 路由（GoRouter/auto_route） | `flutter-implementing-navigation-and-routing` | 用内置路由规则 |
-| 表单页面 | `flutter-building-forms` | 用内置表单模式 |
-| API 调用 | `flutter-handling-http-and-json` | 用内置网络层规则 |
-| 本地缓存 | `flutter-caching-data` | 用内置缓存模式 |
-| 数据库操作 | `flutter-working-with-databases` | 用内置数据库规则 |
-| 动画 | `flutter-animating-apps` | 用内置动画模式 |
-| 测试 | `flutter-testing-apps` | 用内置测试策略 |
-| 国际化 | `flutter-localizing-apps` | 用内置 i18n 规则 |
-| 无障碍 | `flutter-improving-accessibility` | 用内置 a18n 检查 |
-| 布局 | `flutter-building-layouts` | 用内置布局模式 |
-| 并发 | `flutter-handling-concurrency` | 用内置并发规则 |
+| 路由（GoRouter/auto_route） | `flutter-setup-declarative-routing` | 用内置路由规则 |
+| API 调用 | `flutter-implement-json-serialization` + `flutter-use-http-package` | 用内置网络层规则 |
+| 测试 | `flutter-add-widget-test` + `flutter-add-widget-preview` + `flutter-add-integration-test` | 用内置测试策略 |
+| 国际化 | `flutter-setup-localization` | 用内置 i18n 规则 |
+| 布局 | `flutter-build-responsive-layout` + `flutter-fix-layout-issues` | 用内置布局模式 |
+| 架构 | `flutter-apply-architecture-best-practices` | 用内置架构规则 |
 
 调度流程：
 

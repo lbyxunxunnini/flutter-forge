@@ -119,7 +119,7 @@
 
 调用流程：
 
-1. 接收架构设计师的 skill 调度指令（如"使用 flutter-managing-state + flutter-building-forms"）
+1. 接收架构设计师的 skill 调度指令（如"使用 flutter-apply-architecture-best-practices + flutter-add-widget-test"）
 2. 检查对应 skill 是否可用
 3. 可用 → 调用 skill，获取实现蓝图，结合项目上下文收口
 4. 不可用 → 降级到内置流程
