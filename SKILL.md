@@ -1,81 +1,15 @@
 ---
 name: flutter-forge
-description: Flutter 项目开发的主控 skill。当前工作区是 Flutter 项目时，除纯知识问答、闲聊确认、通用 git 操作等硬排除场景外，Flutter 页面、模块、PRD/设计图、目录命名、复用判断、状态管理、项目初始化、测试、构建、配置和质量检查任务都应优先进入 flutter-forge，再按复杂度选择直通、轻量或完整流程。
+description: >-
+  Flutter 项目开发的主控 skill。当前工作区是 Flutter 项目时，除纯知识问答、闲聊、通用 git 操作、项目打包运行、环境搭建外，必须进入 flutter-forge，由 skill 内部决定执行路径。
+  硬触发关键词："ff-"、"ff -"、"ff "、"flutter-forge"、"/flutter-forge"、"使用 flutter-forge"、"按 flutter-forge 工作模式处理"。用户输入以 "ff" 开头（后跟 dash、空格或任务描述）时必须触发。
+  Flutter 项目内（lib/、pubspec.yaml、widgets、screens、pages）任何任务均必须调用，包括但不限于：修改组件、改颜色/样式、删除按钮、新增功能、修布局、重构代码、读设计稿、解析 PRD、新页面、代码审查、迁移。
+  不要因为任务看起来简单就跳过，skill 内部自动选择轻量/中等/完整流程。
 ---
 
 # Flutter Forge
 
-`flutter-forge` 是一个 **Flutter 项目内编排与决策 skill**。
-
-如果当前工作区是 Flutter 项目，除明确硬排除场景外，Flutter 相关任务都应优先命中 `flutter-forge`，而不是先进入通用计划 / 编码模式。
-
-`flutter-forge` 的接管不是每次都走重流程。它有四条路径：
-
-- **运维直通**：测试、构建、依赖、配置、文档等 Flutter 项目维护任务，快速执行并保留项目状态感知
-- **轻量执行**：明确的小 UI/Widget 修改，直接读文件、修改、验证
-- **新项目共创**：只有一个新项目想法时，先多轮收口需求、风格和页面结构
-- **完整流程**：新页面、模块、复用、状态管理、PRD/设计图、审查和迁移，先收口再写代码
-
-它的主价值不是提供一整套 Flutter 知识库，而是：
-
-- 理解当前项目
-- 处理不完整输入
-- 先收口结构方案，再进入代码
-- 在需要时切换到多角色心智
-- 统一项目规则、命名和实现落点
-- 在已安装时编排官方 Flutter skills
-
-辅助参考如反模式、模板、测试、调试、网络层和路由层规则，都不是主入口的一部分，只按需加载。
-
-## 触发场景
-
-当用户要你处理以下 Flutter 工作时使用本 skill：
-
-- 新页面、新模块、页面扩展、结构调整
-- PRD / 设计稿解析、页面结构拆解、组件边界和命名方案
-- 复用判断、代码审查、迁移、目录重构、命名统一
-- 项目维护任务：测试、构建、分析、依赖、配置、CI、项目文档
-
-### 触发分层
-
-为避免关键词堆积导致误判，`flutter-forge` 的触发分三层：
-
-1. **硬触发**：显式标记，优先级最高
-2. **语义触发**：按任务意图判断，不依赖固定句子
-3. **示例表达**：只用于帮助用户理解怎么说，不作为严格枚举规则
-
-#### 硬触发
-
-以下表达应直接命中本 skill：
-
-- `ff-`
-- `/flutter-forge`
-- `使用 flutter-forge`
-- `按 flutter-forge 工作模式处理`
-
-#### 语义触发
-
-满足以下任一任务意图时，也应直接命中本 skill，不要求用户固定说法：
-
-- Flutter 项目内的新页面、新模块、页面扩展或结构调整
-- 从一个模糊想法开始共创新的 Flutter 项目
-- 从 PRD、需求说明、设计方向、页面规划开始推进任务
-- 需要判断是否复用旧代码、如何定文件结构、命名或模块归属
-- Flutter 项目内的 code review、迁移、目录重构、命名统一
-- 同一页面或模块的展示、交互、结构、路由、数据接入或实现讨论在继续
-- Flutter 项目内的测试、构建、依赖、配置、CI、文档等维护任务
-
-#### 示例表达
-
-以下只是语义触发的示例表达，不是必须逐字匹配的触发词：
-
-- “我有个 flutter 需求”
-- “我有个 Flutter 项目想法”
-- “先看 prd”
-- “帮我做一个 Flutter 新页面”
-- “先拆页面结构”
-- “这个页面能不能复用旧代码”
-- “帮我 review 一下这段代码”
+Flutter 项目内编排与决策 skill。四条路径：**运维直通**（测试/构建/配置）、**轻量执行**（小改动直接做）、**新项目共创**（从想法收口到结构）、**完整流程**（新页面/模块/PRD/设计稿，先收口再写代码）。
 
 ## 任务路由
 
@@ -93,15 +27,9 @@ description: Flutter 项目开发的主控 skill。当前工作区是 Flutter �
                                                                                            → 否 → 完整流程
 ```
 
-### 硬排除场景
+#### 硬排除场景
 
-满足以下任一条件 → **不进入 flutter-forge**，普通编码模式处理：
-
-1. 不是 Flutter 项目
-2. 纯知识问答，且不要求结合当前项目代码（"Bloc 怎么用"、"Riverpod 和 Provider 区别"）
-3. 通用版本控制操作，且不要求理解 Flutter 项目（git commit/push/branch/tag 等）
-4. 闲聊、确认、追问等不涉及任务执行的对话
-5. 明确与 Flutter 项目无关的脚本、文档或环境任务
+不进入 flutter-forge：非 Flutter 项目、纯知识问答、通用 git 操作、闲聊确认、项目打包运行、环境搭建。
 
 ### 运维直通路径
 
@@ -166,22 +94,6 @@ description: Flutter 项目开发的主控 skill。当前工作区是 Flutter �
 能 10 秒内说清改什么 → 按轻量任务处理，直接执行，不读后续内容。判定标准见下方"轻量任务"。
 
 10 秒测试只适用于**已明确落点的修改任务**，不适用于需求起步、设计起步、页面规划或新项目起步。
-
-### flutter-forge 完整流程触发条件
-
-满足以下任一条 → 进入 flutter-forge 完整流程：
-
-- 新页面开发
-- 涉及复用判断（该页面和已有页面相似，需要判断是否复用）
-- 涉及组件抽取（多页面有共性结构，要决定边界在哪）
-- 涉及状态管理方案（新需求需要接入 Provider/Riverpod 等）
-- 模块扩展（在现有模块上加功能，需要看已有实现）
-- 结构决策（目录放哪、命名怎么定、层级怎么分）
-- PRD / 设计稿解析
-- 首次接手陌生 Flutter 项目
-- 代码审查（review 已有代码、找问题、提改进建议）
-- 迁移辅助（状态管理迁移、目录重构、命名统一）
-- 国际化/无障碍检查（需要检查 i18n 或 a11y 支持）
 
 ### 中间地带
 
@@ -379,25 +291,20 @@ description: Flutter 项目开发的主控 skill。当前工作区是 Flutter �
 - `L3` 复杂页面 / 重设计：`4-7` 问，允许完整四角色，但问到够用就停
 - `L4` 新项目共创 / 多页面体系 / 设计系统：`6-10` 问，必须分里程碑提问
 
-## 相似实现检索
+## 按需参考
 
-进入任务执行前，先在项目中搜索相似实现，比从零设计更高效。检索发现可复用模式时，记录到规则卡的 `reusable_patterns`，同一模式出现第 2 次时主动建议抽取公共组件。
-
-详见 [similar_implementation_search.md](references/similar_implementation_search.md)。
-
-## 输入不完整处理
-
-详见 [input_incomplete_handling.md](references/input_incomplete_handling.md)。核心原则：不要假装看懂设计图，不要自动补齐需求空白。
-
-## Flutter skills 本地集成
-
-详见 [official_flutter_skills.md](references/official_flutter_skills.md)。核心原则：`flutter-skills/` 目录下已有本地副本，直接读取委托，无需外部探测。
-
-## 记忆机制
-
-规则卡和长期记忆的意义是保证**项目后期命名、开发风格和架构统一**，但它们不是每次任务都该默认启用。
-
-详见 [memory_protocol.md](references/memory_protocol.md)。
+| 主题 | 文件 | 一句话说明 |
+|------|------|-----------|
+| 相似实现检索 | [similar_implementation_search.md](references/similar_implementation_search.md) | 执行前先搜相似实现，可复用模式记录到规则卡 |
+| 输入不完整处理 | [input_incomplete_handling.md](references/input_incomplete_handling.md) | 不假装看懂设计图，不自动补齐需求空白 |
+| Flutter skills 集成 | [official_flutter_skills.md](references/official_flutter_skills.md) | `flutter-skills/` 目录下已有本地副本，直接读取委托 |
+| 记忆机制 | [memory_protocol.md](references/memory_protocol.md) | 规则卡保证后期统一，但不是每次任务都默认启用 |
+| 输出后验证 | [page_engineer.md](references/roles/page_engineer.md) | 代码生成后执行验证清单，轻量任务不走此检查 |
+| 代码审查模式 | [code_review_mode.md](references/code_review_mode.md) | 审查已有代码，不生成新代码 |
+| 迁移辅助 | [migration_assist.md](references/migration_assist.md) | 状态管理迁移、目录重构、命名统一 |
+| 国际化/无障碍 | [i18n_a11y_check.md](references/i18n_a11y_check.md) | 代码生成或审查时检查 i18n 和 a11y |
+| 可见性与会话 | [skill_visibility.md](references/skill_visibility.md) | `[f-forge]` 标记规则、会话状态管理 |
+| 加载映射 | [load_map.md](references/load_map.md) | 主文档之外的按需加载映射 |
 
 ## 四个角色
 
@@ -554,77 +461,19 @@ description: Flutter 项目开发的主控 skill。当前工作区是 Flutter �
 
 对话被压缩、暂停恢复或新消息触发 flutter-forge 时，**必须先读取 `.flutter-forge/session.md`**。
 
-### 恢复触发标记
+恢复触发、弱继续表述、恢复输出格式等细节详见 [session_management.md](references/session_management.md)。
 
-恢复也遵循三层规则：
+核心规则：
 
-- **硬触发**：ff-、使用 flutter-forge、/flutter-forge
-- **语义恢复**：明显在继续同一任务、同一页面、同一模块的设计/实现讨论
-- **示例表达**：如“继续做这个需求”“继续页面开发”“继续第2阶段”“继续登录页”，这些只是恢复意图的例子，不是完整枚举
+- session 中有未完成子任务 → 恢复到记录的模式和阶段，不能降级
+- 恢复时以子任务清单状态（`[x]` / `[ ]`）为准
+- 弱继续表述（”接着做”）且有未完成任务 → 轻量恢复，列出未完成项
+- session 中无活跃任务或当前输入明显无关 → 走正常任务路由
 
-**弱继续表述**（"继续之前的工作"、"接着做"、"然后呢"）：
-
-- 如果 `.flutter-forge/session.md` 存在且记录了未完成任务 → 轻量恢复到记录阶段，并输出一行当前模式
-- 如果没有未完成任务 → 视为新任务，走正常任务路由
-
-### 恢复逻辑
-
-如果 session 中记录了活跃任务，且触发标记匹配：
-
-- 当前任务 = 大任务 → 恢复对应工作模式，不能降级为轻量任务
-- 任务阶段未完成 → 从记录的阶段继续，不能从头重新路由
-- 任务模式 = 页面开发 / 代码审查 / 迁移辅助等 → 恢复对应模式
-
-如果 session 中记录了活跃任务，即使没有显式 `ff-`，只要新消息同时满足以下条件，也必须视为同一任务续写：
-
-1. 当前消息引用了上一任务中的页面、模块、区块或业务对象
-2. 当前消息在继续讨论展示方式、交互形式、结构拆分、路由接入、数据接入或实现细节
-3. 当前消息没有明显切换到新的业务主题
-
-典型例子：
-
-- “这个模块详情页怎么组织”
-- “这个区块的交互继续往下定”
-- “这个页面的展示结构再细化一下”
-
-这类消息不应当丢失 skill，也不应重新降级为普通回答。
-
-如果没有 session.md、session 中没有活跃任务、或当前输入与 session 记录明显无关 → 走正常任务路由。
-
-## 输出后验证
-
-代码生成完成后，页面工程师执行验证检查清单。检查项和执行规则详见 [page_engineer.md](references/roles/page_engineer.md)。轻量任务不走此检查。
-
-## 代码审查模式
-
-审查已有代码，不生成新代码。详见 [code_review_mode.md](references/code_review_mode.md)。
-
-## 迁移辅助
-
-状态管理迁移、目录重构、命名统一等批量变更。详见 [migration_assist.md](references/migration_assist.md)。
-
-## 国际化/无障碍检查
-
-代码生成或审查时检查 i18n 和 a11y。详见 [i18n_a11y_check.md](references/i18n_a11y_check.md)。
-
-## 可见性标记与会话状态
-
-详见 [skill_visibility.md](references/skill_visibility.md)。
-
-`[f-forge]` 标记是**必选输出**，不可自行省略。每条 flutter-forge 介入的关键回复，必须在开头带 `[f-forge]` 标记。
-
-会话状态记录在 `.flutter-forge/session.md`，用户可主动查询，不每轮主动输出。
-
-## Progressive Disclosure
-
-主文档只保留主干规则。需要细节时，再按场景读取 reference。
-
-加载映射见：[load_map.md](references/load_map.md)
+`[f-forge]` 标记是**必选输出**，不可自行省略。
 
 ## 红线
 
 1. 不在未确认的情况下重构现有公共模块
 2. 不把低置信度推断当成团队规则强行执行
 3. 不为了追求 UI 还原破坏项目架构和可维护性
-4. flutter-forge 介入的关键回复必须带 `[f-forge]` 标记，不可自行省略
-5. 大任务四角色流程中，禁止跳过角色直接给结论。如果某个角色确实无实质贡献（如需求已明确不需要分析），可以输出一行 `[f-forge] 需求分析师：需求已明确，无需额外分析` 后跳过，但不能完全省略该角色的存在
