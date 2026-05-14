@@ -26,7 +26,7 @@ Flutter Forge 的主规则来源按优先级如下：
 如果你需要以下内容，不要在这里寻找旧副本，直接回到对应文件：
 
 - 角色定义：`SKILL.md`
-- 官方 Flutter skills 对接：`references/official_flutter_skills.md`
+- Flutter skills 本地集成：`references/official_flutter_skills.md`
 - 委托映射：`references/delegation_map.yaml`
 - 记忆协议：`references/memory_protocol.md`
 - 工程判断标准：`references/engineering_heuristics.md`

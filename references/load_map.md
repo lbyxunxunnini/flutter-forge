@@ -36,7 +36,7 @@
 
 - [engineering_heuristics.md](engineering_heuristics.md)
 
-### 需要官方 Flutter skills 委托规则
+### 需要 Flutter skills 委托规则
 
 - [official_flutter_skills.md](official_flutter_skills.md)
 - [delegation_map.yaml](delegation_map.yaml)

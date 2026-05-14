@@ -24,7 +24,6 @@ Flutter Forge is a workflow skill for AI-assisted Flutter development. Contribut
 There is no compile step for the skill itself. Use these checks before submitting:
 
 ```bash
-bash -n scripts/discover_flutter_skills.sh
 grep -n '"version"' .skillhub.json
 cat VERSION
 ```

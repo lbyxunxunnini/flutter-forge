@@ -376,9 +376,9 @@ description: Flutter 项目开发的主控 skill。当前工作区是 Flutter �
 
 详见 [input_incomplete_handling.md](references/input_incomplete_handling.md)。核心原则：不要假装看懂设计图，不要自动补齐需求空白。
 
-## 官方 Flutter skills
+## Flutter skills 本地集成
 
-详见 [official_flutter_skills.md](references/official_flutter_skills.md)。核心原则：已安装时直接委托，未安装时不阻塞，回退到内置流程。
+详见 [official_flutter_skills.md](references/official_flutter_skills.md)。核心原则：`flutter-skills/` 目录下已有本地副本，直接读取委托，无需外部探测。
 
 ## 记忆机制
 

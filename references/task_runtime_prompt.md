@@ -194,7 +194,7 @@ Flutter skills 状态已就绪指满足任一条件：
 
 ## 运行时必查文件
 
-- 官方 skill 委托：`references/delegation_map.yaml`
+- Flutter skill 委托：`references/delegation_map.yaml`
 - 工程判断标准：`references/engineering_heuristics.md`
 - 质量门：`references/quality_gates.md`
 - 反模式：`references/anti_patterns.md`
@@ -220,42 +220,13 @@ Flutter skills 状态已就绪指满足任一条件：
 
 然后才能进入代码阶段。
 
-### 官方 Flutter skill 检查
+### Flutter skill 本地集成
 
-- 如果当前会话没有直接暴露可用 skill 列表，先看本地映射文件 `.flutter-forge/skill_mapping.local.env`，再看项目内和宿主根技能目录
-- 优先检查当前环境是否已安装对应官方 Flutter skill
-- 已安装则优先委托
-- 未安装则不阻塞，回退到 Flutter Forge 内置流程
-- 不要为普通任务每次联网检查官方仓库
+Flutter skills 已作为本地副本存放在 `flutter-skills/` 目录下，无需外部探测。
 
-如果本地还没有选定协作技能目录，先提示：
-
-- `[f-forge] 正在查询需要协作的 Flutter skill...`
-- 引导用户运行：`scripts/discover_flutter_skills.sh`
-
-如果用户已明确表示不想下载官方 Flutter skills、也不想做本地映射，则应记录一个长期偏好标记。之后：
-
-- 继续探测 Flutter skills
-- 继续输出 Flutter skills 状态
-- 不再提示安装命令
-- 不再提示 `scripts/discover_flutter_skills.sh`
-
-未安装时，启动握手阶段应明确提醒一次，并提供：
-
-- 官方仓库：https://github.com/flutter/skills
-- 官方文档：https://docs.flutter.dev/ai/agent-skills
-- 安装命令：`npx skills add flutter/skills --skill '*' --agent universal`
-
-已安装时：
-
-- 直接按委托映射使用
-- 不再把官方 skills 当成“理论上可用但本轮没接上”的空悬能力
-
-探测时允许使用本地别名映射，不要求当前环境的 skill 名称与 Flutter 官方 canonical 名称完全一致。
-
-参考：
-
-- `references/official_skill_aliases.yaml`
+- 直接从 `flutter-skills/<skill-name>/SKILL.md` 读取
+- 委托映射见 `references/delegation_map.yaml`
+- 不再需要 `scripts/discover_flutter_skills.sh`、`npx skills add` 或 `.flutter-forge/skill_mapping.local.env`
 
 ### 设计图兼容机制
 

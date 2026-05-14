@@ -19,7 +19,6 @@ Use this checklist before publishing a GitHub release or asking external users t
 Run:
 
 ```bash
-bash -n scripts/discover_flutter_skills.sh
 cat VERSION
 grep -n '"version"' .skillhub.json
 grep -n '当前版本' README.md

@@ -4,7 +4,7 @@
 
 Flutter Forge 是一个为 Flutter 开发提供结构化的 AI 协作工作流 skill。它不是代码生成器——它是一个**项目内编排与决策层**，在动手写代码之前先理解项目上下文、收口设计方案、统一工程规则。
 
-GitHub: [lbyxunxunnini/flutter-forge](https://github.com/lbyxunxunnini/flutter-forge) · License: MIT · 当前版本：0.7.2
+GitHub: [lbyxunxunnini/flutter-forge](https://github.com/lbyxunxunnini/flutter-forge) · License: MIT · 当前版本：0.4.4
 
 ## 30 秒理解
 
@@ -286,8 +286,8 @@ ls ~/.agents/skills/flutter-forge/SKILL.md 2>/dev/null && echo "OK" || echo "未
           ┌───────────────┼───────────────┐
           ▼               ▼               ▼
 ┌──────────────┐ ┌──────────────┐ ┌──────────────┐
-│  按需加载     │ │  官方 Skills  │ │  记忆协议     │
-│  30+ 参考文档 │ │  委托+降级    │ │  规则卡/偏好  │
+│  按需加载     │ │ 本地 Flutter │ │  记忆协议     │
+│  30+ 参考文档 │ │ Skills 委托  │ │  规则卡/偏好  │
 └──────────────┘ └──────────────┘ └──────────────┘
 ```
 
@@ -398,7 +398,7 @@ Flutter Forge 的设计前提：**用户不会总是给你完整需求**。
 | 迭代中项目接入 | `legacy_project_scan.md`、`rule_card_template.yaml` |
 | 任务执行 | `task_runtime_prompt.md` |
 | 工程判断 | `engineering_heuristics.md` |
-| 官方 Skills 委托 | `official_flutter_skills.md`、`delegation_map.yaml` |
+| Flutter Skills 委托 | `official_flutter_skills.md`、`delegation_map.yaml` |
 | 测试与质量 | `testing_strategy.md`、`quality_gates.md` |
 | 代码审查 | `code_review_mode.md` |
 | 迁移辅助 | `migration_assist.md` |
@@ -406,20 +406,25 @@ Flutter Forge 的设计前提：**用户不会总是给你完整需求**。
 
 完整映射见 [`references/load_map.md`](references/load_map.md)。
 
-### 8. 官方 Flutter Skills 集成
+### 8. Flutter Skills 本地集成
 
-Flutter Forge 不重复造轮子。它检测本地是否安装了 Flutter 官方 skills，有就委托通用子任务：
+Flutter Forge 不重复造轮子。Flutter 官方通用技能的副本存放在 `flutter-skills/` 目录下，直接读取委托：
 
 ```
-探测顺序：
-1. 当前项目目录 (.claude/skills/, .agents/skills/, .cc-switch/skills/, .trae/skills/)
-2. 宿主根目录 (~/.claude/skills/, ~/.agents/skills/, ~/.cc-switch/skills/, ~/.trae/skills/)
-3. 未检测到 → 使用内置参考文档兜底（降级不降质量）
+flutter-skills/
+├── flutter-add-integration-test/
+├── flutter-add-widget-preview/
+├── flutter-add-widget-test/
+├── flutter-apply-architecture-best-practices/
+├── flutter-build-responsive-layout/
+├── flutter-fix-layout-issues/
+├── flutter-implement-json-serialization/
+├── flutter-setup-declarative-routing/
+├── flutter-setup-localization/
+└── flutter-use-http-package/
 ```
 
-架构设计师决定调用哪些 skill，页面工程师执行调用。未安装时自动降级到内置流程，不阻塞任务。
-
-委托映射见 [`references/delegation_map.yaml`](references/delegation_map.yaml)。
+架构设计师决定调用哪些 skill，页面工程师执行调用。委托映射见 [`references/delegation_map.yaml`](references/delegation_map.yaml)。
 
 ### 9. 工作模式与可见性
 
@@ -457,7 +462,7 @@ flutter-forge/
 │   ├── code_review_mode.md         # 代码审查模式
 │   ├── migration_assist.md         # 迁移辅助
 │   ├── i18n_a11y_check.md          # 国际化/无障碍检查
-│   ├── official_flutter_skills.md  # 官方 Flutter skills 集成
+│   ├── official_flutter_skills.md  # Flutter skills 本地集成
 │   ├── engineering_heuristics.md   # 工程判断标准
 │   ├── similar_implementation_search.md  # 相似实现检索
 │   ├── existing_rules_discovery.md # 已有规则发现
@@ -482,19 +487,26 @@ flutter-forge/
 │   ├── projects/                   # 项目规则卡示例
 │   └── runtime/                    # 运行时任务记忆模板
 │
-└── scripts/
-    └── discover_flutter_skills.sh  # Flutter skills 探测脚本
+└── flutter-skills/                 # Flutter 通用技能本地副本（10个）
+    ├── flutter-add-integration-test/
+    ├── flutter-add-widget-preview/
+    ├── flutter-add-widget-test/
+    ├── flutter-apply-architecture-best-practices/
+    ├── flutter-build-responsive-layout/
+    ├── flutter-fix-layout-issues/
+    ├── flutter-implement-json-serialization/
+    ├── flutter-setup-declarative-routing/
+    ├── flutter-setup-localization/
+    └── flutter-use-http-package/
 ```
 
-## 官方 Flutter Skills（可选）
+## Flutter Skills 本地集成
 
-安装后 Flutter Forge 会自动委托通用子任务（布局、路由、HTTP、测试）：
+`flutter-skills/` 目录下的 10 个 skill 是从 [flutter/skills](https://github.com/flutter/skills) 仓库复制的官方 Flutter Agent Skills 副本，用于本地直接委托，无需外部探测或安装。
 
-```bash
-npx skills add flutter/skills --skill '*' --agent universal
-```
+**归属声明**：这些文件的原始版权属于 Google LLC，采用 BSD-3-Clause 许可证。详见 [LICENSE](LICENSE) 中的 Third-Party Components 部分。
 
-`--agent universal` 会安装到 `.agents/skills/` 目录，兼容大多数 AI 编码工具。安装后 Flutter Forge 会自动探测该目录。
+更新时参考原始仓库同步：
 
 - [flutter/skills 仓库](https://github.com/flutter/skills)
 - [Agent skills for Flutter and Dart](https://docs.flutter.dev/ai/agent-skills)
@@ -509,4 +521,4 @@ npx skills add flutter/skills --skill '*' --agent universal
 
 ## 版本
 
-当前版本：**0.4.3** · [CHANGELOG](CHANGELOG.md)
+当前版本：**0.4.4** · [CHANGELOG](CHANGELOG.md)

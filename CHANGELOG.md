@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.4.4
+
+去外部依赖，Flutter skills 本地化
+
+- 删除 `scripts/discover_flutter_skills.sh` 外部探测脚本
+- 删除 `references/official_skill_aliases.yaml` 别名映射
+- `references/official_flutter_skills.md` 改为直接引用 `flutter-skills/` 本地副本
+- `references/delegation_map.yaml` 每个 skill 加 `path` 字段指向本地副本
+- 移除 task_runtime_prompt.md 中的探测/降级/安装命令整段
+- LICENSE 加 Third-Party Components 段落，标注 flutter-skills/ 来源归属（BSD-3-Clause, Google LLC）
+- README 更新架构图、项目结构、集成章节为本地副本模式
+
 ## 0.4.3
 
 更新官方 Flutter Skills 映射：对齐 flutter/skills 仓库命名
