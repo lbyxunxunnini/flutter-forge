@@ -14,6 +14,7 @@
 
 ### 新 Flutter 应用从 0 到 1
 
+- [new_project_cocreation_mode.md](new_project_cocreation_mode.md)
 - [new_project_app_profiles.md](new_project_app_profiles.md)
 - [new_project_profile_selection.md](new_project_profile_selection.md)
 - [project_init_flow.md](project_init_flow.md)

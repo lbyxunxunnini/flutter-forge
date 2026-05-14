@@ -16,6 +16,8 @@
 
 判断为新项目且无规则卡时，主动提示用户建立规则卡。给出两个选项：
 
+如果用户当前还只有一个想法，仍在讨论需求、风格和页面结构，先进入 [new_project_cocreation_mode.md](new_project_cocreation_mode.md)，不要过早跳到规则卡和工程细节。
+
 如果用户是在从 0 到 1 创建新应用，先根据 [new_project_app_profiles.md](new_project_app_profiles.md) 选择 `mvp`、`business` 或 `team` profile，再决定规则来源。
 
 ### 选项 A：从已有规则复制
@@ -103,6 +105,7 @@
 ### 4. 新项目 + 无规则卡
 
 - 默认进入新项目初始化模式
+- 如果当前仍处于“只有想法、尚未收口页面结构”的阶段，先进入新项目共创模式，再回到初始化
 - 给出三种起步方式：
   - 使用当前扫描结果
   - 使用通用 Flutter 规则 + 全局偏好
