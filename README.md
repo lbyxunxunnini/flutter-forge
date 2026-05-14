@@ -509,4 +509,4 @@ npx skills add flutter/skills --skill '*' --agent universal
 
 ## 版本
 
-当前版本：**0.7.2** · [CHANGELOG](CHANGELOG.md)
+当前版本：**0.4.3** · [CHANGELOG](CHANGELOG.md)
