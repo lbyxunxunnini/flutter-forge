@@ -93,6 +93,7 @@ autonomous_mode: true
 
 按主文档 `SKILL.md` 的顺序执行：
 
+- 检查规则卡（首次接入/规则卡不存在时自动初始化）
 - 直通模式
 - 新项目共创
 - 优化拆分
@@ -130,6 +131,8 @@ autonomous_mode: true
 - 涉及新页面或新模块
 - 涉及重构、迁移、依赖清理
 - 需要判断是否沿用项目既有模式
+
+按优先级查找：.claude/.flutter-forge > .trae/.flutter-forge > .agent/.flutter-forge > .flutter-forge
 
 纯轻量任务可只读取必要局部上下文，不强制完整规则卡摘要。
 

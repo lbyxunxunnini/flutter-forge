@@ -4,12 +4,12 @@
 
 ## 规则卡路径
 
-项目规则卡只能来自**当前目标项目根目录内部**。按以下顺序查找，且只匹配当前项目名：
+项目规则卡使用项目内目录，按以下顺序查找：
 
-1. `.claude/.flutter-forge/projects/<project>.rule_card.yaml`
-2. `.trae/.flutter-forge/projects/<project>.rule_card.yaml`
-3. `.agent/.flutter-forge/projects/<project>.rule_card.yaml`
-4. `.flutter-forge/projects/<project>.rule_card.yaml`
+1. `.claude/.flutter-forge/projects/*.rule_card.yaml`
+2. `.trae/.flutter-forge/projects/*.rule_card.yaml`
+3. `.agent/.flutter-forge/projects/*.rule_card.yaml`
+4. `.flutter-forge/projects/*.rule_card.yaml`
 
 查找规则：
 
@@ -17,18 +17,14 @@
 - 其次检查 `.trae/.flutter-forge`
 - 再检查 `.agent/.flutter-forge`
 - 如果前三个目录都不存在或都没有当前项目规则卡，则回退到项目根目录下的 `.flutter-forge`
-- 通配符只能用于列目录展示，不能用于加载正式规则卡；正式加载必须是 `<project>.rule_card.yaml` 精确命中
-- 当需要初始化规则卡且以上目录都不存在或没有精确命中时，在当前项目中创建 `.flutter-forge/projects/<project>.rule_card_draft.yaml`
+- 当需要初始化正式规则卡时，按优先级在第一个存在的目录中创建；如果都不存在，优先在 `.claude/.flutter-forge/projects/` 创建
 
 这是 **唯一正式规则卡来源范围**。
 
 以下内容都不应视为正式规则卡来源：
 
 - `.claude/projects/.../memory/*.yaml`
-- `~/.claude/projects/.../memory/*.yaml`
 - 未命中上述四个目录的其他宿主项目记忆目录
-- 任何不在当前目标项目根目录下的规则卡，即使命名看起来匹配
-- 当前项目目录下其他项目名的 `*.rule_card.yaml`
 - 仓库内示例规则卡或模板文件
 - 当前会话临时总结或扫描推断
 
@@ -51,23 +47,8 @@
 - 一律视为 `项目状态：未初始化`
 - 不要把扫描推断、代码印象或会话记忆误报成"已加载规则卡"
 - 应显式标注 `当前判断来源：项目扫描 / 当前代码结构 / 会话上下文`
-- 立即进入当前项目规则卡草案生成：`scripts/init_rule_card.py <project_root> --interactive`
-- 输出草案路径时必须是当前项目内路径：`.flutter-forge/projects/<project>.rule_card_draft.yaml`
 
-即使其他宿主目录或 Claude 全局项目记忆中存在项目记忆文件，只要不在当前目标项目根目录的上述查找顺序内，也不能据此输出"已加载规则卡"。
-
-## 错误恢复规则
-
-如果已经误读了其他项目规则卡，必须立刻纠正：
-
-```text
-[f-forge] 规则卡读取纠正：刚才误用了非当前项目目录下的规则卡，已废弃该上下文。
-- 当前项目：<project_root>
-- 规则卡：未发现，准备初始化
-- 下一步：扫描当前项目并生成规则卡草案
-```
-
-纠正后不得继续引用误读规则卡中的目录、mixin、状态管理、路由或组件约定。
+即使其他宿主目录中存在项目记忆文件，只要不在上述查找顺序内，也不能据此输出"已加载规则卡"。
 
 ## 已有项目规则发现
 
@@ -102,8 +83,6 @@
 当迭代项目首次接入且无规则卡时，扫描后生成的是**规则卡草案**，不是正式规则卡。
 
 草案文件命名：`*.rule_card_draft.yaml`（注意 `_draft` 后缀）
-
-默认草案路径：`.flutter-forge/projects/<project>.rule_card_draft.yaml`
 
 ### 草案确认流程
 
