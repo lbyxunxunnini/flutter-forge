@@ -81,6 +81,23 @@ git -C <安装路径> pull                            # git clone 安装
 
 `<安装路径>` 替换为实际安装目录，如 `~/.claude/skills/flutter-forge`、`~/.trae/skills/flutter-forge` 等。
 
+**注意**：不要手动同步部分文件，确保更新整个目录。完整目录结构：
+
+```
+flutter-forge/
+├── SKILL.md
+├── README.md
+├── VERSION
+├── CHANGELOG.md
+├── CHEATSHEET.md
+├── CONTRIBUTING.md
+├── references/
+├── memory/
+├── scripts/
+├── flutter-skills/
+└── tests/
+```
+
 ---
 
 ## 使用
