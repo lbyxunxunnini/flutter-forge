@@ -13,6 +13,7 @@
 当前已有真实回归案例，但还没有真实 Flutter app 开发案例。按时间倒序记录：
 
 ```text
+- 2026-05-15 flutter-forge / 规则卡项目隔离回归 / 已限定为当前项目目录精确命中，禁止读取 Claude 全局 memory
 - 2026-05-15 flutter-forge / 规则卡目录策略回归 / 已统一为宿主目录优先，未命中时回退项目内 `.flutter-forge`
 - 2026-05-15 flutter-forge / 非 Flutter 仓库接入判定 / 初始误触发，用户纠正后成功退出
 ```
@@ -21,7 +22,36 @@
 
 > 说明：以下案例是真实发生的工作流 / 文档工程回归，不等价于真实 Flutter app 项目试跑。发布前仍应补至少一个真实 Flutter app validation case。
 
-### 案例 1：规则卡目录策略回归
+### 案例 1：规则卡项目隔离回归
+
+### 基本信息
+
+- 日期：2026-05-15
+- 项目：flutter-forge（skill 文档工程）
+- 任务类型：规则卡协议回归
+- 输入类型：真实调试反馈
+- 使用工具：Claude Code / Codex
+- Flutter Forge 版本：v0.1.0+
+- 是否启用规则卡：否
+- 是否命中官方 Flutter skills：否
+- 用户是否能明显感知到当前模式 / 阶段切换：能
+
+### 问题
+
+调试 `flutter-forge` 本身时，外部宿主输出了 `~/.claude/projects/.../memory/facesong_project_rule_card.yaml`，并误报为已读取当前项目规则卡。
+
+### 修复
+
+- 规则卡正式来源限定为当前目标项目目录内 `<project>.rule_card.yaml` 精确命中
+- 当前项目没有精确命中时，必须输出 `规则卡：未发现，准备初始化`
+- 初始化路径固定为当前项目 `.flutter-forge/projects/<project>.rule_card_draft.yaml`
+- 新增 `scripts/validate_rule_card_resolution.py` 覆盖全局 Claude memory、当前目录其它项目卡、当前项目精确卡三种情况
+
+### 结论
+
+规则卡必须项目内隔离，不能跨项目兜底；错误读取后必须废弃上下文并重新初始化当前项目草案。
+
+### 案例 2：规则卡目录策略回归
 
 ### 基本信息
 

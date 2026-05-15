@@ -129,6 +129,13 @@ autonomous_mode: true
 - 涉及重构、迁移、依赖清理
 - 需要判断是否沿用项目既有模式
 
+读取规则卡时必须遵守 [rule_card_protocol.md](rule_card_protocol.md)：
+
+- 只读取当前目标项目根目录内的 `<project>.rule_card.yaml`
+- 不读取 `~/.claude/projects/.../memory/*.yaml`
+- 不读取其他项目目录或其他项目名的规则卡
+- 无精确命中时，输出 `规则卡：未发现，准备初始化`，并生成当前项目规则卡草案
+
 纯轻量任务可只读取必要局部上下文，不强制完整规则卡摘要。
 
 ### 4. 阶段摘要包

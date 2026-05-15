@@ -5,6 +5,17 @@
 - `0.2.x` 中出现的 `legacy_project_scan.md`、`~/.flutter-forge/projects/*.rule_card.yaml` 等表述保留为当时版本的历史事实
 - 当前现行入口与规则卡路径策略以 `references/existing_project_entry.md`、`references/existing_project_scan.md`、`references/rule_card_protocol.md` 为准
 
+## v0.1.1
+
+规则卡项目隔离修复。
+
+- 规则卡正式来源限定为当前目标项目目录内 `<project>.rule_card.yaml` 精确命中
+- 禁止读取 `~/.claude/projects/.../memory/*.yaml`、其它项目目录或其它项目名的规则卡作为兜底
+- 无规则卡时必须输出 `规则卡：未发现，准备初始化`，并生成 `.flutter-forge/projects/<project>.rule_card_draft.yaml`
+- `scripts/project_snapshot.py` 从通配加载改为按当前项目名精确匹配
+- 新增 `scripts/validate_rule_card_resolution.py`，覆盖全局 Claude memory、当前目录其它项目卡、当前项目精确卡三类回归
+- `validate_release.sh` 纳入规则卡解析隔离测试
+
 ## v0.1.0
 
 开启 v 前缀发布线，用于和历史无 `v` 的 `0.x.x` 版本隔离。

@@ -7,7 +7,7 @@
 | 层 | 位置 | 回答什么 | 详细协议 |
 |----|------|----------|----------|
 | Session | `.flutter-forge/session.md` | 这次任务做到哪了 | [session_management.md](session_management.md) |
-| 规则卡 | `.flutter-forge/projects/*.rule_card.yaml` | 这个项目长期怎么做 | [rule_card_protocol.md](rule_card_protocol.md) |
+| 规则卡 | 当前项目内 `.flutter-forge/projects/<project>.rule_card.yaml` 或宿主子目录下同名文件 | 这个项目长期怎么做 | [rule_card_protocol.md](rule_card_protocol.md) |
 | 跨项目偏好 | `~/.flutter-forge/global_preferences.yaml` | 跨项目稳定偏好 | — |
 
 ## 读写权限
@@ -31,3 +31,5 @@
 - 任务进度不写进规则卡
 - impl-agent 不写长期规则
 - 扫描推断不误报为"已加载正式规则卡"
+- `~/.claude/projects/.../memory/*.yaml` 不是 Flutter Forge 项目规则卡来源
+- 当前项目没有精确命中规则卡时，必须初始化草案，不能读取其他项目记忆兜底

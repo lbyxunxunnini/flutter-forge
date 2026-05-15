@@ -32,12 +32,22 @@
 - 下一步：进入新项目共创 / 进入页面开发 / 继续当前任务
 ```
 
-其中 `规则卡路径` 按以下顺序解析：
+其中 `规则卡路径` 只能在当前目标项目根目录内按以下顺序精确解析：
 
 1. `.claude/.flutter-forge/projects/<project>.rule_card.yaml`
 2. `.trae/.flutter-forge/projects/<project>.rule_card.yaml`
 3. `.agent/.flutter-forge/projects/<project>.rule_card.yaml`
 4. `.flutter-forge/projects/<project>.rule_card.yaml`
+
+禁止把 `~/.claude/projects/.../memory/*.yaml`、其他项目目录中的规则卡、当前项目目录下其他项目名的规则卡当作已加载规则卡。
+
+如果以上路径没有精确命中，启动握手必须输出：
+
+```text
+- 规则卡：未发现，准备初始化
+- 规则卡草案路径：.flutter-forge/projects/<project>.rule_card_draft.yaml
+- 下一步：扫描当前项目并生成规则卡草案
+```
 
 ## 握手后续
 
@@ -49,8 +59,9 @@
 [f-forge] 模式：启动握手
 - 项目阶段：迭代项目
 - 规则卡：未发现
+- 规则卡草案路径：.flutter-forge/projects/<project>.rule_card_draft.yaml
 - Flutter skills：已就绪
-- 下一步：进入页面开发
+- 下一步：扫描当前项目并生成规则卡草案
 
 [f-forge] 模式：页面开发
 - 升级原因：当前任务涉及页面结构和路由接入

@@ -57,6 +57,7 @@ python3 scripts/validate_rule_card.py --allow-placeholders \
   memory/projects/example_project.rule_card.yaml
 
 python3 scripts/validate_flutter_stack_scan.py
+python3 scripts/validate_rule_card_resolution.py
 python3 scripts/project_snapshot.py tests/fixtures/flutter_sample >/dev/null
 tmp_rule_card="$(mktemp -t flutter-forge-rule-card.XXXXXX.yaml)"
 python3 scripts/init_rule_card.py tests/fixtures/flutter_sample --output "$tmp_rule_card" >/dev/null

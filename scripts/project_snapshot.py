@@ -40,11 +40,12 @@ def top_dirs(root: Path) -> list[str]:
 
 
 def find_rule_cards(root: Path) -> list[str]:
+    project_name = root.name
     patterns = [
-        ".claude/.flutter-forge/projects/*.rule_card.yaml",
-        ".trae/.flutter-forge/projects/*.rule_card.yaml",
-        ".agent/.flutter-forge/projects/*.rule_card.yaml",
-        ".flutter-forge/projects/*.rule_card.yaml",
+        f".claude/.flutter-forge/projects/{project_name}.rule_card.yaml",
+        f".trae/.flutter-forge/projects/{project_name}.rule_card.yaml",
+        f".agent/.flutter-forge/projects/{project_name}.rule_card.yaml",
+        f".flutter-forge/projects/{project_name}.rule_card.yaml",
     ]
     cards: list[str] = []
     for pattern in patterns:
