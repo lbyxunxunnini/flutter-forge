@@ -4,7 +4,7 @@
 
 Flutter Forge 是一个面向 Flutter 开发的结构化 AI 协作工作流 skill。它不是代码生成器，而是一个**项目内的编排与决策层**：在动手写代码之前，先理解项目上下文、收口设计方案、统一工程规则。
 
-GitHub: [lbyxunxunnini/flutter-forge](https://github.com/lbyxunxunnini/flutter-forge) · License: MIT · 当前版本：**v0.1.0**
+GitHub: [lbyxunxunnini/flutter-forge](https://github.com/lbyxunxunnini/flutter-forge) · License: MIT · 当前版本：**0.1.2**
 
 ---
 
@@ -221,7 +221,7 @@ ff-a 新建商品详情页，包含轮播图、价格、规格选择和底部购
 | **直通模式** | 文档、代码环境、打包、CI/CD、闲聊 | 主控直接处理 |
 | **轻量任务** | 文案/颜色/字号/已定位 bug、analyze/test/build | 页面工程师 |
 | **中等任务** | 局部结构调整、单页内增加几个功能点 | 页面工程师（先扫描后执行） |
-| **UI 优化任务** | 现有页面样式、布局、动效优化 | UI 设计师 → 页面工程师 |
+| **UI 优化** | 现有页面样式、布局、动效优化 | UI 设计师 → 页面工程师 |
 | **架构级任务** | 性能优化、重构、审查、迁移、依赖清理、i18n/a11y | 架构设计师 → 页面工程师 |
 | **功能开发** | 大功能闭环、跨页面状态联动、深链 | 完整流程 |
 | **页面开发** | 新页面、模块扩展、PRD/设计图解析 | 完整流程 |
@@ -506,6 +506,6 @@ python3 scripts/validate_docs_sync.py
 
 ## 版本
 
-当前版本：**v0.1.0** · [CHANGELOG](CHANGELOG.md)
+当前版本：**0.1.2** · [CHANGELOG](CHANGELOG.md)
 
-`v0.1.0` 开启 v 前缀发布线，新增 `ff-fast`、`ff-a`、规则卡初始化向导、项目快照、doctor、自检脚本、技术栈 profile 和发布 gate。
+`0.1.2` 补强路由判定与规则卡协议，新增等待态、无规则卡强制初始化和用户询问位置时的回答规范。

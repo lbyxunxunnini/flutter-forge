@@ -5,6 +5,20 @@
 - `0.2.x` 中出现的 `legacy_project_scan.md`、`~/.flutter-forge/projects/*.rule_card.yaml` 等表述保留为当时版本的历史事实
 - 当前现行入口与规则卡路径策略以 `references/existing_project_entry.md`、`references/existing_project_scan.md`、`references/rule_card_protocol.md` 为准
 
+## 0.1.2
+
+路由判定与规则卡协议补强。
+
+- 路由判定新增"等待态"内部状态：任务信息不明确时先追问目标，不直接进入执行流程
+- 路由判定步骤重写为问句格式，逻辑更清晰（规则卡检查→任务明确性→直通→共创→优化→架构→页面→功能→需求起步→10秒测试→中等→兜底）
+- 规则卡协议新增无规则卡时强制处理规则：不允许跳过初始化直接进入执行流程
+- 规则卡协议新增用户询问规则卡位置时的回答规范，明确正式规则卡路径优先
+- `task_runtime_prompt.md` 新增规则卡检查硬约束：未命中真实 `.rule_card.yaml` 前不得输出"已加载"
+- `task_runtime_prompt.md` 规则卡查找路径格式统一为完整路径（`.claude/.flutter-forge > .trae/.flutter-forge > .agents/.flutter-forge > .flutter-forge`）
+- "UI 优化任务"统一简化为"UI 优化"，涉及 SKILL.md、README.md、session_management.md、question_budget.md、skill_visibility.md、startup_handshake.md、task_runtime_prompt.md
+- `code_review_mode.md` 术语对齐：中间地带→不满足轻量条件但也不需重流程
+- `similar_implementation_search.md` 术语对齐：需求分析阶段→S1 需求确认
+
 ## v0.1.1
 
 规则卡项目隔离修复。
