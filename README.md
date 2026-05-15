@@ -4,7 +4,7 @@
 
 Flutter Forge 是一个面向 Flutter 开发的结构化 AI 协作工作流 skill。它不是代码生成器，而是一个**项目内的编排与决策层**：在动手写代码之前，先理解项目上下文、收口设计方案、统一工程规则。
 
-GitHub: [lbyxunxunnini/flutter-forge](https://github.com/lbyxunxunnini/flutter-forge) · License: MIT · 当前版本：**v0.1.1**
+GitHub: [lbyxunxunnini/flutter-forge](https://github.com/lbyxunxunnini/flutter-forge) · License: MIT · 当前版本：**v0.1.0**
 
 ---
 
@@ -76,8 +76,10 @@ git clone https://github.com/lbyxunxunnini/flutter-forge ~/.claude/skills/flutte
 
 ```bash
 npx skills update                                # npx 安装
-git -C ~/.claude/skills/flutter-forge pull       # git clone 安装
+git -C <安装路径> pull                            # git clone 安装
 ```
+
+`<安装路径>` 替换为实际安装目录，如 `~/.claude/skills/flutter-forge`、`~/.trae/skills/flutter-forge` 等。
 
 ---
 
@@ -274,9 +276,7 @@ accessibility:
   enabled: false
 ```
 
-存储位置只允许在当前目标项目目录内：`.claude/.flutter-forge/projects/<project>.rule_card.yaml`、`.trae/.flutter-forge/projects/<project>.rule_card.yaml`、`.agent/.flutter-forge/projects/<project>.rule_card.yaml`，回退到项目根目录 `.flutter-forge/projects/<project>.rule_card.yaml`。
-
-如果当前项目没有精确命中的正式规则卡，必须生成 `.flutter-forge/projects/<project>.rule_card_draft.yaml` 草案；不得读取 `~/.claude/projects/.../memory/*.yaml` 或其它项目规则卡作为兜底。
+存储位置优先：`.claude/.flutter-forge/projects/`、`.trae/.flutter-forge/projects/`、`.agent/.flutter-forge/projects/`，回退到项目根目录 `.flutter-forge/projects/`。
 
 ### 6. 不完整输入处理
 
@@ -446,7 +446,7 @@ python3 scripts/validate_docs_sync.py
 
 ## 当前状态
 
-`v0.1.1` 延续新的 v 前缀发布线，用于和历史无 `v` 的 `0.x.x` 版本隔离。当前已具备完整文档、任务路由、规则卡、角色协作、官方 Flutter skills 委托策略和本地发布检查，并补强规则卡项目隔离。
+`v0.1.0` 是新的 v 前缀发布线，用于和历史无 `v` 的 `0.x.x` 版本隔离。当前已具备完整文档、任务路由、规则卡、角色协作、官方 Flutter skills 委托策略和本地发布检查。
 
 当前已提供：
 
@@ -489,6 +489,6 @@ python3 scripts/validate_docs_sync.py
 
 ## 版本
 
-当前版本：**v0.1.1** · [CHANGELOG](CHANGELOG.md)
+当前版本：**v0.1.0** · [CHANGELOG](CHANGELOG.md)
 
-`v0.1.1` 补强规则卡项目隔离：只允许读取当前目标项目目录内精确命中的 `<project>.rule_card.yaml`，无规则卡时生成当前项目 `_draft` 草案，并纳入发布回归测试。
+`v0.1.0` 开启 v 前缀发布线，新增 `ff-fast`、`ff-a`、规则卡初始化向导、项目快照、doctor、自检脚本、技术栈 profile 和发布 gate。
