@@ -1,4 +1,4 @@
-# Flutter Forge Reference - Legacy Project First Scan
+# Flutter Forge Reference - Existing Project First Scan
 
 这个文件是“迭代中项目首次接入”的扫描路由与检查清单，不再维护一套与 `SKILL.md` 平行的旧规则。
 
@@ -21,10 +21,20 @@
 9. 国际化、主题、依赖注入等主流工程规则
 10. 已有规则文件（`.claude/rules/`、`.trae/rules/`、`.agents/rules/`、项目根目录的 `rules.md`、`analysis_rules.md` 等）
 
+## Flutter 技术栈识别
+
+首次接入时必须补一层 Flutter 专项扫描，不能只看通用目录结构：
+
+```bash
+python3 scripts/flutter_stack_scan.py /path/to/flutter/project --json
+```
+
+扫描结果只作为规则卡 evidence，不直接覆盖用户已确认规则。具体检测范围和 confidence 写入规则见 [flutter_stack_detection.md](flutter_stack_detection.md)。
+
 ## 扫描原则
 
 - 优先看最近、最主流、最具代表性的代码
-- 不要被孤例和历史遗留误导
+- 不要被孤例和历史实现误导
 - 低置信度判断必须显式标注
 - 不要在扫描阶段直接开始写页面代码
 - 识别项目主流模式时，参考 `engineering_heuristics.md`
@@ -40,6 +50,7 @@
 ## 必读配套文件
 
 - `references/rule_card_template.yaml`
+- `references/flutter_stack_detection.md`
 - `references/engineering_heuristics.md`
 - `references/memory_protocol.md`
 - `references/routing_and_navigation.md`

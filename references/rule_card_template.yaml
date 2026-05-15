@@ -2,7 +2,7 @@ project_rule_card:
   project:
     name: ""
     type: "flutter"
-    status: "new|legacy"
+    status: "new|existing"
     overall_confidence: "low|medium|high"
     source_rules: []  # 规则卡内容来源，如 [".trae/rules/rules.md", "project scan"]
 

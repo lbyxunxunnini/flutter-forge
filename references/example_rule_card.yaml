@@ -2,7 +2,7 @@ project_rule_card:
   project:
     name: "sample_flutter_app"
     type: "flutter"
-    status: "legacy"
+    status: "existing"
     overall_confidence: "medium"
 
   team_rules:
@@ -111,8 +111,8 @@ project_rule_card:
       - "页面层不直接请求接口"
       - "状态管理默认先走页面级 provider/controller"
     low_confidence_rules:
-      - "部分老页面仍使用 bloc，尚不能确认 riverpod 是否已完全替代"
-      - "个别 feature 目录中 page 和 view 并存，可能存在历史迁移未完成"
+      - "部分历史页面仍使用 bloc，尚不能确认 riverpod 是否已完全替代"
+      - "个别 feature 目录中 page 和 view 并存，说明局部约定仍未完全统一"
     conflicts_to_watch:
       - "新页面应落在 page 还是 view 目录"
       - "状态层统一使用 provider 还是 controller 命名"
@@ -126,8 +126,8 @@ project_rule_card:
       - "列表 + 空态 + loading + error 的标准页面骨架"
       - "表单提交页的 footer action bar"
     avoid_reuse_targets:
-      - "历史耦合过重的 legacy settings 页面"
-      - "直接在页面里写接口请求的旧实现"
+      - "历史耦合过重的设置页"
+      - "直接在页面里写接口请求的历史实现"
 
   task_only_context:
     temporary_business_rules:
@@ -135,7 +135,7 @@ project_rule_card:
     field_special_cases:
       - "userLevel 字段为空时展示默认文案"
     api_compat_notes:
-      - "旧接口仍返回 string 类型 status，新接口已切换为 int"
+      - "部分存量接口仍返回 string 类型 status，新接口已切换为 int"
 
   quality_preferences:
     analyze_required: true

@@ -8,7 +8,7 @@ Flutter Forge 的主规则来源按优先级如下：
 
 1. `SKILL.md`
 2. `references/task_runtime_prompt.md`
-3. `references/legacy_project_scan.md`
+3. `references/existing_project_entry.md`
 4. 任务需要时按需读取的其他 `references/*.md|*.yaml`
 
 ## Persistent Principles

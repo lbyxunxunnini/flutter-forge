@@ -1,9 +1,58 @@
 # Changelog
 
+说明：
+
+- `0.2.x` 中出现的 `legacy_project_scan.md`、`~/.flutter-forge/projects/*.rule_card.yaml` 等表述保留为当时版本的历史事实
+- 当前现行入口与规则卡路径策略以 `references/existing_project_entry.md`、`references/existing_project_scan.md`、`references/rule_card_protocol.md` 为准
+
+## v0.1.0
+
+开启 v 前缀发布线，用于和历史无 `v` 的 `0.x.x` 版本隔离。
+
+- 新增 `ff-fast` 快速执行策略：轻量优先、自动生成 project snapshot、发现结构风险再升级
+- 新增 `ff-a` 全自动执行策略：非阻塞缺口采用推荐方案继续推进，高风险或不可逆事项才中断确认
+- 新增 `QUICKSTART.md` 和 `CHEATSHEET.md`，降低使用者学习成本
+- 新增 `scripts/project_snapshot.py`、`scripts/init_rule_card.py`、`scripts/doctor.sh`、`scripts/validate_project.sh`
+- `scripts/init_rule_card.py` 升级为初始化向导，支持 `--profile auto`、显式 profile、`--interactive` 和 `quick_context` 写入
+- 新增 `references/fast_mode.md`、`references/autonomous_mode.md`、`references/stack_profiles.md`、`references/release_playbook.md`
+- 新增多套技术栈 profile：Riverpod / Bloc / go_router+Dio+freezed / GetX / lean MVP
+- 新增 Flutter 技术栈扫描、规则卡 schema 校验、路由 golden cases、文档同步检查和发布 gate
+- 补充宿主子代理支持判断、串行降级协议、大任务摘要包、统一验证工程师和规则卡结束判断出口
+
+## 0.5.3
+
+补强 UI 输入门禁与大任务结束出口
+
+- 新增 `ff-a` 全自动执行策略：非阻塞缺口采用推荐方案继续推进，安全 / 不可逆 / 生产环境 / 全项目架构切换等高风险事项才中断确认
+- 新增 `ff-fast` 快速执行策略：轻量优先、自动生成 project snapshot、发现结构风险再升级
+- 新增 `references/autonomous_mode.md`，定义 `auto_assumption`、全自动输出格式、自动决策范围和必须中断确认的边界
+- 新增 `references/fast_mode.md`，定义轻量 / 中等任务的快速路径、15 分钟内完成策略和升级条件
+- 新增 `references/stack_profiles.md` 和多套内置技术栈 profile，用于规则卡初始化时推荐 Riverpod / Bloc / go_router+Dio+freezed / GetX / lean MVP 方案
+- 新增 `QUICKSTART.md`、`CHEATSHEET.md`、`scripts/project_snapshot.py`、`scripts/init_rule_card.py`、`scripts/doctor.sh`、`scripts/validate_project.sh` 和 `references/release_playbook.md`
+- `scripts/init_rule_card.py` 升级为初始化向导，支持 `--profile auto`、显式 profile、`--interactive` 和 `quick_context` 写入
+- 新增 `references/host_subagent_support.md`，说明宿主对子代理支持应以官方宿主能力而非模型名判断，并补充 Claude Code / Codex / Cursor / Trae 的官方支持矩阵
+- 新增“未知宿主能力时的串行降级协议”：无法确认真实子代理或并行能力时，统一降级为 `单主控 + 串行阶段推进 + 逻辑角色分工`
+- `README.md`、`load_map.md` 新增 `host_subagent_support.md` 入口，便于在任务执行前快速判断是否允许真实并行实现
+- 新增 `references/decision_and_question_protocol.md`，统一收口决策域、提问归属、一问一答、阶段摘要包、前置阶段并发边界和规则卡判断出口
+- 新增 `references/case_study_large_rework.md`，给出整体大改版场景下的标准案例，覆盖缺材料询问、用户一问一答、阶段摘要包、并行实现与最终收口
+- `SKILL.md`、`task_runtime_prompt.md` 新增硬规则：`UI 设计师` 遇到会影响布局、交互或状态表达正确性的缺失信息时，先向用户补要设计图、参考图或文字化 UI 描述
+- 新增 `controller` 合并提问规则：多个角色同时发现缺口时，统一聚合成一次最小提问，不让角色轮流追问用户
+- 新增大改版 / 超长 PRD / 超长 UI 文档场景的“阶段摘要包”机制，要求先压缩为需求 / UI / 架构冻结摘要包，再继续下游
+- 新增 `scripts/validate_release.sh`、`scripts/validate_rule_card.py` 和 `scripts/route_golden_tests.py`，把版本一致性、规则卡 schema 和模式路由用例纳入可执行发布检查
+- 新增 `scripts/flutter_stack_scan.py` 与 fixture 回归，首次接入 Flutter 项目时可识别 Riverpod / Bloc / go_router / Dio / freezed / json_serializable / get_it / l10n / test 等技术栈 evidence
+- 新增 `scripts/validate_docs_sync.py` 和 `references/demo_transcript.md`，把 demo transcript、load map 和关键文档链接纳入自动同步检查
+- `skill_visibility.md` 新增子 agent 结果摘要示例，要求子 agent 完成时对用户说明“完成了什么”，而不是只写“完成”
+- 新增大任务结束固定出口：先输出“已完成什么 / 修改了什么 / 实现了什么”，再显式判断“是否需要更新规则卡”
+- `mode_test_cases.md`、`example_workflow.md`、`validation_log.md`、`README.md` 同步更新大任务结束模板与规则卡判断口径
+- `references/roles/ui_designer.md`、`requirement_analyst.md`、`role_handoff_formats.md`、`question_budget.md`、`input_incomplete_handling.md` 同步补充摘要包与聚合提问约束
+
 ## 0.5.2
 
 架构级任务分类与路由清理
 
+- 补充“功能开发”模式：用于已有项目中的大功能闭环、跨页面状态联动、弹窗/提示栏/流程承接类需求
+- 明确“完整流程”是执行协议，不是用户可见模式名；对外按任务语义显示为功能开发或页面开发
+- 新增 `references/mode_test_cases.md`：覆盖各模式的最小测试用例，并补充大任务并行时 arch-agent / impl-agent / verify-agent 的对外可见输出示例
 - 新增架构级任务分类：优化/重构/代码审查/迁移/依赖清理/i18n-a11y，角色流程为架构设计师 → 页面工程师
 - 运维直通重定义：仅覆盖排除场景（非 Flutter 任务），analyze/test/build 等工程任务改为轻量任务
 - 新增角色流程选择表：有 UI → 四角色，无 UI → 跳 UI 设计师，架构级 → 跳需求+UI，轻量 → 页面工程师

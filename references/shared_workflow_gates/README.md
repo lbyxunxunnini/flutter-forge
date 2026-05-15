@@ -14,7 +14,7 @@
 - `requirement_confirmation.md`
 - `role_gate_matrix.md`
 - `advisor_collaboration.md`
-- `legacy_project_consulting.md`
+- `existing_project_consulting.md`
 - `question_budget.md`
 
 使用原则：

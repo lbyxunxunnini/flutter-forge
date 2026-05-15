@@ -1,11 +1,11 @@
-# Legacy Project Consulting
+# Existing Project Consulting
 
-通用老项目顾问式提问规则：
+通用存量项目顾问式提问规则：
 
 适用场景：
 
 - 迭代中项目首次扫描
-- 老项目内的新页面或模块扩展
+- 存量项目内的新页面或模块扩展
 - 复用判断
 - 规则冲突
 - 改动边界不清

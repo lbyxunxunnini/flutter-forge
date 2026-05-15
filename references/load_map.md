@@ -6,17 +6,22 @@
 
 ### 迭代中项目首次接入
 
+- [project_init_flow.md](project_init_flow.md)
 - [existing_project_entry.md](existing_project_entry.md)
-- [legacy_project_scan.md](legacy_project_scan.md)
+- [existing_project_scan.md](existing_project_scan.md)
+- [flutter_stack_detection.md](flutter_stack_detection.md)
+- [stack_profiles.md](stack_profiles.md)
 - [rule_card_template.yaml](rule_card_template.yaml)
 - [example_rule_card.yaml](example_rule_card.yaml)
 - [existing_rules_discovery.md](existing_rules_discovery.md)
+- [rule_card_validation.md](rule_card_validation.md)
 
 ### 新 Flutter 应用从 0 到 1
 
 - [new_project_cocreation_mode.md](new_project_cocreation_mode.md)
 - [new_project_app_profiles.md](new_project_app_profiles.md)
 - [new_project_profile_selection.md](new_project_profile_selection.md)
+- [stack_profiles.md](stack_profiles.md)
 - [project_init_flow.md](project_init_flow.md)
 - [rule_card_template.yaml](rule_card_template.yaml)
 
@@ -26,6 +31,9 @@
 
 ### 进入具体任务执行
 
+- [fast_mode.md](fast_mode.md)
+- [autonomous_mode.md](autonomous_mode.md)
+- [decision_and_question_protocol.md](decision_and_question_protocol.md)
 - [task_runtime_prompt.md](task_runtime_prompt.md)
 
 ### 需要记忆读写规则
@@ -35,11 +43,17 @@
 ### 需要工程判断标准或 Flutter 专项规则
 
 - [engineering_heuristics.md](engineering_heuristics.md)
+- [flutter_stack_detection.md](flutter_stack_detection.md)
+- [stack_profiles.md](stack_profiles.md)
 
 ### 需要 Flutter skills 委托规则
 
 - [official_flutter_skills.md](official_flutter_skills.md)
 - [delegation_map.yaml](delegation_map.yaml)
+
+### 需要判断宿主对子代理的支持与降级路径
+
+- [host_subagent_support.md](host_subagent_support.md)
 
 ### 需要网络层项目规则
 
@@ -54,6 +68,7 @@
 - [testing_strategy.md](testing_strategy.md)
 - [quality_gates.md](quality_gates.md)
 - [build_and_quality.md](build_and_quality.md)
+- [roles/verify_agent.md](roles/verify_agent.md)
 
 ### 需要反模式、模板或调试手册
 
@@ -69,11 +84,21 @@
 
 - [role_handoff_formats.md](role_handoff_formats.md)
 
+### 需要决策、提问或阶段门禁细则
+
+- [decision_and_question_protocol.md](decision_and_question_protocol.md)
+- [fast_mode.md](fast_mode.md)
+- [autonomous_mode.md](autonomous_mode.md)
+
+### 需要发布流程
+
+- [release_playbook.md](release_playbook.md)
+
 ### 需要处理输入不完整场景
 
 - [input_incomplete_handling.md](input_incomplete_handling.md)
 
-### 需要可见性标记或会话状态规则
+### 需要可见性标记或当前大任务状态规则
 
 - [skill_visibility.md](skill_visibility.md)
 - [session_management.md](session_management.md)
@@ -85,6 +110,7 @@
 ### 需要规则卡协议
 
 - [rule_card_protocol.md](rule_card_protocol.md)
+- [rule_card_validation.md](rule_card_validation.md)
 
 ### 需要项目初始化流程
 
@@ -106,4 +132,7 @@
 
 - [case_studies.md](case_studies.md)
 - [case_study_member_center.md](case_study_member_center.md)
+- [case_study_large_rework.md](case_study_large_rework.md)
+- [mode_test_cases.md](mode_test_cases.md)
+- [demo_transcript.md](demo_transcript.md)
 - [validation_log.md](validation_log.md)

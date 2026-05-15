@@ -2,7 +2,7 @@ project_rule_card:
   project:
     name: "example_project"        # 项目名称，用 snake_case
     type: "flutter"                # 固定值
-    status: "legacy"               # legacy = 迭代中项目, new = 新项目
+    status: "existing"             # existing = 存量/迭代中项目, new = 新项目
     overall_confidence: "medium"   # 规则卡整体置信度
 
   team_rules:
@@ -44,9 +44,10 @@ project_rule_card:
       confidence: "low|medium|high"
       evidence: []
 
-    routing:
-      pattern: ""                  # 例：GoRouter / auto_route / 命名路由 / 无集中路由
-      registration_rule: ""        # 例：新页面必须在 app_router.dart 注册
+    routing_and_navigation:
+      route_definition_rule: ""    # 例：GoRouter routes 统一在 app_router.dart 定义
+      route_naming_rule: ""        # 例：路径用 kebab-case，路由名用 camelCase
+      navigation_trigger_rule: ""  # 例：页面跳转统一通过 context.go / context.push
       confidence: "low|medium|high"
       evidence: []
 

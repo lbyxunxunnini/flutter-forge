@@ -21,11 +21,19 @@ Flutter Forge is a workflow skill for AI-assisted Flutter development. Contribut
 
 ## Validation
 
-There is no compile step for the skill itself. Use these checks before submitting:
+There is no compile step for the skill itself. Use the release gate before submitting:
 
 ```bash
-grep -n '"version"' .skillhub.json
-cat VERSION
+scripts/validate_release.sh
+```
+
+For focused checks:
+
+```bash
+python3 scripts/route_golden_tests.py
+python3 scripts/validate_flutter_stack_scan.py
+python3 scripts/validate_docs_sync.py
+python3 scripts/validate_rule_card.py --allow-placeholders references/rule_card_template.yaml memory/projects/example_project.rule_card.yaml
 ```
 
 For workflow changes, test at least one prompt from each affected mode:
@@ -41,4 +49,3 @@ For workflow changes, test at least one prompt from each affected mode:
 - Do not turn uncertain guesses into project rules.
 - Prefer short decision rules over broad slogans.
 - Use Chinese for existing Chinese docs unless a file is intentionally bilingual.
-

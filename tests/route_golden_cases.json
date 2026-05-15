@@ -1,0 +1,59 @@
+[
+  {
+    "name": "direct_docs",
+    "prompt": "ff- 帮我改一下 README 里的安装说明",
+    "expected_mode": "直通模式"
+  },
+  {
+    "name": "light_task",
+    "prompt": "ff- 把首页购买按钮点击后跳到会员购买页",
+    "expected_mode": "轻量任务"
+  },
+  {
+    "name": "medium_task",
+    "prompt": "ff- 订单页加 3 个筛选条件，先看相似实现再改",
+    "expected_mode": "中等任务"
+  },
+  {
+    "name": "ui_optimization",
+    "prompt": "ff- 优化个人中心页面视觉层级和卡片布局",
+    "expected_mode": "UI 优化"
+  },
+  {
+    "name": "architecture_optimization",
+    "prompt": "ff- 帮我做包体积优化",
+    "expected_mode": "架构级任务"
+  },
+  {
+    "name": "feature_flow",
+    "prompt": "ff- 当客态用户点击邀请 h5 中“录制”按钮拉起 app 后，按弹窗优先级、授权弹窗、有无音色和提示栏逻辑完成整条交互",
+    "expected_mode": "功能开发"
+  },
+  {
+    "name": "page_development",
+    "prompt": "ff- 新建一个商品详情页",
+    "expected_mode": "页面开发"
+  },
+  {
+    "name": "new_project_cocreation",
+    "prompt": "ff- 我想做一个新的 Flutter 项目，先共创一下，只定项目架构和登录页",
+    "expected_mode": "新项目共创"
+  },
+  {
+    "name": "large_parallel_module",
+    "prompt": "ff- 在老项目里新增会员中心大模块，包含权益页、任务页、积分记录和购买入口",
+    "expected_mode": "页面开发"
+  },
+  {
+    "name": "fast_medium_task",
+    "prompt": "ff-fast 订单页加 3 个筛选条件，先快速看相似实现再改",
+    "expected_mode": "中等任务",
+    "expected_policy": "快速"
+  },
+  {
+    "name": "autonomous_page_development",
+    "prompt": "ff-a 新建一个商品详情页，包含轮播图、价格、规格选择和底部购买按钮，缺少的部分按推荐方案自动做完",
+    "expected_mode": "页面开发",
+    "expected_policy": "全自动"
+  }
+]

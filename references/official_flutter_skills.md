@@ -1,96 +1,81 @@
 # Flutter Forge Reference - Flutter Skills 本地集成
 
-本项目将 Flutter 官方通用技能的副本存放在 `flutter-skills/` 目录下，不再依赖外部探测或 `npx skills add` 安装机制。
+这个文件定义 Flutter 官方 skills 的本地委托方式。关键规则是：
 
-## 使用原则
+**是否调用某个 Flutter skill，由 `controller` 决定。**
 
-Flutter Forge 负责总控和项目内决策，不负责替代所有 Flutter 通用技能。
+`arch-agent` 只提供建议，`impl-agent` 只负责执行已批准的委托。
 
-当架构设计师决定调用某个 Flutter 子技能时，直接从本地 `flutter-skills/` 目录读取对应的 `SKILL.md`。
+## 本地来源
 
-## 本地可用 Skills（10个）
+官方 skills 的本地副本位于：
 
-以下名称以当前 `flutter/skills` 仓库为准，副本存放在 `flutter-skills/`：
+```text
+flutter-skills/
+```
 
-| 本地目录 | 描述 |
-|----------|------|
-| `flutter-skills/flutter-add-integration-test` | 配置 Flutter Driver 集成测试 |
-| `flutter-skills/flutter-add-widget-preview` | 添加交互式 widget 预览 |
-| `flutter-skills/flutter-add-widget-test` | 添加组件级 widget 测试 |
-| `flutter-skills/flutter-apply-architecture-best-practices` | 分层架构（UI/Logic/Data） |
-| `flutter-skills/flutter-build-responsive-layout` | 响应式布局 |
-| `flutter-skills/flutter-fix-layout-issues` | 修复布局溢出等问题 |
-| `flutter-skills/flutter-implement-json-serialization` | JSON 序列化 |
-| `flutter-skills/flutter-setup-declarative-routing` | 声明式路由配置 |
-| `flutter-skills/flutter-setup-localization` | 本地化配置 |
-| `flutter-skills/flutter-use-http-package` | HTTP 请求封装 |
+无需外部探测或 `npx skills add`。
 
-## 委托策略
+## 委托分工
 
-### 需求理解阶段
+### controller
 
-不要调用子技能。这个阶段属于项目和业务理解，必须由 Flutter Forge 自己完成。
+- 决定是否需要委托 Flutter skill
+- 决定当前阶段是否允许委托
+- 决定是否记录为降级执行
 
-### UI 解析阶段
+### arch-agent
 
-如果问题主要是：
+- 建议应该使用哪些 Flutter skill
+- 说明为什么需要这些 skill
+- 不直接调度它们
 
-- 响应式布局
-- 布局溢出
-- 复杂约束系统
+### impl-agent
 
-优先参考：
+- 执行已经批准的 skill 委托
+- 结合项目上下文收口结果
+- skill 不可用时按降级规则执行
 
-- `flutter-skills/flutter-build-responsive-layout`
-- `flutter-skills/flutter-fix-layout-issues`
+## 常见映射
 
-### 架构与实现设计阶段
+| 场景 | 建议 skill |
+|------|-----------|
+| 路由接入 | `flutter-setup-declarative-routing` |
+| JSON 序列化 | `flutter-implement-json-serialization` |
+| 网络请求 | `flutter-use-http-package` |
+| 本地化 | `flutter-setup-localization` |
+| 响应式布局 | `flutter-build-responsive-layout` |
+| 布局修复 | `flutter-fix-layout-issues` |
+| Widget 测试 | `flutter-add-widget-test` |
+| Widget 预览 | `flutter-add-widget-preview` |
+| 集成测试 | `flutter-add-integration-test` |
+| 架构规范 | `flutter-apply-architecture-best-practices` |
 
-如果问题主要是：
+## 什么时候不该委托
 
-- 分层架构
-- 路由方式
-- 数据模型序列化
-- 网络请求接入
-- 本地化初始化
+以下情况不要调用 Flutter skill：
 
-优先参考：
+- 需求确认阶段
+- 新项目共创的 `C0-C2`
+- 只是纯业务收口或纯视觉方向判断
+- 当前规则卡和项目现状已经足够支撑实现
 
-- `flutter-skills/flutter-apply-architecture-best-practices`
-- `flutter-skills/flutter-setup-declarative-routing`
-- `flutter-skills/flutter-implement-json-serialization`
-- `flutter-skills/flutter-use-http-package`
-- `flutter-skills/flutter-setup-localization`
+## 降级规则
 
-### 页面开发阶段
+如果 skill 不可用：
 
-如果问题主要是：
+1. 明确标注当前是降级执行
+2. 改用 `flutter-forge` 内置参考规则
+3. 不降低产出质量
 
-- 组件测试
-- 页面预览
-- 集成测试
+示例：
 
-优先参考：
+```text
+[f-forge] 页面工程师：flutter-add-widget-test 当前未使用，改按内置测试策略补测试
+```
 
-- `flutter-skills/flutter-add-widget-test`
-- `flutter-skills/flutter-add-widget-preview`
-- `flutter-skills/flutter-add-integration-test`
+## 不要做的事
 
-## 收口规则
-
-即使参考了 Flutter 子技能，Flutter Forge 仍然负责最终收口：
-
-1. 是否符合当前项目目录结构
-2. 是否符合当前项目命名规则
-3. 是否符合当前项目主流状态管理模式
-4. 是否需要复用已有实现
-5. 是否要压缩或调整建议，避免和项目现状冲突
-
-## 更新机制
-
-`flutter-skills/` 目录下的副本需要手动同步更新。
-
-更新时检查：
-
-- 官方 `flutter/skills` 仓库是否有新版本
-- `references/delegation_map.yaml` 是否仍然匹配
+- 不要让 `arch-agent` 自己成为委托调度中心
+- 不要让 `impl-agent` 未经授权自行拉起新的 Flutter skill
+- 不要在共创阶段为了“显得专业”提前委托实现类 skill
