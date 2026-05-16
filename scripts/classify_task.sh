@@ -25,7 +25,7 @@ fi
 policy="标准"
 stripped="$(echo "$INPUT" | sed 's/^[[:space:]]*//' | sed 's/[[:space:]]*$//')"
 
-if echo "$stripped" | grep -qE '^ff-a(| |a)'; then
+if echo "$stripped" | grep -qE '^ff-a[ ]?|^ff a'; then
   policy="全自动"
 elif echo "$stripped" | grep -qE '^ff-fast'; then
   policy="快速"
@@ -94,7 +94,7 @@ elif echo "$INPUT" | grep -qE '按钮|颜色|文案|字号|跳到|点击后|改�
   matched_by="light_hints"
 # 10. 兜底
 else
-  mode="功能开发"
+  mode="中等任务"
   confidence="low"
   matched_by="fallback"
 fi

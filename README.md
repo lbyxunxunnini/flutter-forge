@@ -4,7 +4,7 @@
 
 Flutter Forge 是一个面向 Flutter 开发的结构化 AI 协作工作流 skill。它不是代码生成器，而是一个**项目内的编排与决策层**：在动手写代码之前，先理解项目上下文、收口设计方案、统一工程规则。
 
-GitHub: [lbyxunxunnini/flutter-forge](https://github.com/lbyxunxunnini/flutter-forge) · License: MIT · 当前版本：**0.1.2**
+GitHub: [lbyxunxunnini/flutter-forge](https://github.com/lbyxunxunnini/flutter-forge) · License: MIT · 当前版本：**0.1.3**
 
 ---
 
@@ -14,7 +14,23 @@ GitHub: [lbyxunxunnini/flutter-forge](https://github.com/lbyxunxunnini/flutter-f
 
 小改动直接做；已有项目先收口再实现；只有想法时先共创需求、风格、页面结构，再动代码。
 
-## 你只需要记住 3 个入口
+## 30 秒快速上手
+
+```bash
+# 1. 安装
+npx skills add lbyxunxunnini/flutter-forge
+
+# 2. 在 Flutter 项目里触发（任选一种）
+ff- 帮我做一个订单列表页          # 标准流程
+ff-fast 改一下登录页按钮颜色      # 快速路径
+ff-a 新建商品详情页，缺的自动补完  # 全自动路径
+```
+
+所有策略通过 `ff-`、`ff-fast`、`ff-a`、`ff a`、`/flutter-forge` 或 `flutter-forge` 触发。上面 3 行描述的是执行行为差异，不是触发词差异。
+
+更短的上手说明见 [QUICKSTART.md](QUICKSTART.md)，常用 prompt 见 [CHEATSHEET.md](CHEATSHEET.md)。
+
+## 3 种执行策略
 
 ```text
 ff-       标准结构化流程：新页面、新模块、PRD、设计图、重构、迁移
@@ -22,13 +38,11 @@ ff-fast  快速路径：小改动、局部 bug、轻量/中等任务，发现风
 ff-a      全自动路径：缺少的非阻塞信息用推荐方案，一路做到验证完成
 ```
 
-第一次接入已有项目时，用：
+第一次接入已有项目时：
 
 ```text
 ff- 这是一个迭代中的 Flutter 项目。先扫描项目结构，输出规则卡草案，不要先写代码。
 ```
-
-更短的上手说明见 [QUICKSTART.md](QUICKSTART.md)，常用 prompt 见 [CHEATSHEET.md](CHEATSHEET.md)。
 
 ## 适合 / 不适合
 
@@ -102,16 +116,19 @@ flutter-forge/
 
 ## 使用
 
-推荐显式触发：`ff-`、`ff-fast`、`ff-a` 或 `/flutter-forge`。
+推荐显式触发：`ff-`、`ff-fast`、`ff-a`、`ff a` 或 `/flutter-forge`。
 
 ```
 ff- 帮我做一个订单列表页
 ff-fast 订单页加 3 个筛选条件，先快速看相似实现再改
 ff-a 新建一个商品详情页，缺少的部分按推荐方案自动做完
+ff a 新建一个商品详情页，缺少的部分按推荐方案自动做完
 /flutter-forge 帮我 review 这个页面
 ```
 
 一旦显式进入，本轮任务由 controller 主动分流，不需要为子步骤重复触发；任务结束自动退出。
+
+选哪个？**小改动、局部 bug** 用 `ff-fast`（先做再说，有风险再问）；**明确需求但缺实现细节** 用 `ff-a`（自动补全，做完告诉你）；**复杂任务、PRD、设计图** 用 `ff-`（标准流程收口）。
 
 `ff-fast` 表示快速执行：轻量优先，自动生成项目摘要，最多读少量关键文件；发现需求、UI 或架构风险再升级。
 
@@ -252,94 +269,23 @@ ff-a 新建商品详情页，包含轮播图、价格、规格选择和底部购
 
 ## 核心机制
 
-### 1. 任务路由（第一道门）
-显式触发后，先按直通 / 优化类 / 架构级 / 页面新增 / 业务闭环 / 10 秒测试等顺序快速分流。
+### 1. 任务路由
+显式触发后，按直通 / 轻量 / 中等 / UI 优化 / 架构级 / 功能开发 / 页面开发 / 新项目共创顺序快速分流。轻量任务通过"10 秒测试"判定：用户输入已包含可直接定位的信息、不涉及新增组件或架构变更。
 
-### 2. 主控 + 按需专项判断
-- `controller` 负责命中、路由、阶段推进
-- 需求分析师 / UI 设计师 / 架构设计师 / 页面工程师 仅在当前阶段需要时出现
-- UI 设计师遇到关键视觉输入不足时，先向用户补要设计图或文字化描述
+### 2. 阶段门禁
+需求未确认 → 不进实现；方案未稳定 → 不进实现；拆包未冻结 → 不进并行；上游变化 → 下游失效。轻量/中等任务跳过门禁，直接读→改→验证。
 
-### 3. 阶段门禁
-- 需求未确认前不进实现
-- 方案未稳定前不进实现
-- 拆包未冻结前不进多实现并行
-- 上游变化让下游结果失效
+### 3. 规则卡（Rule Card）
+一份 YAML 文件捕获项目工程约定（命名、状态管理、路由、性能预算等），首次接入时自动生成草案，确认后成为后续所有任务的约束。存储在 `.claude/.flutter-forge/projects/` 等宿主目录下。
 
-### 4. 双轨模型
-- `C0–C3`：新项目共创轨道
-- `S0–S6`：开发执行轨道
-- `C3` 通过后才允许进入 `S3`
+### 4. 不完整输入处理
+只给 PRD → 先做需求分析；只给设计图 → 先做 UI 解析；上下文不足 → 明确告诉你缺什么，不会硬编。UI 来源标注：真实视觉 / 文字描述 / 结构推断。
 
-### 5. 规则卡（Rule Card）
-核心持久化机制，一份 YAML 文件捕获项目工程约定：
+### 5. 渐进式加载
+主控 `SKILL.md` 只保留编排逻辑，30+ 参考文档按需加载。完整映射见 [`references/load_map.md`](references/load_map.md)。`flutter-skills/` 下集成 10 个官方 Flutter Agent Skill 本地副本可直接委托。
 
-```yaml
-project:
-  name: "my_app"
-  type: existing
-  flutter_version: "3.x"
-naming:
-  page_suffix: "Page"
-  file_case: snake_case
-state_management: riverpod
-routing: go_router
-performance_budget:
-  max_widget_depth: 5
-  list_must_use_builder: true
-i18n:
-  enabled: false
-accessibility:
-  enabled: false
-```
-
-存储位置优先：`.claude/.flutter-forge/projects/`、`.trae/.flutter-forge/projects/`、`.agents/.flutter-forge/projects/`，回退到项目根目录 `.flutter-forge/projects/`。
-
-### 6. 不完整输入处理
-
-| 输入 | 行为 |
-|------|------|
-| 只给 PRD | 先做需求分析，产出页面结构树草案和待确认 UI 点 |
-| 只给设计图 | 先做 UI 解析，缺业务规则再明确告诉你 |
-| PRD + 设计图 | 完整流程：需求 → UI → 结构 → 实现 |
-| 上下文不足 | 明确告诉你缺什么，不会硬编 |
-
-### 7. UI 来源标注
-- `真实视觉输入` — 能可靠读取设计图
-- `用户文字描述` — 基于用户口述
-- `结构推断` — 设计图不可读时的降级推断
-
-### 8. 渐进式加载
-主控 `SKILL.md` 只保留编排逻辑，30+ 参考文档按需加载。完整映射见 [`references/load_map.md`](references/load_map.md)。
-
-### 9. Flutter Skills 本地集成
-`flutter-skills/` 目录下集成了 10 个官方 Flutter Agent Skill 本地副本，可直接委托：
-
-```
-flutter-add-integration-test           flutter-add-widget-preview
-flutter-add-widget-test                flutter-apply-architecture-best-practices
-flutter-build-responsive-layout        flutter-fix-layout-issues
-flutter-implement-json-serialization   flutter-setup-declarative-routing
-flutter-setup-localization             flutter-use-http-package
-```
-
-委托映射见 [`references/delegation_map.yaml`](references/delegation_map.yaml)。
-
-### 10. 工作模式可见性
-
-每次命中后输出一行模式标志：
-
-| 模式 | 标志 |
-|------|------|
-| 轻量任务 | `[f-forge] 页面工程师：轻量任务，直接执行` |
-| 中等任务 | `[f-forge] 页面工程师：中等任务，先扫描后执行` |
-| UI 优化 | `[f-forge] 模式：UI 优化` |
-| 架构级 | `[f-forge] 模式：架构级任务` |
-| 功能开发 | `[f-forge] 模式：功能开发` |
-| 页面开发 | `[f-forge] 模式：页面开发` |
-| 新项目共创 | `[f-forge] 模式：新项目共创` |
-
-阶段变化时还会输出阶段日志，例如 `[f-forge] 阶段：S2 方案确认`。
+### 6. 工作模式可见性
+每次命中输出模式日志（如 `[f-forge] 模式：页面开发`），阶段变化输出阶段日志（如 `[f-forge] 阶段：S2 方案确认`），结果带角色标签。`ff-fast` 启动时输出快速策略日志，`ff-a` 启动时输出全自动日志并结束时列出自动采用的推荐方案。
 
 ---
 
@@ -472,6 +418,8 @@ python3 scripts/validate_docs_sync.py
 - Flutter 技术栈扫描器：`scripts/flutter_stack_scan.py`
 - 项目快照：`scripts/project_snapshot.py`
 - 规则卡初始化向导：`scripts/init_rule_card.py`
+- 任务预分类：`scripts/classify_task.sh`
+- 输出格式校验：`scripts/validate_output.sh`
 - Doctor / 项目校验：`scripts/doctor.sh`、`scripts/validate_project.sh`
 - 发布 gate：`scripts/validate_release.sh`
 
@@ -506,6 +454,6 @@ python3 scripts/validate_docs_sync.py
 
 ## 版本
 
-当前版本：**0.1.2** · [CHANGELOG](CHANGELOG.md)
+当前版本：**0.1.3** · [CHANGELOG](CHANGELOG.md)
 
-`0.1.2` 补强路由判定与规则卡协议，新增等待态、无规则卡强制初始化和用户询问位置时的回答规范。
+`0.1.3` 基于 agent-pm 技术审查修复：触发词一致性、路由顺序去重、脚本失败回退、Session 恢复判定、等待态行为、S6 阶段定义等。README 结构优化：新增 30 秒快速上手、核心机制精简为 6 项。

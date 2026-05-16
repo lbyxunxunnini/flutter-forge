@@ -5,6 +5,23 @@
 - `0.2.x` 中出现的 `legacy_project_scan.md`、`~/.flutter-forge/projects/*.rule_card.yaml` 等表述保留为当时版本的历史事实
 - 当前现行入口与规则卡路径策略以 `references/existing_project_entry.md`、`references/existing_project_scan.md`、`references/rule_card_protocol.md` 为准
 
+## v0.1.3
+
+基于 agent-pm 技术审查修复与 README 结构优化。
+
+- 修复 "ff a" 触发词不一致：SKILL.md 触发条件补充 "ff a"，classify_task.sh 正则修复 `ff a` 不匹配问题
+- 修复路由顺序重复维护：task_runtime_prompt.md 路由判定改为引用 SKILL.md，消除两处不一致
+- 修复脚本失败回退缺失：check_rule_card.sh 和 classify_task.sh 脚本不存在或执行失败时补充降级路径
+- 修复 ff-fast 升级后日志限额冲突：明确升级日志不计入轻量任务 2 条限额
+- 优化 Session 恢复判定：增加强匹配/弱匹配/反向排除三级判定规则，减少歧义
+- 补充"等待态"行为约束：上下文保持、恢复方式、超时处理
+- 新增 S6 完成阶段定义：收口状态 + 完成日志 + 规则卡出口 + 退出
+- 明确 validate_output.sh 校验频率：只在模式/阶段/完成日志后运行
+- 规则卡草案超时"轮"改为"次触发 flutter-forge 任务"，定义更明确
+- 10 秒测试第二条改为"用户输入包含可直接定位的信息"+ 示例
+- ff-fast / ff-a 补充 4 文件分布的显式指引
+- README 新增「30 秒快速上手」区，核心机制从 10 项精简为 6 项
+
 ## 0.1.2
 
 路由判定与规则卡协议补强。

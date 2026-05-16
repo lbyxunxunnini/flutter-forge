@@ -60,7 +60,7 @@ while IFS= read -r line; do
     fi
 
     # 规则2: 模式日志中的模式名校验
-    if echo "$line" | grep -qE '\[f-forge\] *(模式：|页面工程师：.*任务|直通模式)'; then
+    if echo "$line" | grep -qE '\[f-forge\] *(模式：|页面工程师：.*任务|直通模式|页面工程师：ff-fast|全自动：)'; then
       # 提取模式名部分进行校验
       mode_part=$(echo "$line" | sed -E 's/.*\[f-forge\][[:space:]]*//' | sed -E 's/：.*//')
       # 对于 "模式：XXX" 格式，提取 XXX

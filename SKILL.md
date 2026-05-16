@@ -2,7 +2,7 @@
 name: flutter-forge
 description: >-
   Flutter 项目开发主控 skill。用户显式使用 "ff-"、"ff-fast"、"ff-a"、"/flutter-forge"、"使用 flutter-forge"、"按 flutter-forge 工作模式处理" 等方式触发时进入。也可在用户明确要求按 flutter 项目结构化流程处理时进入。
-  硬触发关键词："ff-fast"、"ff-a"、"ff a"、"ff-"、"ff -"、"ff "、"flutter-forge"、"/flutter-forge"、"使用 flutter-forge"、"按 flutter-forge 工作模式处理"。用户输入以 "ff" 开头时必须触发。
+  硬触发关键词："ff-fast"、"ff-a"、"ff a"、"ff-"、"ff -"、"ff "、"flutter-forge"、"/flutter-forge"、"使用 flutter-forge"、"按 flutter-forge 工作模式处理"。用户输入以 "ff-"、"ff "、"ff a"、"ff-fast"、"ff-a" 开头时必须触发，不匹配 "ffmpeg"、"ffprobe" 等无关输入。
   命中后由 controller 在当前整轮任务内主动分流；文档、代码环境、打包、CI/CD、闲聊等走直通模式，任务完成后自动退出。需要专项判断时再展示需求分析师、UI 设计师、架构设计师、页面工程师标签。
 ---
 
@@ -15,7 +15,7 @@ Flutter 项目内的 `controller` skill。先路由，再分类，再执行。
 1. `controller` 唯一——命中判断、任务路由、阶段推进、升级降级、最终输出
 2. 先路由 → 再分类 → 再展示模式 → 再执行
 3. 任务类型和任务规模分离（`大任务` 只代表复杂度）
-4. `完整流程` 是执行协议，不是用户可见模式名
+4. `完整流程` 是执行协议，不是用户可见模式名。它指 S1→S2→(S3)→S4→S5 的标准执行链（功能开发/页面开发共用），S3 为可选的角色对话/拆包阶段（仅大任务并行时需要），对外显示为具体模式名（功能开发/页面开发）
 5. 角色标签按需输出，只在需要专项判断时展示
 6. 提问由 controller 排序合并，由对应角色发出，每轮只问 1 个
 7. UI 关键信息不足时先补输入，不直接拍板
@@ -29,7 +29,7 @@ Flutter 项目内的 `controller` skill。先路由，再分类，再执行。
 
 ### 进入条件
 
-满足任一：硬触发词 `ff-fast`/`ff-a`/`ff-`/`/flutter-forge`/`flutter-forge`、用户明确要求按结构化流程处理。
+满足任一：硬触发词（完整列表见 description）或用户明确要求按结构化流程处理。
 
 仅因为当前工作区是 Flutter 项目，不自动进入。
 
@@ -37,25 +37,30 @@ Flutter 项目内的 `controller` skill。先路由，再分类，再执行。
 
 `ff-fast` 是执行策略，不是独立任务模式。命中后优先按轻量 / 中等路径处理，并生成项目扫描摘要；只有发现明确需求缺口、UI 结构决策或架构边界风险时才升级。
 
-快速策略下：
-- 轻量任务最多读 1-3 个关键文件，最多输出开始 / 完成 2 条主要日志
-- 中等任务执行“15 分钟内完成策略”：扫描相似实现 → 直接改 → 最小验证
-- 启动时可调用 `scripts/project_snapshot.py` 生成冷启动摘要
-- 需要结构性决策时必须升级，不为速度绕过阶段门禁
-
-详细规则见 [fast_mode.md](references/fast_mode.md)。
+完整定义分布在 4 个文件中：核心策略（本文档）→ 详细规则与升级条件（[fast_mode.md](references/fast_mode.md)）→ 运行时动作（[task_runtime_prompt.md](references/task_runtime_prompt.md)）→ 提问与确认协议（[decision_and_question_protocol.md](references/decision_and_question_protocol.md)）。
 
 ### 全自动入口 `ff-a`
 
 `ff-a` 是全自动执行策略，不是独立任务模式。命中后先输出全自动日志，再继续按正常路由进入直通 / 轻量 / 中等 / UI 优化 / 架构级 / 功能开发 / 页面开发 / 新项目共创。
 
-全自动策略下：
-- 普通需求、UI、架构缺口不反复问用户，controller 选择推荐方案并标记为 `auto_assumption`
-- 自动方案必须来自规则卡、相似实现、项目主流模式或 Flutter 常规工程实践
-- 阶段门禁仍存在，只是“用户确认”可由“推荐方案自动确认”替代
-- 安全、隐私、生产环境、删除数据、不可逆迁移、全项目架构切换、write scope 不清晰时必须中断确认
+完整定义分布在 4 个文件中：核心策略（本文档）→ 详细规则与中断条件（[autonomous_mode.md](references/autonomous_mode.md)）→ 运行时动作（[task_runtime_prompt.md](references/task_runtime_prompt.md)）→ 提问与确认协议（[decision_and_question_protocol.md](references/decision_and_question_protocol.md)）。
 
-详细规则见 [autonomous_mode.md](references/autonomous_mode.md)。
+### ff-fast vs ff-a 快速对比
+
+选哪个？一句话：小改动用 `ff-fast`（先做再说，有风险再问），明确需求但缺细节用 `ff-a`（自动补全，做完告诉你）。
+
+```text
+ff-fast "改按钮颜色"      → 直接改，完了告诉你
+ff-a    "新建详情页"       → 缺的按推荐方案自动补完，做完列出用了哪些默认方案
+```
+
+| | ff-fast | ff-a |
+|---|---------|------|
+| 核心策略 | 轻量优先，发现风险再升级 | 缺口用推荐方案自动推进 |
+| 确认行为 | 减少确认但不自动拍板 | 非阻塞缺口不问用户 |
+| 升级后 | 可回退到中等任务 | 不回退，继续执行 |
+| 安全边界 | 不绕过高风险确认 | 不绕过高风险确认 |
+| 适用场景 | 小改动、局部 bug、有风险升级 | 明确需求但缺实现细节 |
 
 ### 路由顺序
 
@@ -63,7 +68,7 @@ Flutter 项目内的 `controller` skill。先路由，再分类，再执行。
 
 1. 检查规则卡状态？→ 有则加载；无则触发初始化（迭代项目生成草案，新项目在共创中完成初始化）
 2. 用户任务明确吗？→ 不明确则进入等待态，询问用户要做什么
-3. 属于直通场景吗？→ 文档/环境/打包/CI/CD/闲聊/快速确认走直通模式
+3. 属于直通场景吗？→ 文档查询/环境配置/打包/CI/CD/闲聊/快速确认走直通模式。反例：涉及代码修改的 review、需要新增文件的配置不属于直通
 4. 属于新项目共创吗？→ 模糊想法/空项目/方向讨论进入新项目共创
 5. 属于优化场景吗？→ 需求优化进入功能开发/页面开发的 S1；UI 优化进入 UI 优化；架构优化进入架构级任务
 6. 属于架构级重任务吗？→ 迁移/系统性重构/依赖治理/i18n-a11y 体系化接入/性能专项优化进入架构级任务
@@ -74,7 +79,7 @@ Flutter 项目内的 `controller` skill。先路由，再分类，再执行。
 11. 不适合轻量但也不需重流程吗？→ 进入中等任务
 12. 其他情况 → 默认进入功能开发
 
-`等待态` 是内部等待状态，不属于用户可见模式名。
+`等待态` 是内部等待状态，不属于用户可见模式名。行为约束：等待期间 controller 保持当前上下文不丢失；用户回复后直接根据回答内容恢复路由判定，不重新走完整启动流程；如果用户长时间无回复（跨会话），下一次输入按新任务处理。
 
 ### 从需求/设计起步的硬规则
 
@@ -88,10 +93,12 @@ Flutter 项目内的 `controller` skill。先路由，再分类，再执行。
 
 同时满足才允许走轻量：
 - 不是从需求/设计起步
-- 用户已指明具体文件/组件/属性（不是 controller 推断）
-- 不涉及组件边界、状态管理、路由、模块归属、复用决策
+- 用户输入包含可直接定位的信息（如页面名+控件名、文件路径、组件名）——仅凭输入即可确定改动范围，无需 controller 额外推断
+- 不涉及新增组件、不改变状态管理方式、不改变路由结构
 
-判定主体：以用户输入为准。
+判定主体：以用户输入为准。示例：「把登录页的按钮文案改成立即开始」→ 满足（登录页+按钮+文案，可直接定位）；「改一下那个页面」→ 不满足（需要追问具体页面和改动点）。
+
+降级规则：用户输入模糊（如"改一下那个页面"）且不涉及需求/设计起步时 → 进入等待态追问具体目标 → 追问后仍模糊 → 按中等任务处理。
 
 ## 执行协议
 
@@ -104,13 +111,28 @@ Flutter 项目内的 `controller` skill。先路由，再分类，再执行。
 
 #### S0 未收口（内部状态，不对外输出）
 
-路由判定完成但需补上下文（读规则卡、扫描）时短暂经过。轻量/中等任务跳过。满足后自动进入 S1。
+路由判定完成但需补上下文（读规则卡、扫描）时短暂经过。轻量/中等任务跳过。
+
+退出条件：规则卡已加载（或确认无需规则卡）+ 必要扫描完成，满足后自动进入 S1。
 
 #### C3 → S3 等价性
 
-- C0-C1 ≈ S1（目标、场景、结构方向已收口）
-- C2-C3 ≈ S2（工程组织、状态管理、路由、首批范围已冻结）
-- 首批范围足够小时可跳过 S3 直接进入 S4
+C3 完成时必须产出以下冻结项，等价于 S1+S2 的合并产出：
+
+- **目标与场景**（≈S1）：产品目标、核心用户路径、核心页面清单
+- **结构方向**（≈S1）：页面结构草案、信息架构
+- **工程组织**（≈S2）：目录结构、状态管理方案、路由方案
+- **首批范围**（≈S2）：首批实现的页面和功能边界、命名规范
+
+C3 冻结后进入 S3（角色对话/拆包），首批范围足够小时可跳过 S3 直接进入 S4。
+
+#### S6 完成
+
+S5 验证通过后进入 S6。S6 不是一个需要执行动作的阶段，而是退出前的收口状态：
+
+- 输出完成日志（`[f-forge] 本轮完成：xxx`）
+- 大任务且命中长期约束变化时，询问是否更新规则卡
+- 清理当前运行态，退出 flutter-forge
 
 ### 各模式执行要点
 
@@ -133,9 +155,17 @@ Flutter 项目内的 `controller` skill。先路由，再分类，再执行。
 
 ### 中等任务升级路径
 
-- 需求缺口 → 功能开发/页面开发，从 S1 开始
-- UI 结构决策 → UI 优化/页面开发，从 S2 开始
-- 架构边界风险 → 架构级任务，从 S2 开始
+升级信号判定标准：
+
+| 信号 | 判定标准 | 升级目标 | 起始阶段 |
+|------|---------|---------|---------|
+| 需求缺口 | 发现任务目标有歧义、缺少关键业务约束、分支未收口 | 功能开发/页面开发 | S1 |
+| UI 结构决策 | 需要新增区块、调整布局结构、涉及组件边界 | UI 优化/页面开发 | S2 |
+| 架构边界风险 | 涉及状态管理变更、路由调整、公共模块拆分、模块归属变动 | 架构级任务 | S2 |
+
+升级时输出新模式标志 + 具体原因 + 从对应阶段继续。
+
+降级条件：扫描后发现实际复杂度低于预期（需求已明确、无架构风险、UI 结构简单）时，可降级回中等任务，降级必须有具体原因。详见 [fast_mode.md](references/fast_mode.md)。
 
 ### 大任务并行协议
 
@@ -158,6 +188,14 @@ Flutter 项目内的 `controller` skill。先路由，再分类，再执行。
 - 直通子任务完成后新任务重新走路由
 - 用户本轮无新任务时才真正退出 flutter-forge
 
+### 用户中途打断/取消
+
+用户在大任务执行中途说"算了""不要了""换个方向"时：
+1. 停止当前执行态
+2. 输出已完成部分的摘要（`[f-forge] 已完成部分：xxx`）
+3. 询问是否保留已做改动
+4. 如用户要求换方向，重新走任务路由
+
 ## 阶段门禁
 
 1. 需求未确认且无 `auto_assumption` → 禁止实现
@@ -170,6 +208,8 @@ Flutter 项目内的 `controller` skill。先路由，再分类，再执行。
 8. 大文档 → 禁止整包下发
 
 用户要求阶段回退时，先回退再继续。
+
+详细阶段转换条件见 [decision_and_question_protocol.md](references/decision_and_question_protocol.md) 第 5 节。
 
 ## 误路由纠正
 
@@ -185,21 +225,7 @@ Flutter 项目内的 `controller` skill。先路由，再分类，再执行。
 
 ## 按需加载
 
-| 场景 | 加载 |
-|------|------|
-| 决策/提问/门禁细则 | [decision_and_question_protocol.md](references/decision_and_question_protocol.md) |
-| 快速执行策略 | [fast_mode.md](references/fast_mode.md) |
-| 全自动执行策略 | [autonomous_mode.md](references/autonomous_mode.md) |
-| 运行时检查 | [task_runtime_prompt.md](references/task_runtime_prompt.md) |
-| 可见性/日志格式 | [skill_visibility.md](references/skill_visibility.md) |
-| Session 管理 | [session_management.md](references/session_management.md) |
-| 规则卡协议 | [rule_card_protocol.md](references/rule_card_protocol.md) |
-| 规则卡校验 | [rule_card_validation.md](references/rule_card_validation.md) |
-| 项目初始化 | [project_init_flow.md](references/project_init_flow.md) |
-| 新项目共创 | [new_project_cocreation_mode.md](references/new_project_cocreation_mode.md) |
-| 宿主子代理支持 | [host_subagent_support.md](references/host_subagent_support.md) |
-| 角色契约 | [roles/](references/roles/) 目录下各文件 |
-| 完整加载映射 | [load_map.md](references/load_map.md) |
+30+ 参考文档按需加载，完整场景→文件映射见 [load_map.md](references/load_map.md)。本文件不再重复列出。
 
 ## 规则优先级
 
@@ -207,12 +233,12 @@ Flutter 项目内的 `controller` skill。先路由，再分类，再执行。
 
 - 阶段门禁
 - 角色边界（impl 不重定义需求，ui 不决定状态管理，requirement 不给架构结论）
-- 一问一答（每轮只问 1 个）
+- 一问一答（每轮只问 1 个）——详见 [decision_and_question_protocol.md](references/decision_and_question_protocol.md) 第 4 节
 - 10 秒测试以用户输入为准
 - 宿主能力未知时不假装并行
-- 进入后必须输出 `[f-forge]` 模式日志，模式名必须使用 skill_visibility.md 中定义的标准名称（直通模式/轻量任务/中等任务/UI 优化/架构级任务/功能开发/页面开发/新项目共创），禁止自创模式名
-- `ff-fast` 不能绕过阶段门禁、验证或高风险确认
-- `ff-a` 不能自动执行安全、生产、删除数据、不可逆迁移或全项目架构切换类高风险决策
+- 进入后必须输出 `[f-forge]` 模式日志，模式名必须使用 [skill_visibility.md](references/skill_visibility.md) 中定义的标准名称，禁止自创模式名
+- `ff-fast` 不能绕过阶段门禁、验证或高风险确认——详见 [fast_mode.md](references/fast_mode.md)
+- `ff-a` 不能自动执行安全、生产、删除数据、不可逆迁移或全项目架构切换类高风险决策——详见 [autonomous_mode.md](references/autonomous_mode.md)
 
 ### P1 核心规则（应当遵循）
 
@@ -246,7 +272,7 @@ Flutter 项目内的 `controller` skill。先路由，再分类，再执行。
 | 转换 | 自检 |
 |------|------|
 | → 进入模式 | 是否满足进入条件？是否误判轻量？ |
-| S1→S2 | 放行条件全满足？ |
+| S1→S2 | 需求已冻结（目标、范围、分支、边界 case 均已确认或有 auto_assumption）？ |
 | S2→S3/S4 | 方案稳定？上游无未收口？ |
 | S3→S4 | 拆分包完整？宿主支持？值得并行？ |
 | S4→S5 | 工作包全完成或已标失效？ |
