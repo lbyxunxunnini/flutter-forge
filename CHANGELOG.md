@@ -5,6 +5,24 @@
 - `0.2.x` 中出现的 `legacy_project_scan.md`、`~/.flutter-forge/projects/*.rule_card.yaml` 等表述保留为当时版本的历史事实
 - 当前现行入口与规则卡路径策略以 `references/existing_project_entry.md`、`references/existing_project_scan.md`、`references/rule_card_protocol.md` 为准
 
+## v0.1.4
+
+基于 agent-pm 二次技术审查的指令清晰度与协议一致性修复。
+
+- **修复规则卡初始化链路根因**：SKILL.md 路由步骤 1 从概念描述（"检查规则卡状态？"）改为明确脚本执行指令（"运行 `scripts/check_rule_card.sh`"），标注"必须执行的动作，不是可选判断"，解决 agent 跳过规则卡检查的问题
+- 新增验证失败回退矩阵：quality_gates.md 定义 5 种失败类型的回退阶段和回退原则
+- 规则卡草案超时计数改为持久化到 session.md，支持跨会话累积
+- 修正 advisor_collaboration.md 提问数量矛盾：明确"1-3 个问题"是总数，每轮仍只放 1 个
+- existing_project_consulting.md 精简为存量项目特有场景，通用格式引用 advisor_collaboration.md
+- 新增低置信度判定标准：engineering_heuristics.md 定义 5 种触发条件和处理方式
+- 新增长任务并行 5 项前提条件内联到 SKILL.md，不再需要跳转查找
+- 明确 validate_output.sh 是推荐运行而非强制，P0 日志规则不依赖脚本
+- code_review_mode.md 开头增加与 S5 验证的边界区分说明
+- existing_project_entry.md 补充"已加载规则卡"的启动握手输出模板
+- SKILL.md 补全 "ff a"（带空格）等价写法说明
+- 修正"完整流程"命名歧义：明确为内部执行协议，对外以功能开发/页面开发呈现
+- 对齐等待态与 session 恢复的优先级关系
+
 ## v0.1.3
 
 基于 agent-pm 技术审查修复与 README 结构优化。
