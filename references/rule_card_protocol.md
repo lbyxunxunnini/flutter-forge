@@ -8,14 +8,14 @@
 
 1. `.claude/.flutter-forge/projects/*.rule_card.yaml`
 2. `.trae/.flutter-forge/projects/*.rule_card.yaml`
-3. `.agent/.flutter-forge/projects/*.rule_card.yaml`
+3. `.agents/.flutter-forge/projects/*.rule_card.yaml`
 4. `.flutter-forge/projects/*.rule_card.yaml`
 
 查找规则：
 
 - 优先检查 `.claude/.flutter-forge`
 - 其次检查 `.trae/.flutter-forge`
-- 再检查 `.agent/.flutter-forge`
+- 再检查 `.agents/.flutter-forge`
 - 如果前三个目录都不存在或都没有当前项目规则卡，则回退到项目根目录下的 `.flutter-forge`
 - 当需要初始化正式规则卡时，按优先级在第一个存在的目录中创建；如果都不存在，优先在 `.claude/.flutter-forge/projects/` 创建
 
@@ -27,6 +27,30 @@
 - 未命中上述四个目录的其他宿主项目记忆目录
 - 仓库内示例规则卡或模板文件
 - 当前会话临时总结或扫描推断
+
+## 快速查找脚本
+
+每次任务启动时，通过脚本完成路径解析，LLM 只消费输出结果：
+
+```bash
+scripts/check_rule_card.sh <project_root>
+```
+
+输出格式：
+
+```text
+status: found | draft | not_found
+path: <相对路径或 ->
+project_name: <项目名>
+has_draft: true | false
+draft_path: <草案相对路径或 ->
+```
+
+- `status: found` → 加载 `path` 指向的正式规则卡
+- `status: draft` → 提示用户确认草案
+- `status: not_found` → 进入初始化流程
+
+LLM 禁止自行遍历上述四个路径查找规则卡。路径解析由脚本完成，确保精确匹配项目名且不跨项目污染。
 
 ## 规则卡的意义
 
@@ -106,7 +130,7 @@
 正式规则卡只会出现在以下路径之一：
 - .claude/.flutter-forge/projects/*.rule_card.yaml
 - .trae/.flutter-forge/projects/*.rule_card.yaml
-- .agent/.flutter-forge/projects/*.rule_card.yaml
+- .agents/.flutter-forge/projects/*.rule_card.yaml
 - .flutter-forge/projects/*.rule_card.yaml
 ```
 
@@ -126,15 +150,20 @@
 
 ## 规则卡检查流程
 
-如果存在当前项目对应的真实规则卡：
+运行 `scripts/check_rule_card.sh <project_root>` 获取状态后：
 
-1. 先加载项目规则卡
-2. 视为 `项目状态：已初始化`
-3. 视为 `项目已被 Flutter Forge 接管`
-4. 再加载跨项目长期偏好
-5. 然后判断是否需要补扫描
+- `status: found`：
+  1. 加载 `path` 指向的规则卡内容
+  2. 视为 `项目状态：已初始化`
+  3. 视为 `项目已被 Flutter Forge 接管`
+  4. 加载跨项目长期偏好
+  5. 判断是否需要补扫描
 
-只有在规则卡存在且 Flutter skills 状态也已就绪时，才允许静默进入下一环节。
+- `status: draft`：提示用户确认草案，草案期间按草案参考执行
+
+- `status: not_found`：进入初始化流程
+
+只有在 `status: found` 且 Flutter skills 状态也已就绪时，才允许静默进入下一环节。
 
 ## 规则卡草案与正式规则卡
 

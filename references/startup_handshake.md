@@ -22,26 +22,19 @@
 [f-forge] 模式：启动握手
 ```
 
-后面补最小状态：
+后面补最小状态（其中规则卡状态由 `scripts/check_rule_card.sh` 输出决定）：
 
 ```text
 - 项目阶段：新项目 / 迭代项目
 - 规则卡：已加载 / 未发现 / 待生成
-- 规则卡路径：<resolved_rule_card_path>
+- 规则卡路径：<check_rule_card.sh 输出的 path 字段>
 - Flutter skills：已就绪 / 未就绪
 - 下一步：进入新项目共创 / 进入页面开发 / 继续当前任务
 ```
 
-其中 `规则卡路径` 只能在当前目标项目根目录内按以下顺序精确解析：
+规则卡路径由 `scripts/check_rule_card.sh` 精确解析，LLM 禁止自行搜索路径。禁止把 `~/.claude/projects/.../memory/*.yaml`、其他项目目录中的规则卡、当前项目目录下其他项目名的规则卡当作已加载规则卡。
 
-1. `.claude/.flutter-forge/projects/<project>.rule_card.yaml`
-2. `.trae/.flutter-forge/projects/<project>.rule_card.yaml`
-3. `.agent/.flutter-forge/projects/<project>.rule_card.yaml`
-4. `.flutter-forge/projects/<project>.rule_card.yaml`
-
-禁止把 `~/.claude/projects/.../memory/*.yaml`、其他项目目录中的规则卡、当前项目目录下其他项目名的规则卡当作已加载规则卡。
-
-如果以上路径没有精确命中，启动握手必须输出：
+如果脚本输出 `status: not_found`，启动握手必须输出：
 
 ```text
 - 规则卡：未发现，准备初始化

@@ -111,7 +111,7 @@
 规则卡查找顺序：
 1. .claude/.flutter-forge
 2. .trae/.flutter-forge
-3. .agent/.flutter-forge
+3. .agents/.flutter-forge
 4. 项目根目录 .flutter-forge
 ```
 

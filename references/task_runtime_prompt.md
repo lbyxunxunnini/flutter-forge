@@ -10,13 +10,11 @@
 
 每次任务开始时，按这个顺序检查：
 
-1. 检查规则卡：是否存在当前项目规则卡？按优先级查找（.claude/.flutter-forge > .trae/.flutter-forge > .agents/.flutter-forge > .flutter-forge ），不存在则自动初始化（扫描项目结构 → 生成草案 → 输出待确认）
+1. 检查规则卡：运行 `scripts/check_rule_card.sh <project_root>`，读取输出判断状态（`found` / `draft` / `not_found`）。`found` 则加载规则卡；`draft` 则提示用户确认草案；`not_found` 则自动初始化（扫描项目结构 → 生成草案 → 输出待确认）。禁止 LLM 自行搜索路径。路径优先级：`.claude/.flutter-forge` > `.trae/.flutter-forge` > `.agents/.flutter-forge` > `.flutter-forge`
 2. 是否需要进入 `flutter-forge`
-3. 是否启用 `ff-fast` 快速策略或 `ff-a` 全自动策略
+3. 运行 `scripts/classify_task.sh "<用户输入>"` 获取任务类型预判和执行策略，LLM 消费预判结果（`confidence: low` 时做二次判定）
 4. 用户当前任务是否明确；不明确则进入内部等待态并先追问任务目标
-5. 命中后是否应走直通模式
-6. 当前任务属于哪种任务类型
-7. 当前任务规模是小 / 中 / 大
+5. 当前任务规模是小 / 中 / 大
 8. 是否需要读取规则卡
 9. 是否需要补扫描上下文
 10. 当前输入是否已经大到需要先压缩成阶段摘要包
@@ -25,14 +23,15 @@
 13. 如果任务规模为大且可能进入并行，当前宿主是否支持真实子代理（见 [host_subagent_support.md](host_subagent_support.md)）
 14. 是否需要执行验证
 15. 当前是否明确在继续同一未完成大任务
-16. 输出格式校验：每次对外输出前，检查是否符合 [skill_visibility.md](skill_visibility.md) 定义的格式——模式日志必须为 `[f-forge] 模式：xxx`，角色对话必须带 `[f-forge] 角色名：` 前缀，阶段日志必须为 `[f-forge] 阶段：Sx xxx`
+16. 输出格式校验：每次对外输出完成后，运行 `scripts/validate_output.sh` 校验格式合规性（`[f-forge]` 前缀、模式名、阶段编号、角色名）
 
 规则卡检查硬约束：
 
-- 未命中真实 `.rule_card.yaml` 前，不得输出“规则卡：已加载”
+- `check_rule_card.sh` 输出 `status: not_found` 时，不得输出”规则卡：已加载”
 - 不得用 `.trae/rules/rules.md`、`.claude/*.md`、`CLAUDE.md`、`AGENTS.md` 或其他项目规则文件替代正式规则卡
-- 无规则卡时，不得直接进入“等待用户任务”或普通执行流程；必须先进入初始化处理
-- 只有“用户单纯询问规则卡位置/状态”这类直通说明场景，才允许只回答现状而不立即展开初始化执行
+- `status: not_found` 时，不得直接进入”等待用户任务”或普通执行流程；必须先进入初始化处理
+- 只有”用户单纯询问规则卡位置/状态”这类直通说明场景，才允许只回答现状而不立即展开初始化执行
+- 禁止 LLM 自行遍历路径查找规则卡；路径解析由脚本完成，LLM 只消费输出结果
 
 ## 先判定，再执行
 
@@ -51,38 +50,44 @@
 
 这里只保留运行时需要执行的最小动作，不重复展开协议细则。
 
-### 0. 快速策略判定
+### 0. 预分类与策略判定
 
-如果用户以 `ff-fast` 开头，或明确要求“快速处理、轻量优先、先直接改，必要时再升级”，设置：
+运行 `scripts/classify_task.sh “<用户输入>”` 获取预判结果：
 
 ```text
-fast_mode: true
+mode: <直通模式|轻量任务|中等任务|UI 优化|架构级任务|功能开发|页面开发|新项目共创>
+confidence: <high|medium|low>
+policy: <标准|快速|全自动>
+matched_by: <命中的关键词类别>
 ```
 
-启动时输出：
+根据 `policy` 字段设置执行策略：
+
+- `policy: 快速` → 设置 `fast_mode: true`，输出 ff-fast 启动日志
+- `policy: 全自动` → 设置 `autonomous_mode: true`，输出 ff-a 启动日志
+- `policy: 标准` → 不设置额外策略
+
+根据 `mode` 和 `confidence` 字段：
+
+- `confidence: high` → 直接采用预判结果
+- `confidence: low` → LLM 做二次判定，可推翻预判结果
+
+`ff-fast` 启动时输出：
 
 ```text
 [f-forge] 页面工程师：ff-fast 快速策略，轻量优先，发现架构风险再升级。
 ```
 
-执行中：
+`ff-fast` 执行中：
 
 - 优先调用 `scripts/project_snapshot.py` 获取冷启动摘要
 - 轻量任务最多读 1-3 个关键文件
-- 中等任务执行“扫描相似实现 → 直接改 → 最小验证”
+- 中等任务执行”扫描相似实现 → 直接改 → 最小验证”
 - 发现需求缺口、UI 结构决策或架构边界风险时升级
 
 详细边界见 [fast_mode.md](fast_mode.md)。
 
-### 0.1 全自动策略判定
-
-如果用户以 `ff-a` / `ff a` 开头，或明确要求“全自动做完、不反复确认、缺少部分采用推荐方案”，设置：
-
-```text
-autonomous_mode: true
-```
-
-启动时输出：
+`ff-a` 启动时输出：
 
 ```text
 [f-forge] 全自动：已启用 ff-a，非阻塞缺口将采用推荐方案推进；安全、不可逆或高风险架构决策才中断确认。
@@ -141,7 +146,7 @@ autonomous_mode: true
 - 涉及重构、迁移、依赖清理
 - 需要判断是否沿用项目既有模式
 
-按优先级查找：.claude/.flutter-forge > .trae/.flutter-forge > .agent/.flutter-forge > .flutter-forge
+路径由 `scripts/check_rule_card.sh` 解析，LLM 读取脚本输出的 `path` 字段获取规则卡内容，禁止自行搜索路径。
 
 纯轻量任务可只读取必要局部上下文，不强制完整规则卡摘要。
 

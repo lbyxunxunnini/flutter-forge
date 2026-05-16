@@ -44,7 +44,7 @@ def find_rule_cards(root: Path) -> list[str]:
     patterns = [
         f".claude/.flutter-forge/projects/{project_name}.rule_card.yaml",
         f".trae/.flutter-forge/projects/{project_name}.rule_card.yaml",
-        f".agent/.flutter-forge/projects/{project_name}.rule_card.yaml",
+        f".agents/.flutter-forge/projects/{project_name}.rule_card.yaml",
         f".flutter-forge/projects/{project_name}.rule_card.yaml",
     ]
     cards: list[str] = []

@@ -293,7 +293,7 @@ accessibility:
   enabled: false
 ```
 
-存储位置优先：`.claude/.flutter-forge/projects/`、`.trae/.flutter-forge/projects/`、`.agent/.flutter-forge/projects/`，回退到项目根目录 `.flutter-forge/projects/`。
+存储位置优先：`.claude/.flutter-forge/projects/`、`.trae/.flutter-forge/projects/`、`.agents/.flutter-forge/projects/`，回退到项目根目录 `.flutter-forge/projects/`。
 
 ### 6. 不完整输入处理
 

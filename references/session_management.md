@@ -50,14 +50,24 @@
 
 ## 写入时机
 
+通过 `scripts/ff_session.sh` 操作 session，禁止 LLM 直接读写文件格式。
+
+```bash
+scripts/ff_session.sh read                                    # 读取
+scripts/ff_session.sh init --track execution --phase S1       # 初始化
+scripts/ff_session.sh update --phase S4 --mode 功能开发       # 更新字段
+scripts/ff_session.sh reset                                   # 重置（任务完成时）
+scripts/ff_session.sh validate                                # 校验字段完整性
+```
+
 ### 必写
 
-1. 路由和模式判定完成时
-2. 阶段切换时
-3. 决策版本变化时
-4. 工作包完成时
-5. 下游结果失效时
-6. 整个任务完成时立即重置 `session`
+1. 路由和模式判定完成时 → `init` 或 `update --phase --mode`
+2. 阶段切换时 → `update --phase`
+3. 决策版本变化时 → `update --decision_version`
+4. 工作包完成时 → `update --work_packages --recent_action`
+5. 下游结果失效时 → `update --stale_results`
+6. 整个任务完成时 → `reset`
 
 ### 不必写
 
@@ -68,13 +78,15 @@
 
 ## 读取时机
 
+通过 `scripts/ff_session.sh read` 读取。
+
 ### 可读场景
 
 1. 当前大任务被压缩或中断时
 2. 用户明确要求继续同一未完成任务时
 3. 当前工作包尚未完成，且仍在同一轮任务内部时
 
-任务已经完成时，不再读取旧 `session`。
+任务已经完成时，不再读取旧 `session`（已通过 `reset` 清除）。
 
 ## 恢复逻辑
 

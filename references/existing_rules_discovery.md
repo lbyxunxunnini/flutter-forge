@@ -2,13 +2,17 @@
 
 除了 Flutter Forge 自己的规则卡，还要扫描项目中已有的规则文件。这些不是正式规则卡，但应作为一等输入参与规则卡生成和校正。
 
-## 扫描优先级
+## 扫描方式
+
+运行 `scripts/find_existing_rules.sh <project_root>`，脚本按以下优先级扫描：
 
 1. `.claude/rules/` 或 `.claude/*.md` — Claude Code 项目规则
 2. `.trae/rules/` — Trae 项目规则
 3. `.agents/rules/` — 其他 Agent 项目规则
 4. 项目根目录的 `rules.md`、`analysis_rules.md`、`CONVENTIONS.md` 等
 5. `analysis/` 目录下的规则或分析文档
+
+输出格式：`path: <路径> | size: <大小> | modified: <时间> | source: <来源>`
 
 ## 处理方式
 
