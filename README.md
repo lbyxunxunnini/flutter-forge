@@ -4,7 +4,7 @@
 
 Flutter Forge 是一个面向 Flutter 开发的结构化 AI 协作工作流 skill。它不是代码生成器，而是一个**项目内的编排与决策层**：在动手写代码之前，先理解项目上下文、收口设计方案、统一工程规则。
 
-GitHub: [lbyxunxunnini/flutter-forge](https://github.com/lbyxunxunnini/flutter-forge) · License: MIT · 当前版本：**0.1.4**
+GitHub: [lbyxunxunnini/flutter-forge](https://github.com/lbyxunxunnini/flutter-forge) · License: MIT · 当前版本：**v0.1.4**
 
 ---
 
@@ -454,6 +454,6 @@ python3 scripts/validate_docs_sync.py
 
 ## 版本
 
-当前版本：**0.1.4** · [CHANGELOG](CHANGELOG.md)
+当前版本：**v0.1.4** · [CHANGELOG](CHANGELOG.md)
 
-`0.1.4` 基于 agent-pm 二次技术审查：修复规则卡初始化链路根因（路由步骤从概念描述改为明确脚本执行指令）、验证失败回退矩阵、草案超时持久化、提问数量矛盾修正、低置信度判定标准统一、启动握手模板补全等。
+`v0.1.4` 基于 agent-pm 二次技术审查：修复规则卡初始化链路根因（路由步骤从概念描述改为明确脚本执行指令）、验证失败回退矩阵、草案超时持久化、提问数量矛盾修正、低置信度判定标准统一、启动握手模板补全等。
