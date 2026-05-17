@@ -5,6 +5,21 @@
 - `0.2.x` 中出现的 `legacy_project_scan.md`、`~/.flutter-forge/projects/*.rule_card.yaml` 等表述保留为当时版本的历史事实
 - 当前现行入口与规则卡路径策略以 `references/existing_project_entry.md`、`references/existing_project_scan.md`、`references/rule_card_protocol.md` 为准
 
+## v0.1.5
+
+基于 agent-pm 三次技术审查的语义真空修复与协议一致性补全。
+
+- **等待态日志格式补全**：标准模式清单新增 `[f-forge] 等待态：任务未明确，等待用户输入`，解决等待态无合规日志导致 LLM 回退自然语言的问题
+- **进入日志与模式日志解耦**：新增 `[f-forge] 进入 controller` 作为命中后第一条强制输出，模式日志作为第二步，解决"进入 skill"与"输出模式日志"绑定导致等待态无法输出的问题
+- **P0 日志时序修正**：第一步触发条件从"路由判定完成后"改为"命中触发词后"，解决等待态场景下"判定未完成→不该输出"的死锁
+- **session 恢复时序前置**：启动顺序中 session 恢复检查插入到等待态判定之前，明确"session 恢复 > 等待态判定"的执行路径
+- **脚本路径降级说明**：路由第 1 条和 task_runtime_prompt.md 补充"脚本不存在或执行失败时按 rule_card_protocol.md 手动判定"，并新增脚本路径解析规则节
+- **等待态追问后路由起点明确**：追问后从路由第 2 条重新判定，跳过规则卡检查
+- **启动握手模式名补全**：SKILL.md 和 skill_visibility.md 标准模式清单补充启动握手
+- **等待态追问话术模板**：skill_visibility.md 新增标准格式
+- **task_runtime_prompt.md 去重**：去除与 SKILL.md 重复的日志时机定义，改为引用
+- 同步更新 validate_output.sh 模式允许列表、P0 硬规则描述
+
 ## v0.1.4
 
 基于 agent-pm 二次技术审查的指令清晰度与协议一致性修复。

@@ -6,6 +6,10 @@
 
 - [decision_and_question_protocol.md](decision_and_question_protocol.md)
 
+## 脚本路径解析
+
+`scripts/` 目录位于 flutter-forge skill 安装目录下（如 `~/.claude/skills/flutter-forge/scripts/`）。运行脚本时，使用相对于 skill 安装目录的完整路径，或确保 CWD 可解析到该路径。脚本不存在或执行失败时，按各脚本对应的 reference 文档手动判定，不因脚本缺失阻塞启动。
+
 ## 启动顺序
 
 每次任务开始时，按这个顺序检查：
@@ -13,18 +17,20 @@
 1. 检查规则卡：运行 `scripts/check_rule_card.sh <project_root>`，读取输出判断状态（`found` / `draft` / `not_found`）。`found` 则加载规则卡；`draft` 则提示用户确认草案；`not_found` 则自动初始化（扫描项目结构 → 生成草案 → 输出待确认）。禁止 LLM 自行搜索路径。路径优先级：`.claude/.flutter-forge` > `.trae/.flutter-forge` > `.agents/.flutter-forge` > `.flutter-forge`。脚本不存在或执行失败时，LLM 按 `rule_card_protocol.md` 手动判定路径，但不跳过规则卡检查
 2. 是否需要进入 `flutter-forge`
 3. 运行 `scripts/classify_task.sh "<用户输入>"` 获取任务类型预判和执行策略，LLM 消费预判结果（`confidence: low` 时做二次判定）。脚本不存在或执行失败时，LLM 按 `SKILL.md` 路由顺序自行判定，不因脚本缺失阻塞启动
-4. 用户当前任务是否明确；不明确则进入内部等待态并先追问任务目标
-5. 当前任务规模是小 / 中 / 大
-6. 是否需要读取规则卡
-7. 是否需要补扫描上下文
-8. 当前输入是否已经大到需要先压缩成阶段摘要包
-9. 是否需要专项判断
-10. 如果进入 UI 判断，当前 UI 输入是否足够
-11. 如果任务规模为大且可能进入并行，当前宿主是否支持真实子代理（见 [host_subagent_support.md](host_subagent_support.md)）
-12. 是否需要执行验证
-13. 当前是否明确在继续同一未完成大任务
-14. 输出模式日志：路由判定完成后、开始执行前，必须先输出 `[f-forge]` 模式日志（格式见 [skill_visibility.md](skill_visibility.md) 第 48-77 行）。这是 P0 硬规则，不输出不允许继续执行
-15. 输出格式校验：在模式日志、阶段日志和完成日志输出后运行 `scripts/validate_output.sh` 校验格式合规性（`[f-forge]` 前缀、模式名、阶段编号、角色名）。轻量/中等任务只在完成日志后校验
+4. 检查 session 恢复条件：如果存在未完成 session 且用户输入匹配恢复条件（详见下方"Session 恢复"节），优先恢复 session，跳过等待态判定
+5. 用户当前任务是否明确；不明确则进入内部等待态并先追问任务目标
+6. 当前任务规模是小 / 中 / 大
+7. 是否需要读取规则卡
+8. 是否需要补扫描上下文
+9. 当前输入是否已经大到需要先压缩成阶段摘要包
+10. 是否需要专项判断
+11. 如果进入 UI 判断，当前 UI 输入是否足够
+12. 如果任务规模为大且可能进入并行，当前宿主是否支持真实子代理（见 [host_subagent_support.md](host_subagent_support.md)）
+13. 是否需要执行验证
+14. 当前是否明确在继续同一未完成大任务
+15. 输出进入日志：命中触发词后立即输出 `[f-forge] 进入 controller`
+16. 输出模式日志：路由判定完成后、开始执行前，必须输出 `[f-forge]` 模式日志（格式见 [skill_visibility.md](skill_visibility.md)）。这是 P0 硬规则，不输出不允许继续执行
+17. 输出格式校验：在模式日志、阶段日志和完成日志输出后运行 `scripts/validate_output.sh` 校验格式合规性（`[f-forge]` 前缀、模式名、阶段编号、角色名）。轻量/中等任务只在完成日志后校验
 
 规则卡检查硬约束：
 

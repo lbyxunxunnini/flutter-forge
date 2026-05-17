@@ -1,5 +1,5 @@
 {
   "name": "flutter-forge",
   "description": "Flutter 项目开发的主控 skill。显式使用 ff-、ff-fast、ff-a、/flutter-forge 或要求按 Flutter 结构化流程处理时进入；ff-fast 启用轻量优先快速策略，ff-a 启用全自动策略。命中后按复杂度选择直通、轻量、中等、UI 优化、架构级、功能开发、页面开发或新项目共创。",
-  "version": "0.1.3"
+  "version": "0.1.5"
 }
