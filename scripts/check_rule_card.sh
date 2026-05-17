@@ -54,16 +54,50 @@ done
 
 # 输出结果
 if [ -n "$found_card" ]; then
-  echo "status: found"
-  echo "path: $found_card"
+  status="found"
+  card_path="$found_card"
 elif [ -n "$found_draft" ]; then
-  echo "status: draft"
-  echo "path: $found_draft"
+  status="draft"
+  card_path="$found_draft"
 else
-  echo "status: not_found"
-  echo "path: -"
+  status="not_found"
+  card_path="-"
 fi
 
+# --json 模式：输出 JSON 供 hook / 自动化消费
+if [[ "${2:-}" == "--json" ]]; then
+  python3 -c "
+import json, sys
+print(json.dumps({
+    'status': '$status',
+    'path': '$card_path',
+    'project_name': '$PROJECT_NAME',
+    'has_draft': $([ -n "$found_draft" ] && echo true || echo false),
+    'draft_path': '${found_draft:--}'
+}, ensure_ascii=False))
+"
+  exit 0
+fi
+
+# 写入状态文件供 hook 读取
+STATE_DIR="${PROJECT_ROOT}/.flutter-forge/runtime"
+mkdir -p "$STATE_DIR" 2>/dev/null || true
+python3 -c "
+import json, os
+state = {
+    'status': '$status',
+    'path': '$card_path',
+    'project_name': '$PROJECT_NAME',
+    'has_draft': $([ -n "$found_draft" ] && echo true || echo false),
+    'draft_path': '${found_draft:--}'
+}
+state_file = os.path.join('$STATE_DIR', 'rule_card_status.json')
+with open(state_file, 'w') as f:
+    json.dump(state, f, ensure_ascii=False, indent=2)
+" 2>/dev/null || true
+
+echo "status: $status"
+echo "path: $card_path"
 echo "project_name: $PROJECT_NAME"
 echo "has_draft: $([ -n "$found_draft" ] && echo true || echo false)"
 echo "draft_path: ${found_draft:--}"

@@ -67,7 +67,16 @@ ff a    "新建详情页"            → 同 ff-a（带空格写法等价）
 
 命中后按此顺序判定（命中即停）：
 
-1. **运行 `scripts/check_rule_card.sh <project_root>`** 检查规则卡状态（`found`/`draft`/`not_found`）。这是必须执行的动作，不是可选判断。`found` → 加载规则卡；`draft` → 提示用户确认草案；`not_found` → **必须先执行初始化**（迭代项目：扫描 → 生成草案 → 输出待确认；新项目：在共创中完成初始化），不得跳过进入普通执行流程。脚本不存在或执行失败时，按 [rule_card_protocol.md](references/rule_card_protocol.md) 手动判定路径，不因脚本缺失阻塞启动。详见 [rule_card_protocol.md](references/rule_card_protocol.md)
+**1. 运行 `scripts/check_rule_card.sh <project_root>`**（必须执行，不是可选判断）
+
+| 状态 | 动作 |
+|------|------|
+| `found` | 加载规则卡 |
+| `draft` | 提示用户确认草案 |
+| `not_found` | **必须先执行初始化**（迭代项目：扫描 → 生成草案 → 输出待确认；新项目：在共创中完成初始化），不得跳过 |
+
+脚本失败时按 [rule_card_protocol.md](references/rule_card_protocol.md) 手动判定。脚本同时写入 `.flutter-forge/runtime/rule_card_status.json`，preToolCall hook 会在后续工具调用前检查——`not_found` 时阻断执行。
+
 2. 用户任务明确吗？→ 不明确则进入等待态，询问用户要做什么
 3. 属于直通场景吗？→ 文档查询/环境配置/打包/CI/CD/闲聊/快速确认走直通模式。反例：涉及代码修改的 review、需要新增文件的配置不属于直通
 4. 属于新项目共创吗？→ 模糊想法/空项目/方向讨论进入新项目共创
@@ -290,6 +299,7 @@ S5 验证通过后进入 S6。S6 不是一个需要执行动作的阶段，而�
 
 - 阶段门禁
 - 角色边界（impl 不重定义需求，ui 不决定状态管理，requirement 不给架构结论）
+- 角色激活必须完成对应 Mandatory Checklist（各角色文件定义），未完成不得宣布该角色结论
 - 一问一答（每轮只问 1 个）——详见 [decision_and_question_protocol.md](references/decision_and_question_protocol.md) 第 4 节
 - 10 秒测试以用户输入为准
 - 宿主能力未知时不假装并行

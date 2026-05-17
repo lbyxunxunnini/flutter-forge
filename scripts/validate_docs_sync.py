@@ -13,18 +13,15 @@ REFERENCE_LINK_RE = re.compile(r"\[([^\]]+)\]\(([^)]+)\)")
 REQUIRED_README_LINKS = [
     "QUICKSTART.md",
     "CHEATSHEET.md",
-    "references/validation_log.md",
-    "references/demo_transcript.md",
-    "references/mode_test_cases.md",
+    "references/archive/validation_log.md",
+    "references/archive/demo_transcript.md",
+    "references/archive/mode_test_cases.md",
 ]
 REQUIRED_LOAD_MAP_LINKS = [
     "fast_mode.md",
     "autonomous_mode.md",
     "stack_profiles.md",
     "flutter_stack_detection.md",
-    "release_playbook.md",
-    "validation_log.md",
-    "demo_transcript.md",
 ]
 
 

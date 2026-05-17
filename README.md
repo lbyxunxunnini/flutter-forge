@@ -4,7 +4,7 @@
 
 Flutter Forge 是一个面向 Flutter 开发的结构化 AI 协作工作流 skill。它不是代码生成器，而是一个**项目内的编排与决策层**：在动手写代码之前，先理解项目上下文、收口设计方案、统一工程规则。
 
-GitHub: [lbyxunxunnini/flutter-forge](https://github.com/lbyxunxunnini/flutter-forge) · License: MIT · 当前版本：**v0.1.5**
+GitHub: [lbyxunxunnini/flutter-forge](https://github.com/lbyxunxunnini/flutter-forge) · License: MIT · 当前版本：**v0.2.0**
 
 ---
 
@@ -413,8 +413,8 @@ python3 scripts/validate_docs_sync.py
 
 当前已提供：
 
-- Demo transcript：[references/demo_transcript.md](references/demo_transcript.md)
-- 真实回归记录：[references/validation_log.md](references/validation_log.md)
+- Demo transcript：[references/archive/demo_transcript.md](references/archive/demo_transcript.md)
+- 真实回归记录：[references/archive/validation_log.md](references/archive/validation_log.md)
 - Flutter 技术栈扫描器：`scripts/flutter_stack_scan.py`
 - 项目快照：`scripts/project_snapshot.py`
 - 规则卡初始化向导：`scripts/init_rule_card.py`
@@ -431,16 +431,16 @@ python3 scripts/validate_docs_sync.py
 - 快速上手：[QUICKSTART.md](QUICKSTART.md)
 - 速查卡：[CHEATSHEET.md](CHEATSHEET.md)
 - 开源发布检查：[OPEN_SOURCE_CHECKLIST.md](OPEN_SOURCE_CHECKLIST.md)
-- 模式测试用例：[references/mode_test_cases.md](references/mode_test_cases.md)
-- Demo transcript：[references/demo_transcript.md](references/demo_transcript.md)
+- 模式测试用例：[references/archive/mode_test_cases.md](references/archive/mode_test_cases.md)
+- Demo transcript：[references/archive/demo_transcript.md](references/archive/demo_transcript.md)
 - Flutter 技术栈识别：[references/flutter_stack_detection.md](references/flutter_stack_detection.md)
 - 技术栈 profile：[references/stack_profiles.md](references/stack_profiles.md)
 - 快速执行策略：[references/fast_mode.md](references/fast_mode.md)
 - 全自动执行策略：[references/autonomous_mode.md](references/autonomous_mode.md)
-- 发布流程：[references/release_playbook.md](references/release_playbook.md)
-- 大改版标准案例：[references/case_study_large_rework.md](references/case_study_large_rework.md)
+- 发布流程：[references/archive/release_playbook.md](references/archive/release_playbook.md)
+- 大改版标准案例：[references/archive/case_study_large_rework.md](references/archive/case_study_large_rework.md)
 - 宿主子代理支持：[references/host_subagent_support.md](references/host_subagent_support.md)
-- 真实试跑记录模板：[references/validation_log.md](references/validation_log.md)
+- 真实试跑记录模板：[references/archive/validation_log.md](references/archive/validation_log.md)
 
 如果你在真实项目中试用过，优先提交 GitHub issue 中的 `Validation case`，这比泛泛的反馈更有助于改进路由和规则卡。
 
@@ -454,8 +454,8 @@ python3 scripts/validate_docs_sync.py
 
 ## 版本
 
-当前版本：**v0.1.5** · [CHANGELOG](CHANGELOG.md)
+当前版本：**v0.2.0** · [CHANGELOG](CHANGELOG.md)
 
-`v0.1.5` 基于 agent-pm 三次技术审查：等待态日志格式补全、进入日志与模式日志解耦、session 恢复时序修正、脚本路径降级说明、启动握手模式名补全等 12 项修复。
+`v0.2.0` 基于真实评测的根因修复：规则卡执行 hook 化、角色清单强制化、reference 文件瘦身、版本号格式统一。
 
 `v0.1.4` 基于 agent-pm 二次技术审查：修复规则卡初始化链路根因（路由步骤从概念描述改为明确脚本执行指令）、验证失败回退矩阵、草案超时持久化、提问数量矛盾修正、低置信度判定标准统一、启动握手模板补全等。

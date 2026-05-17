@@ -199,7 +199,7 @@ LLM 禁止自行遍历上述四个路径查找规则卡。路径解析由脚本�
 
 草案生成后必须经过校验，确保质量足够支撑后续决策。校验清单、必填字段、置信度规则和扫描深度建议见：
 
-- [rule_card_validation.md](rule_card_validation.md)
+- 归档参考：[archive/rule_card_validation.md](archive/rule_card_validation.md)
 
 ## 规则卡刷新时机
 

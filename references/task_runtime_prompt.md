@@ -306,8 +306,8 @@ matched_by: <命中的关键词类别>
 
 质量门细节见：
 
-- [quality_gates.md](quality_gates.md)
-- [testing_strategy.md](testing_strategy.md)
+- [roles/verify_agent.md](roles/verify_agent.md)（Mandatory Checklist）
+- 归档参考：[archive/quality_gates.md](archive/quality_gates.md)、[archive/testing_strategy.md](archive/testing_strategy.md)
 
 ## 不要做的事
 

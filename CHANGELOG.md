@@ -5,6 +5,16 @@
 - `0.2.x` 中出现的 `legacy_project_scan.md`、`~/.flutter-forge/projects/*.rule_card.yaml` 等表述保留为当时版本的历史事实
 - 当前现行入口与规则卡路径策略以 `references/existing_project_entry.md`、`references/existing_project_scan.md`、`references/rule_card_protocol.md` 为准
 
+## v0.2.0
+
+基于真实评测（v0.1.4 综合 3.5/5）的根因修复与资产精简。
+
+- **规则卡执行 hook 化**：新增 `.claude/settings.json` preToolCall hook，规则卡 not_found 时系统级阻断，不再依赖 LLM 自觉
+- **角色清单强制化**：5 个角色文件各添加 5 项 mandatory checklist，SKILL.md P0 规则新增"未完成 checklist 不得宣布角色结论"
+- **Reference 文件瘦身**：63 文件精简为核心 + 归档两层，低频文件移入 `references/archive/`，load_map 同步更新
+- **版本号格式统一**：`.skillhub.json` 与 `VERSION` 统一为 `v` 前缀格式（`v0.2.0`），消除 validate_release.sh 精确比较歧义
+- **SKILL.md 路由步骤 1 精简**：拆为"执行检查"+"结果处理"表格，降级路径独立小节
+
 ## v0.1.5
 
 基于 agent-pm 三次技术审查的语义真空修复与协议一致性补全。
