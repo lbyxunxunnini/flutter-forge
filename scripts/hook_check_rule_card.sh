@@ -29,7 +29,13 @@ status="$(python3 -c "import json; print(json.load(open('$STATUS_FILE'))['status
 }
 
 if [[ "$status" == "not_found" ]]; then
-  echo "BLOCKED: 规则卡未初始化。请先执行项目初始化：运行 init_rule_card.py 扫描项目并生成规则卡草案，或确认无需规则卡后继续。"
+  python3 -c "
+import json, sys
+json.dump({
+    'permissionDecision': 'block',
+    'reason': '规则卡未初始化。请先执行项目初始化：运行 init_rule_card.py 扫描项目并生成规则卡草案，或确认无需规则卡后继续。'
+}, sys.stdout, ensure_ascii=False)
+"
   exit 2
 fi
 

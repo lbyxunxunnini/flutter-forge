@@ -1,6 +1,6 @@
 # Role Gate Matrix
 
-> **P0 强制规则**：每个角色激活时必须完成对应 Mandatory Checklist（定义在各角色文件中），未完成不得宣布放行结论。
+> **P0 强制规则**：每个角色激活时必须完成对应 Mandatory Checklist（定义在各角色文件中），未完成不得宣布该角色结论。
 
 ## 需求分析师
 
