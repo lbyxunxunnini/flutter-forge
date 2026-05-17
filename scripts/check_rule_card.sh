@@ -68,12 +68,13 @@ if [[ "${2:-}" == "--increment-usage" ]]; then
   STATE_FILE="${PROJECT_ROOT}/.flutter-forge/runtime/rule_card_status.json"
   if [ -f "$STATE_FILE" ]; then
     STATE_FILE="$STATE_FILE" python3 -c "
-import json, os
+import json, os, time
 state_file = os.environ['STATE_FILE']
 with open(state_file) as f:
     s = json.load(f)
 count = s.get('draft_usage_count', 0) + 1
 s['draft_usage_count'] = count
+s['checked_at'] = int(time.time())
 with open(state_file, 'w') as f:
     json.dump(s, f, ensure_ascii=False, indent=2)
 print(f'draft_usage_count: {count}')

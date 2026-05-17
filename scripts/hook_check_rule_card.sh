@@ -49,7 +49,7 @@ fi
 # 初始化白名单：当工具调用本身就是规则卡初始化、检查或修复时放行
 # 防止 hook 阻断初始化流程导致死锁
 if [ -n "$COMMAND_TEXT" ]; then
-  if printf '%s' "$COMMAND_TEXT" | grep -qE '(check_rule_card\.sh|init_rule_card\.py|hook_check_rule_card\.sh|project_snapshot\.py|find_existing_rules\.sh|flutter_stack_scan\.py|validate_rule_card)'; then
+  if printf '%s' "$COMMAND_TEXT" | grep -qE '(check_rule_card\.sh|init_rule_card\.py|hook_check_rule_card\.sh|project_snapshot\.py|find_existing_rules\.sh|flutter_stack_scan\.py|validate_rule_card\.py)'; then
     exit 0
   fi
 fi
