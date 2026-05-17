@@ -1,5 +1,7 @@
 # Flutter Forge Cheatsheet
 
+> 完整触发词与匹配规则：[references/trigger_words.md](references/trigger_words.md)
+
 ## 快速任务
 
 ```text

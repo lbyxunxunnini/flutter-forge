@@ -85,6 +85,10 @@
 
 - [project_init_flow.md](project_init_flow.md)
 
+### 需要触发词权威列表
+
+- [trigger_words.md](trigger_words.md)
+
 ## 反向索引：每个参考文件被哪些上层文件引用
 
 维护时用此表检查引用完整性。新增 reference 文件时同步更新此表。
@@ -110,3 +114,4 @@
 | network_and_api.md | load_map.md |
 | routing_and_navigation.md | load_map.md |
 | roles/verify_agent.md | load_map.md |
+| trigger_words.md | SKILL.md（命中路由）、README.md、QUICKSTART.md、CHEATSHEET.md、load_map.md |

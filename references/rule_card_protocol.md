@@ -52,6 +52,24 @@ draft_path: <草案相对路径或 ->
 
 LLM 禁止自行遍历上述四个路径查找规则卡。路径解析由脚本完成，确保精确匹配项目名且不跨项目污染。
 
+## 脚本降级路径解析
+
+仅在 `scripts/check_rule_card.sh` 不存在或执行失败（非零退出码、超时、缺依赖）时启用降级路径，**正常情况下不允许走降级**。
+
+降级触发时必须：
+
+1. 先输出 `[f-forge] 规则卡：脚本不可用，进入降级路径解析`，保留可观测性
+2. 按下列顺序读取项目根目录下的规则卡，命中第一个存在的即停：
+   - `.claude/.flutter-forge/projects/*.rule_card.yaml`
+   - `.trae/.flutter-forge/projects/*.rule_card.yaml`
+   - `.agents/.flutter-forge/projects/*.rule_card.yaml`
+   - `.flutter-forge/projects/*.rule_card.yaml`
+3. 同时检查同名 `*.rule_card_draft.yaml` 文件，判定草案状态
+4. 命中规则卡时按 `status: found` 处理；只有草案时按 `status: draft` 处理；都没有时按 `status: not_found` 处理
+5. 全程不跳过规则卡检查环节——降级是路径解析方式的降级，不是检查环节的降级
+
+降级路径解析后，LLM 应在任务收口前提示用户检查脚本环境（如 `bash` 不可用、脚本文件被误删），避免长期降级运行。
+
 ## 规则卡的意义
 
 规则卡不只是记忆文件，而是 **项目初始化状态标记**：
@@ -150,7 +168,19 @@ LLM 禁止自行遍历上述四个路径查找规则卡。路径解析由脚本�
 
 ## 规则卡检查流程
 
-运行 `scripts/check_rule_card.sh <project_root>` 获取状态后：
+规则卡检查**不再每次启动强制执行**，而是按任务类型分级触发（详见 [task_runtime_prompt.md](task_runtime_prompt.md) "启动顺序"节第 3 步与 [SKILL.md](../SKILL.md) "路由顺序"节第 2 步的分级表格）：
+
+- 直通模式：跳过
+- 轻量任务：启动跳过；实现中触碰状态管理/路由/目录约定时按需触发
+- 中等任务：`confidence: high` 跳过；`low` 检查
+- UI 优化 / 架构级 / 功能开发 / 页面开发：必须检查
+- 新项目共创：C0/C1 跳过；进入 C2 工程定型时必须检查
+
+需要检查时，运行 `scripts/check_rule_card.sh <project_root> --cached 300`（缓存优先，300 秒 TTL）。
+
+写操作硬阻断由 preToolCall hook（`scripts/hook_check_rule_card.sh`）兜底——`not_found` 状态下，写操作（Edit/Write/创建文件）触发硬阻断，读操作和命令执行只软提醒。
+
+按状态执行：
 
 - `status: found`：
   1. 加载 `path` 指向的规则卡内容
@@ -200,6 +230,46 @@ LLM 禁止自行遍历上述四个路径查找规则卡。路径解析由脚本�
 草案生成后必须经过校验，确保质量足够支撑后续决策。校验清单、必填字段、置信度规则和扫描深度建议见：
 
 - 归档参考：[archive/rule_card_validation.md](archive/rule_card_validation.md)
+
+### 草案静默转正
+
+草案被连续多次任务作为参考执行且无冲突时，自动转为正式规则卡，无需用户显式确认。
+
+**转正条件**：
+
+- `draft_usage_count` 达到 **5**（连续 5 次中等及以上任务完成且未与草案冲突）
+- 直通模式和轻量任务不计入（它们不读规则卡，无法验证一致性）
+- 每次任务完成时，controller 判断"本轮实现是否与草案规则冲突"：
+  - 无冲突：`draft_usage_count` +1
+  - 有冲突（实现结果与草案中的目录结构/状态管理/路由/命名规则不一致）：计数清零，提醒用户确认或更新草案
+
+**转正执行**：
+
+1. `draft_usage_count` 达到 5 时，在下次任务开始时（规则卡检查环节）自动执行：
+   - 将 `*.rule_card_draft.yaml` 重命名为 `*.rule_card.yaml`（去掉 `_draft` 后缀）
+   - 清零 `draft_usage_count` 和 `draft_reminder_count`
+   - 输出日志：`[f-forge] 规则卡草案已连续 5 次任务无冲突使用，自动转为正式规则卡：{路径}`
+2. 转正后，规则卡具有正式强制力
+3. 用户可随时手动确认草案（不必等 5 次），手动确认优先级高于静默转正
+
+**计数持久化**：
+
+- `draft_usage_count` 持久化到 `.flutter-forge/runtime/rule_card_status.json` 的 `draft_usage_count` 字段
+- 由 `scripts/check_rule_card.sh` 在输出 `status: draft` 时一并返回当前计数
+- 由任务完成时的 controller 逻辑递增或清零（通过 `scripts/check_rule_card.sh` 的 `--increment-usage` 或 `--reset-usage` 参数）
+
+**与草案超时的关系**：
+
+- 草案超时（`draft_reminder_count`）和静默转正（`draft_usage_count`）是两条独立路径
+- 超时提醒是"催用户确认"，静默转正是"用户不确认也能自动收口"
+- 两者可以并行：超时提醒照常触发，但如果用户继续忽略，静默转正会在第 5 次无冲突任务后自动生效
+- 用户在超时提醒时明确放弃草案 → 删除草案文件，两个计数都清零
+
+**安全边界**：
+
+- 静默转正不改变草案内容，只改变文件名和强制力等级
+- 如果草案中有明显错误字段（如状态管理写了 `unknown`），应在草案校验阶段就被拦住，不会进入静默转正流程
+- 转正后如果发现规则卡与代码不一致，走正常的"规则卡刷新时机"流程
 
 ## 规则卡刷新时机
 

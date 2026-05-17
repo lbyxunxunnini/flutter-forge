@@ -26,7 +26,9 @@ ff-fast 改一下登录页按钮颜色      # 快速路径
 ff-a 新建商品详情页，缺的自动补完  # 全自动路径
 ```
 
-所有策略通过 `ff-`、`ff-fast`、`ff-a` 触发（也兼容 `ff a`、`/flutter-forge`、`flutter-forge`）。上面 3 行描述的是执行行为差异，不是触发词差异。
+所有策略通过 `ff-`、`ff-fast`、`ff-a` 触发（也兼容 `ff a`、`/flutter-forge`）。上面 3 行描述的是执行行为差异，不是触发词差异。
+
+> 完整触发词与匹配规则的唯一权威来源：[references/trigger_words.md](references/trigger_words.md)。其他文档不维护并列清单。
 
 更短的上手说明见 [QUICKSTART.md](QUICKSTART.md)，常用 prompt 见 [CHEATSHEET.md](CHEATSHEET.md)。
 
@@ -148,12 +150,12 @@ ff-fast 把登录页按钮文案改成“立即开始”
 
 **已有 Flutter 项目首次接入**
 ```text
-这是一个迭代中的 Flutter 项目。先用 flutter-forge 扫描项目结构，输出规则卡草案，不要先写代码。
+ff- 这是一个迭代中的 Flutter 项目，先扫描项目结构，输出规则卡草案，不要先写代码。
 ```
 
 **新 Flutter 应用**
 ```text
-新 Flutter 项目，使用 flutter-forge business profile。先定目录、状态管理、路由、网络层和首批页面结构，再开始写代码。
+ff- 新 Flutter 项目，使用 business profile。先定目录、状态管理、路由、网络层和首批页面结构，再开始写代码。
 ```
 
 | Profile | 适合场景 |
@@ -412,7 +414,9 @@ python3 scripts/validate_docs_sync.py
 
 ## 当前状态
 
-`v0.1.0` 是新的 v 前缀发布线，用于和历史无 `v` 的 `0.x.x` 版本隔离。当前已具备完整文档、任务路由、规则卡、角色协作、官方 Flutter skills 委托策略和本地发布检查。
+当前版本：**v0.2.1**（详见 [VERSION](VERSION) 与 [CHANGELOG](CHANGELOG.md)）。版本号从 `v0.1.0` 起重置加 `v` 前缀，与历史无 `v` 的 `0.x.x` 系列隔离，避免新读者混淆。
+
+当前已具备：完整文档、任务路由、规则卡、角色协作、官方 Flutter skills 委托策略和本地发布检查。
 
 当前已提供：
 
@@ -457,8 +461,6 @@ python3 scripts/validate_docs_sync.py
 
 ## 版本
 
-当前版本：**v0.2.1** · [CHANGELOG](CHANGELOG.md)
+当前版本：**v0.2.1** · 完整变更记录见 [CHANGELOG.md](CHANGELOG.md)。
 
-`v0.2.1` P0 强制层闭环：hook 循环依赖修复、checklist 结构化校验、validate_output 强制化。
-
-`v0.1.4` 基于 agent-pm 二次技术审查：修复规则卡初始化链路根因（路由步骤从概念描述改为明确脚本执行指令）、验证失败回退矩阵、草案超时持久化、提问数量矛盾修正、低置信度判定标准统一、启动握手模板补全等。
+> 历史版本要点已迁移到 CHANGELOG，README 不再单独列出。

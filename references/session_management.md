@@ -4,11 +4,24 @@
 
 ## Session 文件路径
 
-项目根目录下：
+session 路径与规则卡路径采用**同一套宿主优先级**：根据 `scripts/check_rule_card.sh` 输出的规则卡 `path` 字段所在的宿主目录定位 session，LLM 不自行遍历多个目录。
 
-```text
-.flutter-forge/session.md
-```
+路径优先级（与规则卡一致）：
+
+1. `.claude/.flutter-forge/session.md`
+2. `.trae/.flutter-forge/session.md`
+3. `.agents/.flutter-forge/session.md`
+4. `.flutter-forge/session.md`
+
+定位规则：
+
+- 优先使用**与当前规则卡同宿主目录**下的 session 文件
+- 如果当前规则卡在 `.claude/.flutter-forge/projects/`，session 应写到 `.claude/.flutter-forge/session.md`
+- 如果项目尚未初始化规则卡，session 暂存到 `.flutter-forge/session.md`；规则卡正式初始化后，由 `scripts/ff_session.sh` 在下次写入时自动迁移到对应宿主目录
+
+兼容性说明：旧版本 session 固定写在 `.flutter-forge/session.md`。`scripts/ff_session.sh read` 优先读对应宿主目录，未命中再回退到 `.flutter-forge/`，避免历史数据丢失。
+
+> 实现层依赖：`scripts/check_rule_card.sh` 当前输出 `path` 字段，session 寻址通过 `dirname(path)` 推导宿主根目录。后续可选：在 `check_rule_card.sh` 中新增 `session_path` 字段直接返回，避免在 `ff_session.sh` 内重复推导。
 
 ## 基础结构
 

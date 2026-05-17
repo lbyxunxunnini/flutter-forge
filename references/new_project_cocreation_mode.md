@@ -29,7 +29,7 @@
 
 ### C0 想法收口
 
-由 `controller` 主导。
+由 `controller` 主导，对外以 `[f-forge] 主控：xxx` 标签发问（C0 尚未进入 S1，需求分析师未启动，详见 [decision_and_question_protocol.md](decision_and_question_protocol.md) 第 2 节例外条款）。
 
 目标：
 

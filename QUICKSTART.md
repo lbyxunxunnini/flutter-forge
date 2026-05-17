@@ -55,3 +55,5 @@ python3 scripts/init_rule_card.py /path/to/flutter/app --profile auto --interact
 - 新页面、新模块、PRD、设计图用 `ff-`。
 - 第一次接入已有项目，先生成规则卡草案。
 - 不确定时直接用 `ff-`，controller 会分流。
+
+> 完整触发词与匹配规则：[references/trigger_words.md](references/trigger_words.md)
