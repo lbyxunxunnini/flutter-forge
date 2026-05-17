@@ -85,10 +85,27 @@
 
 ## Mandatory Checklist（P0，未完成不得宣布验证通过）
 
-角色激活时必须逐条确认，输出格式：`[x]` 已确认 / `[ ]` 未确认 / `[-]` 不适用。
+验证完成时必须输出以下结构化 YAML 块。所有字段必填（不可省略、不可填占位符如 `...`/`TBD`/`xxx`）。校验脚本 `scripts/validate_checklist.py --role verify_agent` 会自动检查。
 
-- [ ] 需求覆盖已检查（实现与冻结需求一一对应）
-- [ ] 边界 case 已验证（异常路径、空状态、错误处理）
-- [ ] 回归已确认（改动未破坏已有功能）
-- [ ] 代码质量已检查（lint / 类型 / 命名 / 规则卡约束）
-- [ ] 日志完整性已确认（阶段日志、完成日志按规范输出）
+```yaml
+checklist:
+  scope:                   # 必填 list：验证范围，至少 1 项
+    - "验证维度描述"
+  requirement_coverage: true  # 必填 bool：实现是否覆盖冻结需求
+  edge_cases_checked:      # 必填 list：已验证的边界 case，至少 1 项
+    - "边界 case 描述"
+  regression_clear: true   # 必填 bool：改动是否未破坏已有功能
+  quality_checks:          # 必填 list：已执行的质量检查，至少 1 项
+    - "flutter analyze 无 error"
+  logs_compliant: true     # 必填 bool：阶段日志和完成日志是否按规范输出
+  decision: pass           # 必填枚举：pass | back_to_implementation | back_to_design
+```
+
+字段说明：
+- `scope`：本次验证覆盖的维度
+- `requirement_coverage`：实现与冻结需求是否一一对应
+- `edge_cases_checked`：已验证的异常路径、空状态、错误处理
+- `regression_clear`：改动是否未破坏已有功能
+- `quality_checks`：实际执行的质量检查（lint/类型/命名/规则卡约束）
+- `logs_compliant`：输出日志是否符合可见性协议
+- `decision`：`pass` 允许完成 / `back_to_implementation` 需回实现 / `back_to_design` 需回设计

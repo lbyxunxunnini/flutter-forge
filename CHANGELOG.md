@@ -5,6 +5,31 @@
 - `0.2.x` 中出现的 `legacy_project_scan.md`、`~/.flutter-forge/projects/*.rule_card.yaml` 等表述保留为当时版本的历史事实
 - 当前现行入口与规则卡路径策略以 `references/existing_project_entry.md`、`references/existing_project_scan.md`、`references/rule_card_protocol.md` 为准
 
+## v0.2.1
+
+P0 强制层闭环 + P1 路由脚本增强 + P2 文档精简。
+
+### P0 强制层
+
+- **修复 hook 循环依赖**：`hook_check_rule_card.sh` 改为自行调用 `check_rule_card.sh --json` 获取状态，不再依赖 LLM 写入状态文件；状态文件不存在时不再 fail-open 放行
+- **修复 check_rule_card.sh JSON 输出 bug**：shell 变量替换 `false` 进入 Python 字符串导致 NameError，改为通过环境变量传参
+- **hook 初始化白名单**：当工具调用本身是规则卡初始化/检查相关命令时放行，避免初始化死锁
+- **Checklist 结构化**：5 个角色的 Mandatory Checklist 从 `[x]/[ ]` 自我陈述改为结构化 YAML 块输出，新增 `scripts/validate_checklist.py` 校验脚本
+- **Checklist 校验 P0 化**：SKILL.md P0 规则新增"角色宣布放行前必须运行 validate_checklist.py 并确认 PASS"
+- **validate_output.sh 强制化**：从"推荐运行"升级为 P0 强制，模式/阶段/完成日志输出后必须校验
+
+### P1 路由脚本增强
+
+- **classify_task.sh 输出扩展**：新增 `should_load_rule_card`、`required_phases`、`upgrade_signals` 字段，LLM 直接消费结构化路由结果
+- **SKILL.md 减肥**：日志执行清单详细模板、阶段转换自检表格、规则优先级详细说明下沉到对应 reference 文件，主文档从 ~480 行压缩到 ~280 行
+
+### P2 文档精简
+
+- **触发词精简**：README 首屏只展示 `ff-` / `ff-fast` / `ff-a` 三种主推入口
+- **新增"不适合"小节**：README 新增"什么情况下你不需要 Flutter Forge"
+- **PLAN_STATUS 合并**：内容合并到 CHANGELOG 末尾的路线图节，删除独立文件
+- **归档交叉引用修复**：`validate_docs_sync.py` 新增归档文件断链检查
+
 ## v0.2.0
 
 基于真实评测（v0.1.4 综合 3.5/5）的根因修复与资产精简。
@@ -388,3 +413,29 @@ Initial Flutter Forge skill
 - 调整为 `cc-switch` 可识别单 skill 结构
 - 移除安装脚本，改为仓库根目录即 skill 目录
 - 忽略 `.claude/`
+
+
+---
+
+## 路线图
+
+> 原 `PLAN_STATUS.md` 内容合并至此。
+
+### 当前状态
+
+协议层已完成重写（controller 主控、双轨模型、角色代理契约、按需加载）。P0 强制层已闭环（hook 阻断 + checklist 结构化校验 + validate_output 强制化）。
+
+### 下一步
+
+| 优先级 | 事项 | 状态 |
+|--------|------|------|
+| P1 | 真实 Flutter 项目试跑 1-2 周，记录完整 transcript | 未开始 |
+| P1 | 最后一轮低频文档清扫（references/archive 内旧术语） | 进行中 |
+| P2 | 规则卡刷新流程细化（哪些变更必须建议刷新） | 未开始 |
+| P2 | 全仓一致性回归检查 | 进行中 |
+
+### 长期目标
+
+- 进入稳定维护期，只按真实使用反馈做小修
+- 不再大规模翻主协议
+- 积累 3+ 真实项目验证记录

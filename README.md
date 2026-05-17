@@ -4,7 +4,7 @@
 
 Flutter Forge 是一个面向 Flutter 开发的结构化 AI 协作工作流 skill。它不是代码生成器，而是一个**项目内的编排与决策层**：在动手写代码之前，先理解项目上下文、收口设计方案、统一工程规则。
 
-GitHub: [lbyxunxunnini/flutter-forge](https://github.com/lbyxunxunnini/flutter-forge) · License: MIT · 当前版本：**v0.2.0**
+GitHub: [lbyxunxunnini/flutter-forge](https://github.com/lbyxunxunnini/flutter-forge) · License: MIT · 当前版本：**v0.2.1**
 
 ---
 
@@ -26,7 +26,7 @@ ff-fast 改一下登录页按钮颜色      # 快速路径
 ff-a 新建商品详情页，缺的自动补完  # 全自动路径
 ```
 
-所有策略通过 `ff-`、`ff-fast`、`ff-a`、`ff a`、`/flutter-forge` 或 `flutter-forge` 触发。上面 3 行描述的是执行行为差异，不是触发词差异。
+所有策略通过 `ff-`、`ff-fast`、`ff-a` 触发（也兼容 `ff a`、`/flutter-forge`、`flutter-forge`）。上面 3 行描述的是执行行为差异，不是触发词差异。
 
 更短的上手说明见 [QUICKSTART.md](QUICKSTART.md)，常用 prompt 见 [CHEATSHEET.md](CHEATSHEET.md)。
 
@@ -56,6 +56,9 @@ ff- 这是一个迭代中的 Flutter 项目。先扫描项目结构，输出规�
 - 只想找 Flutter UI 组件库
 - 只需要复制粘贴页面模板
 - 不使用 agent skills 或类似 AI 工作流机制
+- 单文件、几行代码的临时脚本或 demo
+- 不打算长期维护的一次性项目
+- 团队还没统一项目规则、且短期不打算统一
 
 ---
 
@@ -454,8 +457,8 @@ python3 scripts/validate_docs_sync.py
 
 ## 版本
 
-当前版本：**v0.2.0** · [CHANGELOG](CHANGELOG.md)
+当前版本：**v0.2.1** · [CHANGELOG](CHANGELOG.md)
 
-`v0.2.0` 基于真实评测的根因修复：规则卡执行 hook 化、角色清单强制化、reference 文件瘦身、版本号格式统一。
+`v0.2.1` P0 强制层闭环：hook 循环依赖修复、checklist 结构化校验、validate_output 强制化。
 
 `v0.1.4` 基于 agent-pm 二次技术审查：修复规则卡初始化链路根因（路由步骤从概念描述改为明确脚本执行指令）、验证失败回退矩阵、草案超时持久化、提问数量矛盾修正、低置信度判定标准统一、启动握手模板补全等。

@@ -1,0 +1,20 @@
+[f-forge] 验证工程师：验证通过，允许完成。
+
+```yaml
+checklist:
+  scope:
+    - "订单列表页功能完整性"
+    - "筛选交互正确性"
+    - "分页加载"
+  requirement_coverage: true
+  edge_cases_checked:
+    - "空态展示正确"
+    - "网络错误重试可用"
+    - "筛选无结果展示"
+  regression_clear: true
+  quality_checks:
+    - "flutter analyze 无 error"
+    - "命名符合规则卡"
+  logs_compliant: true
+  decision: pass
+```

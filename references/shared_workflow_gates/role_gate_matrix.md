@@ -1,6 +1,6 @@
 # Role Gate Matrix
 
-> **P0 强制规则**：每个角色激活时必须完成对应 Mandatory Checklist（定义在各角色文件中），未完成不得宣布该角色结论。
+> **P0 强制规则**：每个角色放行/完成时必须输出对应 Mandatory Checklist 结构化 YAML 块（定义在各角色文件中），由 `scripts/validate_checklist.py` 校验。未输出合规 YAML 块不得宣布该角色结论。
 
 ## 需求分析师
 

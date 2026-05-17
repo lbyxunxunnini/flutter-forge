@@ -30,7 +30,7 @@
 14. 当前是否明确在继续同一未完成大任务
 15. 输出进入日志：命中触发词后立即输出 `[f-forge] 进入 controller`
 16. 输出模式日志：路由判定完成后、开始执行前，必须输出 `[f-forge]` 模式日志（格式见 [skill_visibility.md](skill_visibility.md)）。这是 P0 硬规则，不输出不允许继续执行
-17. 输出格式校验：在模式日志、阶段日志和完成日志输出后运行 `scripts/validate_output.sh` 校验格式合规性（`[f-forge]` 前缀、模式名、阶段编号、角色名）。轻量/中等任务只在完成日志后校验
+17. 输出格式校验：在模式日志、阶段日志和完成日志输出后**必须运行** `scripts/validate_output.sh` 校验格式合规性（`[f-forge]` 前缀、模式名、阶段编号、角色名）。校验失败时必须立即修正并重新输出。轻量/中等任务只在完成日志后校验
 
 规则卡检查硬约束：
 
@@ -304,10 +304,50 @@ matched_by: <命中的关键词类别>
 - 中等任务：必要验证
 - 架构级任务 / 功能开发 / 页面开发：完整验证
 
+### Checklist 校验（P0 强制）
+
+每个角色宣布放行或完成前，必须：
+
+1. 输出结构化 YAML checklist 块（格式见各角色文件）
+2. 运行 `python3 scripts/validate_checklist.py --role <role_name>` 校验
+3. 确认输出 `PASS` 后才允许宣布结论
+4. 输出 `FAIL` 时，按错误提示修正后重新校验
+
+角色名映射：
+- 需求分析师 → `requirement_analyst`
+- UI 设计师 → `ui_designer`
+- 架构设计师 → `architecture_designer`
+- 页面工程师 → `page_engineer`
+- 验证工程师 → `verify_agent`
+
+轻量任务只需 `page_engineer` checklist；完整流程按参与角色逐个校验。
+
 质量门细节见：
 
 - [roles/verify_agent.md](roles/verify_agent.md)（Mandatory Checklist）
 - 归档参考：[archive/quality_gates.md](archive/quality_gates.md)、[archive/testing_strategy.md](archive/testing_strategy.md)
+
+## 阶段转换自检矩阵
+
+每次阶段转换前，controller 内部过一遍：
+
+1. 要进入什么阶段？
+2. 前置条件是什么？
+3. 现在满足吗？
+4. 不满足缺什么？回到哪？
+5. **该阶段的日志已输出了吗？**（未输出则先输出，再继续）
+
+| 转换 | 自检 | 日志检查 |
+|------|------|---------|
+| → 进入模式 | 是否满足进入条件？是否误判轻量？ | 必须已输出 `[f-forge]` 模式日志 |
+| S1→S2 | 需求已冻结（目标、范围、分支、边界 case 均已确认或有 auto_assumption）？ | 必须已输出 `[f-forge] 阶段：S2 方案确认` |
+| S2→S3/S4 | 方案稳定？上游无未收口？ | 必须已输出 `[f-forge] 阶段：S4 实现中`（或 S3） |
+| S3→S4 | 拆分包完整？宿主支持？值得并行？ | 必须已输出 `[f-forge] 阶段：S4 实现中` |
+| S4→S5 | 工作包全完成或已标失效？ | 必须已输出 `[f-forge] 阶段：S5 验证中` |
+| S5→S6 | 验证通过？无越界？共享约束成立？ | 必须已输出 `[f-forge] 本轮完成：xxx` |
+| C3→S3 | C0-C3 产出覆盖 S1+S2？ | 必须已输出 `[f-forge] 阶段：S3 拆包冻结` |
+
+失败时：不跳过，输出阻塞原因，回到正确阶段。
 
 ## 不要做的事
 

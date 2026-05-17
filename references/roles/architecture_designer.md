@@ -121,10 +121,28 @@
 
 ## Mandatory Checklist（P0，未完成不得宣布放行）
 
-角色激活时必须逐条确认，输出格式：`[x]` 已确认 / `[ ]` 未确认 / `[-]` 不适用。
+放行前必须输出以下结构化 YAML 块。所有字段必填（不可省略、不可填占位符如 `...`/`TBD`/`xxx`）。校验脚本 `scripts/validate_checklist.py --role architecture_designer` 会自动检查。
 
-- [ ] 目录结构已规划（新增/修改文件的归属模块）
-- [ ] 状态管理方案已确认（接入方式、数据流向）
-- [ ] 路由方案已确认（是否涉及路由变更）
-- [ ] 模块边界已冻结（共享文件 owner、禁止改动区域）
-- [ ] 复用策略已明确（优先复用 / 新建 / 不复用，各附原因）
+```yaml
+checklist:
+  module_layout:           # 必填 list：新增/修改文件的归属模块，至少 1 项
+    - "lib/features/xxx/pages/xxx_page.dart"
+  state_management: "接入方式和数据流向描述"
+  routing: "路由方案描述（是否涉及路由变更）"
+  freeze_constraints:      # 必填 list：冻结约束，至少 1 项
+    - "约束描述"
+  reuse_strategy:          # 必填 list：复用策略，至少 1 项
+    - "优先复用/新建/不复用，附原因"
+  write_scope:             # 必填 list：允许改动的文件/目录范围，至少 1 项
+    - "lib/features/xxx/"
+  decision: allow          # 必填枚举：allow | need_confirm | back_upstream
+```
+
+字段说明：
+- `module_layout`：新增或修改文件的归属模块路径
+- `state_management`：状态管理接入方式和数据流向
+- `routing`：路由方案（新增/修改/不涉及）
+- `freeze_constraints`：实现前必须遵守的冻结约束
+- `reuse_strategy`：每个关键组件的复用决策和原因
+- `write_scope`：允许改动的文件/目录范围（并行时用于隔离）
+- `decision`：`allow` 允许进入实现 / `need_confirm` 需补确认 / `back_upstream` 需回上游

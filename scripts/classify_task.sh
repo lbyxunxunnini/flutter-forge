@@ -104,3 +104,40 @@ echo "mode: $mode"
 echo "confidence: $confidence"
 echo "policy: $policy"
 echo "matched_by: $matched_by"
+
+# --- 扩展字段：路由辅助 ---
+
+# should_load_rule_card: 除直通模式外都需要
+if [ "$mode" = "直通模式" ]; then
+  echo "should_load_rule_card: false"
+else
+  echo "should_load_rule_card: true"
+fi
+
+# required_phases: 根据模式给出预期阶段
+case "$mode" in
+  "直通模式")       echo "required_phases: none" ;;
+  "轻量任务")       echo "required_phases: impl,verify_minimal" ;;
+  "中等任务")       echo "required_phases: scan,impl,verify_necessary" ;;
+  "UI 优化")        echo "required_phases: S2,S4,S5" ;;
+  "架构级任务")     echo "required_phases: S2,S4,S5" ;;
+  "功能开发")       echo "required_phases: S1,S2,S4,S5" ;;
+  "页面开发")       echo "required_phases: S1,S2,S4,S5" ;;
+  "新项目共创")     echo "required_phases: C0,C1,C2,C3,S3,S4,S5" ;;
+  *)                echo "required_phases: S1,S2,S4,S5" ;;
+esac
+
+# upgrade_signals: 预判可能的升级信号
+upgrade_signals=""
+if echo "$INPUT" | grep -qE '路由|状态管理|Provider|Bloc|Riverpod|GetX'; then
+  upgrade_signals="${upgrade_signals}architecture_boundary,"
+fi
+if echo "$INPUT" | grep -qE '新增.*组件|新增.*区块|布局.*调整|结构.*调整'; then
+  upgrade_signals="${upgrade_signals}ui_structure,"
+fi
+if echo "$INPUT" | grep -qE '需求|PRD|产品|业务.*目标|用户.*路径'; then
+  upgrade_signals="${upgrade_signals}requirement_gap,"
+fi
+# 去掉末尾逗号
+upgrade_signals="${upgrade_signals%,}"
+echo "upgrade_signals: ${upgrade_signals:-none}"

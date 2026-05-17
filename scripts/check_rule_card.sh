@@ -64,16 +64,24 @@ else
   card_path="-"
 fi
 
+if [ -n "$found_draft" ]; then
+  has_draft_py="True"
+else
+  has_draft_py="False"
+fi
+
 # --json 模式：输出 JSON 供 hook / 自动化消费
 if [[ "${2:-}" == "--json" ]]; then
+  STATUS="$status" CARD_PATH="$card_path" PROJ_NAME="$PROJECT_NAME" \
+  HAS_DRAFT_PY="$has_draft_py" DRAFT_PATH="${found_draft:--}" \
   python3 -c "
-import json, sys
+import json, os
 print(json.dumps({
-    'status': '$status',
-    'path': '$card_path',
-    'project_name': '$PROJECT_NAME',
-    'has_draft': $([ -n "$found_draft" ] && echo true || echo false),
-    'draft_path': '${found_draft:--}'
+    'status': os.environ['STATUS'],
+    'path': os.environ['CARD_PATH'],
+    'project_name': os.environ['PROJ_NAME'],
+    'has_draft': os.environ['HAS_DRAFT_PY'] == 'True',
+    'draft_path': os.environ['DRAFT_PATH'],
 }, ensure_ascii=False))
 "
   exit 0
@@ -82,16 +90,19 @@ fi
 # 写入状态文件供 hook 读取
 STATE_DIR="${PROJECT_ROOT}/.flutter-forge/runtime"
 mkdir -p "$STATE_DIR" 2>/dev/null || true
+STATUS="$status" CARD_PATH="$card_path" PROJ_NAME="$PROJECT_NAME" \
+HAS_DRAFT_PY="$has_draft_py" DRAFT_PATH="${found_draft:--}" \
+STATE_DIR="$STATE_DIR" \
 python3 -c "
 import json, os
 state = {
-    'status': '$status',
-    'path': '$card_path',
-    'project_name': '$PROJECT_NAME',
-    'has_draft': $([ -n "$found_draft" ] && echo true || echo false),
-    'draft_path': '${found_draft:--}'
+    'status': os.environ['STATUS'],
+    'path': os.environ['CARD_PATH'],
+    'project_name': os.environ['PROJ_NAME'],
+    'has_draft': os.environ['HAS_DRAFT_PY'] == 'True',
+    'draft_path': os.environ['DRAFT_PATH'],
 }
-state_file = os.path.join('$STATE_DIR', 'rule_card_status.json')
+state_file = os.path.join(os.environ['STATE_DIR'], 'rule_card_status.json')
 with open(state_file, 'w') as f:
     json.dump(state, f, ensure_ascii=False, indent=2)
 " 2>/dev/null || true

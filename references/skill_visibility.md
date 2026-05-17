@@ -44,7 +44,7 @@
 
 ## 输出校验脚本
 
-输出完成后，**推荐运行** `scripts/validate_output.sh` 校验格式合规性。脚本校验是辅助手段，P0 日志的强制性不依赖脚本——即使不运行脚本，P0 遗漏仍不允许继续执行。
+模式日志、阶段日志和完成日志输出后，**必须运行** `scripts/validate_output.sh` 校验格式合规性（P0 强制）。校验失败时必须立即修正并重新输出，不允许继续执行。
 
 ```bash
 echo '<llm_output>' | scripts/validate_output.sh

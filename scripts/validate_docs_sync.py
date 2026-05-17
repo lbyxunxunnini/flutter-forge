@@ -69,6 +69,7 @@ def main() -> int:
     docs.extend((root / "references").glob("*.md"))
     docs.extend((root / "references" / "roles").glob("*.md"))
     docs.extend((root / "references" / "shared_workflow_gates").glob("*.md"))
+    docs.extend((root / "references" / "archive").glob("*.md"))
 
     for path in docs:
         if path.exists():

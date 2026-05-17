@@ -142,10 +142,29 @@
 
 ## Mandatory Checklist（P0，未完成不得宣布实现完成）
 
-角色激活时必须逐条确认，输出格式：`[x]` 已确认 / `[ ]` 未确认 / `[-]` 不适用。
+实现完成时必须输出以下结构化 YAML 块。所有字段必填（不可省略、不可填占位符如 `...`/`TBD`/`xxx`）。校验脚本 `scripts/validate_checklist.py --role page_engineer` 会自动检查。
 
-- [ ] 目标文件已定位（具体文件路径 + 组件名）
-- [ ] 实现方案已确认（与冻结约束一致，不越界）
-- [ ] 改动范围已列出（新增 / 修改 / 删除的具体内容）
-- [ ] 回归风险已评估（影响哪些已有功能）
-- [ ] 验证策略已确定（轻量/必要/完整，对应任务规模）
+```yaml
+checklist:
+  target_files:            # 必填：具体文件路径数组，至少 1 项
+    - lib/pages/xxx_page.dart
+  changes:                 # 必填：每条改动的具体描述
+    - "修改了什么 → 改成了什么"
+  freeze_alignment: true   # 必填 bool：与冻结约束是否一致
+  deviations:              # 必填 list：若有偏离必须列出，无偏离填 []
+    - "偏离描述"
+  regression_scope:        # 必填 list：可能受影响的功能，无则 []
+    - "受影响功能"
+  verification_type: minimal  # 必填枚举：minimal | necessary | full
+  commands_run:            # 必填 list：实际执行的验证命令，无则 []
+    - "flutter analyze"
+```
+
+字段说明：
+- `target_files`：改动涉及的具体文件路径，至少 1 项
+- `changes`：每条改动的具体描述（不是文件名重复），至少 1 项
+- `freeze_alignment`：实现是否与上游冻结约束一致
+- `deviations`：若 `freeze_alignment: false`，必须列出偏离点
+- `regression_scope`：改动可能影响的已有功能
+- `verification_type`：轻量任务 `minimal`，中等 `necessary`，大任务 `full`
+- `commands_run`：实际执行过的验证命令
