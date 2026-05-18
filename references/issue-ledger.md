@@ -20,6 +20,7 @@
 | APM-TOOL-003 | P1 | fixed | 规则卡状态日志被 `validate_output.sh` 误判为非法角色 | 规则卡初始化、转正、刷新日志统一改为 `[f-forge] 主控：...`，release gate 增加正反例 |
 | APM-LOGIC-002 | P2 | fixed | `draft_reminder_count` 只有文档承诺，没有脚本状态实现 | `check_rule_card.sh` 增加 `draft_reminder_count` 输出、`--increment-reminder` 和 `--reset-reminder` |
 | APM-DESIGN-002 | P2 | fixed | 路由 golden 复制分类逻辑，不能验证真实脚本 | `route_golden_tests.py` 改为直接调用 `scripts/classify_task.sh` 并断言输出字段 |
+| APM-DESIGN-003 | P1 | fixed | `SKILL.md` description 只引用 `references/trigger_words.md`，宿主召回不读取 reference 导致显式触发词失灵 | description 直接内联正式触发入口，`trigger_words.md` 改为要求 frontmatter 保留触发词，详细匹配规则仍单源维护 |
 
 ### Candidate Rules
 

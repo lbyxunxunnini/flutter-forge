@@ -1,7 +1,7 @@
 ---
 name: flutter-forge
 description: >-
-  Flutter 项目结构化协作主控 skill。显式触发词见 references/trigger_words.md；controller 按任务类型分流执行，完成后自动退出。
+  Flutter 项目结构化协作主控 skill。用户以 `ff-`、`ff-fast`、`ff-a`、`ff a`、`/flutter-forge` 开头，或明确要求按 Flutter 结构化流程处理时使用；controller 分流执行，完成后退出。
 ---
 
 # Flutter Forge
