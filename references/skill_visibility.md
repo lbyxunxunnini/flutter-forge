@@ -12,11 +12,11 @@
 
 ## 总规则
 
-1. `[f-forge]` 是必选输出，所有对外输出都必须以 `[f-forge]` 开头。**执行强制性**：命中触发词后必须先输出 `[f-forge] 进入 controller`，路由判定完成后必须立即输出模式日志，不输出不允许继续执行（P0）
+1. `[f-forge]` 是工作流状态行的必选前缀。模式、阶段、角色结果、完成、升级/降级等状态行必须以 `[f-forge]` 开头；跟随上一条状态行的解释列表、选项、YAML checklist、命令输出和 diff 不强制加前缀。**执行强制性**：命中触发词后必须先输出 `[f-forge] 进入 controller`，路由判定完成后必须立即输出模式日志，不输出不允许继续执行（P0）
 2. 先输出模式日志，再按需输出阶段日志和结果日志；所有结果日志必须带角色前缀（`[f-forge] 角色名：xxx`）
 3. 不要每读一个文件或每调一次工具就插一条 `[f-forge]`
 4. 没参与的角色不要强行出现
-5. 轻量任务只在开始和结束时各输出一次 `[f-forge]`
+5. 轻量任务只在开始和结束时各输出一次主要 `[f-forge]` 日志；结构化 checklist 和校验命令不计入此限制
 6. 大任务进入并行时，必须对外显示”已拆包 / 正在并行 / 统一收口”这 3 类最小状态
 7. 子 agent 完成时，要给用户看”完成了什么”的结果摘要，不只写”完成了”
 8. 大任务结束时，要给用户看结果摘要；如命中长期约束变化，再输出规则卡判断出口
@@ -44,28 +44,33 @@
 
 ## 输出校验脚本
 
-`scripts/validate_output.sh` **不在每条日志后单独运行**，而是在以下时机一次性 batch 校验当前会话累积的 `[f-forge]` 输出（P0 强制）：
+`scripts/validate_output.sh` **不在每条日志后单独运行**，而是在以下时机一次性 batch 校验当前会话累积的 `[f-forge]` 输出（P0 强制）。阶段切换时使用默认校验；任务收口时使用 `--require-complete` 强制检查完成日志：
 
 | 任务类型 | 校验时机 |
 |---------|---------|
-| 直通模式 | 完成日志输出后校验一次 |
-| 轻量任务 | 完成日志输出后校验一次 |
-| 中等任务 | 完成日志输出后校验一次（升级到大任务后按下方规则） |
-| UI 优化 / 架构级任务 / 功能开发 / 页面开发 / 新项目共创 | 每次阶段切换前校验一次（即将进入新阶段时回看已输出的全部 `[f-forge]` 行）+ 任务收口前校验一次 |
+| 直通模式 | 完成日志输出后运行 `scripts/validate_output.sh --require-complete` |
+| 轻量任务 | 完成日志输出后运行 `scripts/validate_output.sh --require-complete` |
+| 中等任务 | 完成日志输出后运行 `scripts/validate_output.sh --require-complete`（升级到大任务后按下方规则） |
+| UI 优化 / 架构级任务 / 功能开发 / 页面开发 / 新项目共创 | 每次阶段切换前运行默认校验（回看已输出的全部 `[f-forge]` 行）+ 任务收口前运行 `scripts/validate_output.sh --require-complete` |
 
 校验失败时必须立即修正并重新输出，不允许带着违规输出进入下一阶段。
 
 ```bash
 echo '<llm_output>' | scripts/validate_output.sh
+echo '<llm_output>' | scripts/validate_output.sh --require-complete
 # 或
 scripts/validate_output.sh /path/to/output.txt
+scripts/validate_output.sh --require-complete /path/to/output.txt
 ```
 
 校验内容：
-- `[f-forge]` 必须在行首
+- 含 `[f-forge]` 的状态行必须在行首
+- 第一条 `[f-forge]` 行必须是 `[f-forge] 进入 controller`
+- 模式日志必须出现在阶段日志之前
 - 模式名必须在允许列表中（直通模式/轻量任务/中等任务/UI 优化/架构级任务/功能开发/页面开发/新项目共创/启动握手）
 - 阶段编号必须合法（C0-C3 / S0-S6）
 - 角色名必须在允许列表中（需求分析师/UI 设计师/架构设计师/页面工程师/验证工程师/主控）
+- `--require-complete` 时必须包含完成日志
 
 输出 `PASS` 或 `FAIL + 违规行`。
 
@@ -73,7 +78,7 @@ scripts/validate_output.sh /path/to/output.txt
 
 ### 1. 模式日志
 
-任务进入后先输出一行主模式：
+任务进入后先输出 `[f-forge] 进入 controller`，路由完成后输出一行主模式。下列示例为模式日志片段，省略了进入日志：
 
 ```text
 [f-forge] 直通模式：快速处理

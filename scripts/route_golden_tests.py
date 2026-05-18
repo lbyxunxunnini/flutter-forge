@@ -5,64 +5,27 @@ from __future__ import annotations
 
 import argparse
 import json
+import subprocess
 import sys
 from pathlib import Path
 
 
-DOC_KEYWORDS = ("README", "文档", "安装说明", "CHANGELOG", "LICENSE", "贡献指南")
-NEW_PROJECT_KEYWORDS = ("新的 Flutter 项目", "新 Flutter 项目", "从 0 到 1", "先共创")
-UI_OPTIMIZE_KEYWORDS = ("视觉", "样式", "卡片", "布局", "动效", "层级")
-ARCHITECTURE_KEYWORDS = ("包体积", "重构", "迁移", "依赖清理", "性能优化", "代码审查")
-PAGE_KEYWORDS = ("新建", "新增", "页面", "详情页", "模块", "路由接入")
-FEATURE_KEYWORDS = ("跨页面", "业务闭环", "弹窗", "提示栏", "深链", "授权", "流程", "状态联动")
-MEDIUM_HINTS = ("筛选", "先看相似实现", "局部", "增加")
-LIGHT_HINTS = ("按钮", "颜色", "文案", "字号", "跳到", "点击后")
-
-
-def execution_policy(prompt: str) -> str:
-    stripped = prompt.strip()
-    if stripped.startswith(("ff-a", "ff a")) or any(
-        keyword in prompt for keyword in ("全自动", "自动做完", "不要反复确认", "推荐方案自动")
-    ):
-        return "全自动"
-    if stripped.startswith("ff-fast") or any(
-        keyword in prompt for keyword in ("快速处理", "轻量优先", "先直接改")
-    ):
-        return "快速"
-    return "标准"
-
-
-def classify(prompt: str) -> str:
-    if any(keyword in prompt for keyword in DOC_KEYWORDS):
-        return "直通模式"
-
-    if any(keyword in prompt for keyword in NEW_PROJECT_KEYWORDS):
-        return "新项目共创"
-
-    if "优化" in prompt and any(keyword in prompt for keyword in UI_OPTIMIZE_KEYWORDS):
-        return "UI 优化"
-
-    if any(keyword in prompt for keyword in ARCHITECTURE_KEYWORDS):
-        return "架构级任务"
-
-    if any(keyword in prompt for keyword in FEATURE_KEYWORDS):
-        return "功能开发"
-
-    if "新增" in prompt and "模块" in prompt:
-        return "页面开发"
-
-    if any(keyword in prompt for keyword in PAGE_KEYWORDS):
-        if any(keyword in prompt for keyword in MEDIUM_HINTS) and "新建" not in prompt:
-            return "中等任务"
-        return "页面开发"
-
-    if any(keyword in prompt for keyword in MEDIUM_HINTS):
-        return "中等任务"
-
-    if any(keyword in prompt for keyword in LIGHT_HINTS):
-        return "轻量任务"
-
-    return "功能开发"
+def classify_with_script(root: Path, prompt: str) -> dict[str, str]:
+    script = root / "scripts" / "classify_task.sh"
+    result = subprocess.run(
+        [str(script), prompt],
+        check=True,
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+    )
+    parsed: dict[str, str] = {}
+    for line in result.stdout.splitlines():
+        if ": " not in line:
+            continue
+        key, value = line.split(": ", 1)
+        parsed[key] = value
+    return parsed
 
 
 def main() -> int:
@@ -80,19 +43,37 @@ def main() -> int:
     failed = False
 
     for case in cases:
-        actual = classify(case["prompt"])
-        expected = case["expected_mode"]
-        actual_policy = execution_policy(case["prompt"])
-        expected_policy = case.get("expected_policy", "标准")
-        if actual != expected or actual_policy != expected_policy:
+        actual = classify_with_script(root, case["prompt"])
+        expected = {
+            "mode": case["expected_mode"],
+            "policy": case.get("expected_policy", "标准"),
+        }
+        for optional_key in (
+            "confidence",
+            "rule_card_check",
+            "should_load_rule_card",
+            "required_phases",
+        ):
+            case_key = f"expected_{optional_key}"
+            if case_key in case:
+                expected[optional_key] = str(case[case_key])
+
+        mismatches = {
+            key: (expected_value, actual.get(key))
+            for key, expected_value in expected.items()
+            if actual.get(key) != expected_value
+        }
+
+        if mismatches:
             failed = True
-            print(
-                f"FAIL {case['name']}: expected {expected}/{expected_policy}, "
-                f"got {actual}/{actual_policy}"
+            mismatch_text = ", ".join(
+                f"{key}: expected {expected_value}, got {actual_value}"
+                for key, (expected_value, actual_value) in mismatches.items()
             )
+            print(f"FAIL {case['name']}: {mismatch_text}")
             print(f"  prompt: {case['prompt']}")
         else:
-            print(f"PASS {case['name']}: {actual}/{actual_policy}")
+            print(f"PASS {case['name']}: {actual['mode']}/{actual['policy']}")
 
     return 1 if failed else 0
 

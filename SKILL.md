@@ -1,7 +1,7 @@
 ---
 name: flutter-forge
 description: >-
-  Flutter 项目结构化协作主控 skill。ff-、ff-fast、ff-a、ff a、/flutter-forge 触发，controller 按任务类型分流执行，完成后自动退出。触发词详见 references/trigger_words.md。
+  Flutter 项目结构化协作主控 skill。显式触发词见 references/trigger_words.md；controller 按任务类型分流执行，完成后自动退出。
 ---
 
 # Flutter Forge
@@ -21,7 +21,7 @@ Flutter 项目内的 `controller` skill。先路由，再分类，再执行。
 9. session = 当前任务状态；规则卡 = 项目长期约束
 10. 一整轮任务完成后自动退出，不跨轮常驻
 11. `ff-fast` 是快速执行策略：轻量优先，自动生成扫描摘要，只有发现明确风险才升级
-12. `ff-a` 是全自动执行策略：非阻塞缺口采用推荐方案继续推进，高风险或不可逆事项才中断确认
+12. `ff-a` 是全自动执行策略：非阻塞缺口采用推荐方案继续推进；中断条件以 [autonomous_mode.md](references/autonomous_mode.md) "必须中断确认的情况"节为准
 13. 本文档中所有 `scripts/` 引用均相对于 flutter-forge skill 安装目录（如 `~/.claude/skills/flutter-forge/scripts/`），非用户 Flutter 项目目录。脚本不存在或执行失败时按对应 reference 文档的降级路径处理，不因脚本缺失阻塞流程
 
 ## 命中路由
@@ -30,7 +30,7 @@ Flutter 项目内的 `controller` skill。先路由，再分类，再执行。
 
 满足任一即进入：
 
-- 用户消息以以下 5 种正式触发词之一开头（首个 token 位置）：`ff-`、`ff-fast`、`ff-a`、`ff a`、`/flutter-forge`
+- 用户消息以 [trigger_words.md](references/trigger_words.md) 定义的正式触发词开头（首个 token 位置）
 - 用户明确要求按 Flutter 项目结构化流程处理
 
 匹配关键约束：
@@ -52,7 +52,7 @@ Flutter 项目内的 `controller` skill。先路由，再分类，再执行。
 
 `ff-a` 是全自动执行策略，不是独立任务模式。命中后先输出全自动日志，再继续按正常路由进入直通 / 轻量 / 中等 / UI 优化 / 架构级 / 功能开发 / 页面开发 / 新项目共创。
 
-完整定义分布在 4 个文件中：核心策略（本文档）→ 详细规则与中断条件（[autonomous_mode.md](references/autonomous_mode.md)）→ 运行时动作（[task_runtime_prompt.md](references/task_runtime_prompt.md)）→ 提问与确认协议（[decision_and_question_protocol.md](references/decision_and_question_protocol.md)）。
+完整定义分布在 4 个文件中：核心策略（本文档）→ 详细规则与中断条件（[autonomous_mode.md](references/autonomous_mode.md)，行为约束和中断条件的权威来源）→ 运行时动作（[task_runtime_prompt.md](references/task_runtime_prompt.md)）→ 提问与确认协议（[decision_and_question_protocol.md](references/decision_and_question_protocol.md)）。
 
 ### ff-fast vs ff-a 快速对比
 
@@ -76,7 +76,7 @@ ff a    "新建详情页"            → 同 ff-a（带空格写法等价）
 
 命中后按此顺序判定（命中即停）：
 
-**1. 任务路由分类**：运行 `scripts/classify_task.sh "<用户输入>"` 获取任务类型预判（直通/轻量/中等/UI 优化/架构级/功能开发/页面开发/新项目共创）和执行策略（标准/快速/全自动）。脚本失败时按以下降级顺序自行判定：先执行第 3 步（任务是否明确）→ 不明确则进入等待态 → 明确后按第 4-13 步顺序分类 → 分类完成后再按第 2 步决定规则卡检查。
+**1. 任务路由分类**：运行 `scripts/classify_task.sh "<用户输入>"` 获取任务类型预判（等待态/启动握手/直通/轻量/中等/UI 优化/架构级/功能开发/页面开发/新项目共创）和执行策略（标准/快速/全自动）。若采用脚本预判结果，补运行 `scripts/classify_task.sh --project-root <project_root> --write-gate "<用户输入>"` 写入本轮任务 gate，供规则卡 hook 区分轻量/直通写入与必须初始化的重流程写入；若 LLM 推翻预判，不得复用旧 gate。脚本失败时按 [task_runtime_prompt.md](references/task_runtime_prompt.md) "启动顺序"第 2 步的降级路径手动判定：先判断任务是否明确；不明确则进入等待态；明确后按下方第 4-13 步分类；分类完成后再按第 2 步决定规则卡检查。
 
 **2. 按任务类型决定是否检查规则卡**（按需触发，不再每次启动强制检查）：
 
@@ -93,12 +93,12 @@ ff a    "新建详情页"            → 同 ff-a（带空格写法等价）
 | 状态 | 动作 |
 |------|------|
 | `found` | 加载规则卡 |
-| `draft` | 提示用户确认草案 |
-| `not_found` | **必须先执行初始化**（迭代项目：扫描 → 生成草案 → 输出待确认；新项目：在共创中完成初始化），不得跳过 |
+| `draft` | 加载草案作为 advisory；仅在首次接入、用户询问/确认草案或达到提醒阈值时提示确认 |
+| `not_found` | **必须先执行初始化**，不得跳过；完整处理规则见 [rule_card_protocol.md](references/rule_card_protocol.md) "无规则卡时的强制处理"节 |
 
 脚本失败时按 [rule_card_protocol.md](references/rule_card_protocol.md) "脚本降级路径解析"节处理。
 
-**写操作硬阻断**：preToolCall hook（`scripts/hook_check_rule_card.sh`）在 `not_found` 状态下对写操作（Edit/Write/创建文件）触发硬阻断，对读操作和命令执行只做软提醒。这是兜底机制，避免在未初始化项目误改代码。
+**写操作硬阻断**：preToolCall hook（`scripts/hook_check_rule_card.sh`）在 `not_found` 状态下对写操作（Edit/Write/创建文件）默认触发硬阻断，对读操作和命令执行只做软提醒。若当前任务 gate 明确标记为直通 / 轻量 / 高置信中等且目标文件不触碰状态管理、路由、依赖、`lib/core`、`lib/shared` 等边界文件，hook 可放行本次写入；否则必须先初始化规则卡。这是兜底机制，避免在未初始化项目误改代码。
 
 3. 用户任务明确吗？→ 不明确则进入等待态，询问用户要做什么
 4. 属于直通场景吗？→ 文档查询/环境配置/打包/CI/CD/闲聊/快速确认走直通模式。反例：涉及代码修改的 review、需要新增文件的配置不属于直通
@@ -112,9 +112,9 @@ ff a    "新建详情页"            → 同 ff-a（带空格写法等价）
 12. 不适合轻量但也不需重流程吗？→ 进入中等任务
 13. 其他情况 → 默认进入功能开发
 
-`等待态` 是内部等待状态，不属于用户可见模式名。行为约束：等待期间 controller 保持当前上下文不丢失；用户回复后**从路由第 2 步（规则卡分级判定）重新执行**，复用本次启动时缓存的规则卡状态（`scripts/check_rule_card.sh --cached 300` 通常仍命中）；但若用户输入暗示项目路径变化——如出现新的 `cd`、新的项目目录名、`/path/to/...` 等路径线索——必须重新调用 `check_rule_card.sh`（去掉 `--cached` 强制完整检查）；如果用户长时间无回复（跨会话），下一次输入按新任务处理。
+`等待态` 是内部等待状态，不属于用户可见模式名。行为约束：等待期间 controller 保持当前上下文不丢失；用户回复后，先检查 session 恢复条件（详见 [task_runtime_prompt.md](references/task_runtime_prompt.md) "启动顺序"第 6 步）；若不匹配，再**从路由第 2 步（规则卡分级判定）重新执行**，复用本次启动时缓存的规则卡状态（`scripts/check_rule_card.sh --cached 300` 通常仍命中）；但若用户输入暗示项目路径变化——如出现新的 `cd`、新的项目目录名、`/path/to/...` 等路径线索——必须重新调用 `check_rule_card.sh`（去掉 `--cached` 强制完整检查）；如果用户长时间无回复（跨会话），下一次输入按新任务处理。
 
-与 session 恢复的关系：session 恢复优先于等待态判定。路由判定时，先检查 session 恢复条件（详见 [task_runtime_prompt.md](references/task_runtime_prompt.md) 第 2 节），若匹配则恢复 session；不匹配时再进入等待态判定。
+与 session 恢复的关系：session 恢复优先于等待态判定。路由判定时，先检查 session 恢复条件（详见 [task_runtime_prompt.md](references/task_runtime_prompt.md) "启动顺序"第 6 步），若匹配则恢复 session；不匹配时再进入等待态判定。
 
 ### 从需求/设计起步的硬规则
 
@@ -135,7 +135,7 @@ ff a    "新建详情页"            → 同 ff-a（带空格写法等价）
 
 降级规则：用户输入模糊（如"改一下那个页面"）且不涉及需求/设计起步时 → 进入等待态追问具体目标 → 追问后仍模糊 → 按中等任务处理。
 
-等待态追问后恢复时，**从路由第 2 步（规则卡分级判定）重新执行**，复用本次启动时缓存的规则卡状态；用户输入暗示项目路径变化时强制重跑完整检查。
+等待态追问后恢复时，先检查 session 恢复条件；若不匹配，再**从路由第 2 步（规则卡分级判定）重新执行**，复用本次启动时缓存的规则卡状态；用户输入暗示项目路径变化时强制重跑完整检查。
 
 ## 执行协议
 
@@ -187,7 +187,7 @@ S5 验证通过后进入 S6。S6 不是一个需要执行动作的阶段，而�
 
 `ff-fast` 启用时，上表优先按轻量 / 中等执行；发现明确风险时输出升级原因并进入对应重流程。
 
-`ff-a` 启用时，上表中的“确认 / 补要”优先改为“采用推荐方案并记录自动假设”；只有命中高风险中断条件才向用户确认。
+`ff-a` 启用时，上表中的“确认 / 补要”优先改为“采用推荐方案并记录自动假设”；只有命中 [autonomous_mode.md](references/autonomous_mode.md) "必须中断确认的情况"节定义的高风险中断条件才向用户确认。
 
 详细执行逻辑见 [task_runtime_prompt.md](references/task_runtime_prompt.md)
 
@@ -261,7 +261,7 @@ S5 验证通过后进入 S6。S6 不是一个需要执行动作的阶段，而�
 
 日志执行清单（P0）：命中触发词后必须按 进入日志 → 模式日志 → 阶段日志 → 完成日志 顺序输出。完整模板和示例见 [skill_visibility.md](references/skill_visibility.md)。
 
-输出格式校验：在阶段切换或任务收口时一次性 batch 校验，运行 `scripts/validate_output.sh`（详细触发时机见 [skill_visibility.md](references/skill_visibility.md) "输出校验脚本"节）。
+输出格式校验：在阶段切换或任务收口时一次性 batch 校验；阶段切换运行 `scripts/validate_output.sh`，任务收口运行 `scripts/validate_output.sh --require-complete`（详细触发时机见 [skill_visibility.md](references/skill_visibility.md) "输出校验脚本"节）。
 
 ## 按需加载
 
@@ -275,13 +275,13 @@ P0 > P1 > P2；用户显式指令 > 任何规则（除安全红线）。
 
 - 阶段门禁（详见上方"阶段门禁"节）
 - 角色边界（impl 不重定义需求，ui 不决定状态管理，requirement 不给架构结论）
-- 角色宣布放行/完成前，必须输出结构化 YAML checklist 并运行 `python3 scripts/validate_checklist.py --role <role_name>` 确认 `PASS`
+- 角色宣布放行/完成前，必须输出结构化 YAML checklist 并运行 `python3 scripts/validate_checklist.py --role <role_name>` 确认 `PASS`；checklist 是结构化校验产物，不计入轻量 / ff-fast 的 `[f-forge]` 日志条数限制
 - 一问一答（每轮只问 1 个）——详见 [decision_and_question_protocol.md](references/decision_and_question_protocol.md) 第 4 节
 - 10 秒测试以用户输入为准
 - 宿主能力未知时不假装并行
 - **进入日志最先输出**：命中触发词后第一行必须输出 `[f-forge] 进入 controller`，先于任何脚本调用、文件读取、判定动作；之后才输出模式日志；模式名必须使用标准名称
 - `ff-fast` 不能绕过阶段门禁、验证或高风险确认
-- `ff-a` 不能自动执行安全、生产、删除数据、不可逆迁移或全项目架构切换类高风险决策
+- `ff-a` 不得绕过高风险中断确认；中断条件以 [autonomous_mode.md](references/autonomous_mode.md) "必须中断确认的情况"节为准
 - 需求/方案未确认且无 `auto_assumption` 时禁止实现
 - 轻量任务必须同时满足 10 秒测试 + 非需求/设计起步
 - 实现层禁止改写需求边界和架构结论

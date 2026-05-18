@@ -7,11 +7,13 @@
 #   1. 优先读取 .flutter-forge/runtime/rule_card_status.json 缓存（300s TTL）
 #   2. 缓存命中：直接消费状态，不重跑 check_rule_card.sh
 #   3. 缓存未命中：调用 check_rule_card.sh --cached 300（脚本内部会再回退完整检查）
-#   4. status == not_found 且工具是写操作（Edit/MultiEdit/Write）→ 输出 JSON block 决策并 exit 2
-#   5. status == not_found 但工具是读操作或命令执行 → 软提醒（stderr 输出，不阻断）
-#   6. status == found / draft → 放行
-#   7. 当工具调用本身就是规则卡初始化相关命令时放行（避免初始化死锁）
-#   8. 脚本不可用或解析异常时放行（fail-open，避免误阻断）
+#   4. status == not_found 且工具是写操作（Edit/MultiEdit/Write）→ 先检查 task_gate.json
+#   5. 当前任务 gate 明确允许轻量/直通写入且目标文件不触碰架构边界 → 放行
+#   6. 否则输出 JSON block 决策并 exit 2
+#   7. status == not_found 但工具是读操作或命令执行 → 软提醒（stderr 输出，不阻断）
+#   8. status == found / draft → 放行
+#   9. 当工具调用本身就是规则卡初始化相关命令时放行（避免初始化死锁）
+#   10. 脚本不可用或解析异常时放行（fail-open，避免误阻断）
 #
 # 用法: hook_check_rule_card.sh <project_root>
 
@@ -26,24 +28,36 @@ if [ ! -t 0 ]; then
   HOOK_INPUT="$(cat 2>/dev/null || true)"
 fi
 
-# 提取 tool_name 与 command 文本
+# 提取 tool_name、command 和目标文件路径
 TOOL_NAME=""
 COMMAND_TEXT=""
+TARGET_PATH=""
 if [ -n "$HOOK_INPUT" ]; then
   TOOL_INFO="$(printf '%s' "$HOOK_INPUT" | python3 -c "
 import json, sys
 try:
     data = json.load(sys.stdin)
     name = data.get('tool_name', '')
-    cmd = data.get('tool_input', {}).get('command', '') or ''
+    tool_input = data.get('tool_input', {}) or {}
+    cmd = tool_input.get('command', '') or ''
+    path = (
+        tool_input.get('file_path')
+        or tool_input.get('path')
+        or tool_input.get('target_file')
+        or tool_input.get('filename')
+        or ''
+    )
     print(name)
     print(cmd)
+    print(path)
 except Exception:
+    print('')
     print('')
     print('')
 " 2>/dev/null || printf '\n\n')"
   TOOL_NAME="$(printf '%s' "$TOOL_INFO" | sed -n '1p')"
   COMMAND_TEXT="$(printf '%s' "$TOOL_INFO" | sed -n '2p')"
+  TARGET_PATH="$(printf '%s' "$TOOL_INFO" | sed -n '3p')"
 fi
 
 # 初始化白名单：当工具调用本身就是规则卡初始化、检查或修复时放行
@@ -92,6 +106,65 @@ esac
 
 if [ "$STATUS" = "not_found" ]; then
   if [ "$IS_WRITE" = "true" ]; then
+    TASK_GATE="${PROJECT_ROOT}/.flutter-forge/runtime/task_gate.json"
+    if [ -f "$TASK_GATE" ]; then
+      ALLOW_BY_GATE="$(TASK_GATE="$TASK_GATE" PROJECT_ROOT="$PROJECT_ROOT" TARGET_PATH="$TARGET_PATH" python3 -c "
+import json, os, sys, time
+
+gate_path = os.environ['TASK_GATE']
+project_root = os.path.abspath(os.environ['PROJECT_ROOT'])
+target_path = os.environ.get('TARGET_PATH', '')
+
+try:
+    with open(gate_path, encoding='utf-8') as f:
+        gate = json.load(f)
+except Exception:
+    print('deny')
+    raise SystemExit(0)
+
+age = int(time.time()) - int(gate.get('checked_at', 0))
+if gate.get('project_root') != project_root or age > 300:
+    print('deny')
+    raise SystemExit(0)
+
+if not gate.get('allow_write_without_rule_card'):
+    print('deny')
+    raise SystemExit(0)
+
+if not target_path:
+    print('deny')
+    raise SystemExit(0)
+
+norm_target = target_path.replace('\\\\', '/')
+risk_tokens = (
+    'pubspec.yaml',
+    '/router/',
+    'router',
+    '/route',
+    'routes',
+    'provider',
+    'notifier',
+    'bloc',
+    'cubit',
+    'controller',
+    'injection',
+    '/di/',
+    'dependency_injection',
+    'lib/core/',
+    'lib/shared/',
+)
+if any(token in norm_target for token in risk_tokens):
+    print('deny')
+    raise SystemExit(0)
+
+print('allow')
+" 2>/dev/null || echo "deny")"
+      if [ "$ALLOW_BY_GATE" = "allow" ]; then
+        printf '[hook] rule_card not_found, task gate allows this light/direct write: %s\n' "$TARGET_PATH" >&2
+        exit 0
+      fi
+    fi
+
     # 硬阻断：写操作前必须有规则卡
     python3 -c "
 import json, sys

@@ -65,6 +65,48 @@ grep -q 'recommended_profile: "riverpod_feature_profile"' "$tmp_rule_card" || fa
 python3 scripts/validate_rule_card.py "$tmp_rule_card" >/dev/null
 rm -f "$tmp_rule_card"
 python3 scripts/route_golden_tests.py
+
+printf '%s\n' \
+  '[f-forge] 进入 controller' \
+  '[f-forge] 页面工程师：轻量任务，直接执行' \
+  '[f-forge] 页面工程师：已完成修改并完成基本验证' \
+  | scripts/validate_output.sh --require-complete >/dev/null
+
+if printf '%s\n' \
+  '[f-forge] 页面工程师：轻量任务，直接执行' \
+  '[f-forge] 页面工程师：已完成修改并完成基本验证' \
+  | scripts/validate_output.sh --require-complete >/dev/null 2>&1; then
+  fail "validate_output accepted missing entry log"
+fi
+
+if printf '%s\n' \
+  '[f-forge] 进入 controller' \
+  '[f-forge] 模式：页面开发' \
+  '[f-forge] 阶段：S1 需求确认' \
+  | scripts/validate_output.sh --require-complete >/dev/null 2>&1; then
+  fail "validate_output accepted missing completion log"
+fi
+
+printf '%s\n' \
+  '[f-forge] 进入 controller' \
+  '[f-forge] 模式：启动握手' \
+  '[f-forge] 主控：规则卡已初始化：.claude/.flutter-forge/projects/app.rule_card.yaml' \
+  '[f-forge] 本轮完成：已完成规则卡初始化' \
+  | scripts/validate_output.sh --require-complete >/dev/null
+
+printf '%s\n' \
+  '[f-forge] 进入 controller' \
+  '[f-forge] 主控：任务描述不明确，请描述你想做什么（例如：新建页面、修改现有功能、修复 bug）。' \
+  | scripts/validate_output.sh >/dev/null
+
+if printf '%s\n' \
+  '[f-forge] 进入 controller' \
+  '[f-forge] 规则卡已初始化：.claude/.flutter-forge/projects/app.rule_card.yaml' \
+  '[f-forge] 本轮完成：已完成规则卡初始化' \
+  | scripts/validate_output.sh --require-complete >/dev/null 2>&1; then
+  fail "validate_output accepted rule-card status without role or mode"
+fi
+
 python3 scripts/validate_docs_sync.py
 
 info "release validation completed"

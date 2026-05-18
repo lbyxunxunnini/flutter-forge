@@ -15,7 +15,7 @@
 每次任务开始时，按这个顺序检查：
 
 1. **立即输出进入日志**：命中触发词后，在执行任何脚本调用、文件读取、判定动作之前，**第一行**必须输出 `[f-forge] 进入 controller`（P0 硬规则，不输出不允许进入后续步骤）
-2. 运行 `scripts/classify_task.sh "<用户输入>"` 获取任务类型预判和执行策略，LLM 消费预判结果（`confidence: low` 时做二次判定）。脚本不存在或执行失败时，按降级顺序自行判定：先执行第 7 步（任务是否明确）→ 不明确则进入等待态 → 明确后按 `SKILL.md` 路由顺序第 4-13 步分类 → 分类完成后再决定规则卡检查。不因脚本缺失阻塞启动
+2. 运行 `scripts/classify_task.sh "<用户输入>"` 获取任务类型预判和执行策略，LLM 消费预判结果（`confidence: low` 时做二次判定）。如果最终采用脚本预判结果，补运行 `scripts/classify_task.sh --project-root <project_root> --write-gate "<用户输入>"` 写入 `.flutter-forge/runtime/task_gate.json`；规则卡 hook 只在该 gate 明确允许且目标文件不触碰架构边界时，才放行无规则卡的轻量/直通写操作。脚本不存在或执行失败时，按降级顺序自行判定：先执行本节第 7 步（任务是否明确）→ 不明确则进入等待态 → 明确后按 `SKILL.md` 路由顺序第 4-13 步分类 → 分类完成后再执行本节第 3-4 步决定并处理规则卡检查。不因脚本缺失阻塞启动
 3. **按任务类型决定是否检查规则卡**（按需触发，不再每次启动强制）：
 
    | 任务类型 | 规则卡检查 |
@@ -30,7 +30,7 @@
    - **优先读缓存**：运行 `scripts/check_rule_card.sh <project_root> --cached 300`（300 秒 TTL）
    - 缓存命中（输出包含 `cache_hit: true`）→ 直接消费状态，不再重跑完整检查
    - 缓存未命中或过期 → 脚本内部自动回退到完整检查
-   - 状态判定：`found` 加载规则卡；`draft` 提示用户确认草案；`not_found` 进入初始化流程
+   - 状态判定：`found` 加载规则卡；`draft` 加载草案作为 advisory，并按 [rule_card_protocol.md](rule_card_protocol.md) "草案期间的行为"节决定是否提示确认；`not_found` 按 [rule_card_protocol.md](rule_card_protocol.md) "无规则卡时的强制处理"节进入初始化流程
    - 禁止 LLM 自行搜索路径；脚本失败时按 [rule_card_protocol.md](rule_card_protocol.md) "脚本降级路径解析"节处理
 5. **确认当前任务仍在 flutter-forge 处理范围内**：若分类结果或二次判定发现当前输入属于误触发（如 `ffmpeg` 相关、引用代码块中的 `ff-`、与 Flutter 无关的普通对话），输出 `[f-forge] 误触发，退出` 并终止流程，不继续后续步骤
 6. 检查 session 恢复条件：如果存在未完成 session 且用户输入匹配恢复条件（详见下方"Session 恢复"节），优先恢复 session，跳过等待态判定
@@ -44,14 +44,14 @@
 14. 是否需要执行验证
 15. 当前是否明确在继续同一未完成大任务
 16. 输出模式日志：路由判定完成后、开始执行前，必须输出 `[f-forge]` 模式日志（格式见 [skill_visibility.md](skill_visibility.md)）。这是 P0 硬规则，不输出不允许继续执行
-17. 输出格式校验：阶段切换或任务收口时一次性 batch 校验当前会话累积的 `[f-forge]` 输出，运行 `scripts/validate_output.sh`（详见 [skill_visibility.md](skill_visibility.md) "输出校验脚本"节）。校验失败时必须立即修正并重新输出。轻量任务在完成日志后校验一次即可
+17. 输出格式校验：阶段切换或任务收口时一次性 batch 校验当前会话累积的 `[f-forge]` 输出；阶段切换运行 `scripts/validate_output.sh`，任务收口运行 `scripts/validate_output.sh --require-complete`（详见 [skill_visibility.md](skill_visibility.md) "输出校验脚本"节）。校验失败时必须立即修正并重新输出。轻量任务在完成日志后校验一次即可
 
 规则卡检查硬约束（**仅在按上方表格判定为"必须检查"或"按需触发"实际命中时生效**）：
 
 - `check_rule_card.sh` 输出 `status: not_found` 时，不得输出”规则卡：已加载”
 - 不得用 `.trae/rules/rules.md`、`.claude/*.md`、`CLAUDE.md`、`AGENTS.md` 或其他项目规则文件替代正式规则卡
-- `status: not_found` 时，不得直接进入”等待用户任务”或普通执行流程；必须先进入初始化处理
-- 只有”用户单纯询问规则卡位置/状态”这类直通说明场景，才允许只回答现状而不立即展开初始化执行
+- `status: not_found` 时，不得直接进入”等待用户任务”或普通执行流程；必须按 [rule_card_protocol.md](rule_card_protocol.md) "无规则卡时的强制处理"节先进入初始化处理
+- 只有 [rule_card_protocol.md](rule_card_protocol.md) 定义的"用户单纯询问规则卡位置/状态"这类直通说明场景，才允许只回答现状而不立即展开初始化执行
 - 禁止 LLM 自行遍历路径查找规则卡；路径解析由脚本完成，LLM 只消费输出结果
 
 按需触发的实现侧规则：
@@ -59,7 +59,7 @@
 - 轻量任务在实现中如果发现需要触碰状态管理、路由、目录约定、命名规范，立刻"按需触发"规则卡检查
 - 中等任务的 `confidence: low` 或范围模糊判定，由 controller 在路由后、进入实现前判断
 - 中等任务即便初始判定跳过，若任务被升级到 UI 优化 / 架构级 / 功能开发 / 页面开发，升级时必须补做规则卡检查
-- 写操作（Edit/Write/创建文件）由 preToolCall hook 兜底：未初始化项目走写操作时硬阻断，强制初始化（详见 `scripts/hook_check_rule_card.sh`）
+- 写操作（Edit/Write/创建文件）由 preToolCall hook 兜底：未初始化项目走重流程写操作时硬阻断，强制初始化；直通 / 轻量 / 高置信中等任务只有在 task gate 有效且目标文件不触碰状态管理、路由、依赖、`lib/core`、`lib/shared` 等边界文件时才放行（详见 `scripts/hook_check_rule_card.sh`）
 
 ## 先判定，再执行
 
@@ -126,7 +126,7 @@ matched_by: <命中的关键词类别>
 - 需求缺口 → 需求分析师给推荐方案并标记 `auto_assumption`
 - UI 缺口 → UI 设计师给推荐草案并标注来源
 - 架构缺口 → 架构设计师优先沿用规则卡 / 相似实现 / 项目主流
-- 只有命中高风险中断条件才问用户
+- 只有命中 [autonomous_mode.md](autonomous_mode.md) "必须中断确认的情况"节定义的高风险中断条件才问用户
 
 详细边界见 [autonomous_mode.md](autonomous_mode.md)。
 
@@ -317,7 +317,7 @@ LLM 禁止自行搜索路径。
    - 有冲突 → 运行 `scripts/check_rule_card.sh <project_root> --reset-usage`，计数清零，提醒用户确认或更新草案
 2. **转正判定**：如果 `--increment-usage` 返回 `draft_usage_count: 5`（或更高），在下次规则卡检查时自动执行转正：
    - 运行 `scripts/check_rule_card.sh <project_root> --promote-draft`
-   - 输出 `[f-forge] 规则卡草案已连续 5 次任务无冲突使用，自动转为正式规则卡：{promoted 路径}`
+   - 输出 `[f-forge] 主控：规则卡草案已连续 5 次任务无冲突使用，自动转为正式规则卡：{promoted 路径}`
 3. 直通模式和轻量任务不触发此检查（它们不读规则卡，无法验证一致性）
 
 ## 用户确认与提问
@@ -365,6 +365,8 @@ LLM 禁止自行搜索路径。
 - 验证工程师 → `verify_agent`
 
 轻量任务只需 `page_engineer` checklist；完整流程按参与角色逐个校验。
+
+轻量任务和未升级的 `ff-fast` 任务仍必须完成 `page_engineer` checklist 校验，但 checklist YAML 与校验命令属于结构化验证产物，不计入可见性协议中的“开始 / 完成 2 条主要 `[f-forge]` 日志”限制。推荐顺序：开始日志 → checklist YAML → `validate_checklist.py` PASS → 完成日志。
 
 质量门细节见：
 

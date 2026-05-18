@@ -44,10 +44,12 @@ path: <相对路径或 ->
 project_name: <项目名>
 has_draft: true | false
 draft_path: <草案相对路径或 ->
+draft_usage_count: <仅 status=draft 时返回，默认 0>
+draft_reminder_count: <仅 status=draft 时返回，默认 0>
 ```
 
 - `status: found` → 加载 `path` 指向的正式规则卡
-- `status: draft` → 提示用户确认草案
+- `status: draft` → 加载草案作为 advisory；仅在首次接入、用户询问/确认草案或达到提醒阈值时提示确认
 - `status: not_found` → 进入初始化流程
 
 LLM 禁止自行遍历上述四个路径查找规则卡。路径解析由脚本完成，确保精确匹配项目名且不跨项目污染。
@@ -58,7 +60,7 @@ LLM 禁止自行遍历上述四个路径查找规则卡。路径解析由脚本�
 
 降级触发时必须：
 
-1. 先输出 `[f-forge] 规则卡：脚本不可用，进入降级路径解析`，保留可观测性
+1. 先输出 `[f-forge] 主控：规则卡脚本不可用，进入降级路径解析`，保留可观测性
 2. 按下列顺序读取项目根目录下的规则卡，命中第一个存在的即停：
    - `.claude/.flutter-forge/projects/*.rule_card.yaml`
    - `.trae/.flutter-forge/projects/*.rule_card.yaml`
@@ -189,7 +191,12 @@ LLM 禁止自行遍历上述四个路径查找规则卡。路径解析由脚本�
   4. 加载跨项目长期偏好
   5. 判断是否需要补扫描
 
-- `status: draft`：提示用户确认草案，草案期间按草案参考执行
+- `status: draft`：
+  1. 加载 `path` 指向的草案内容
+  2. 标记 `规则卡状态：草案 advisory`
+  3. 草案期间按草案参考执行，但不得称为“正式规则卡已加载”
+  4. 仅在首次生成草案、用户正在询问/确认草案、`draft_reminder_count` 达到提醒阈值，或本轮任务会与草案发生高风险冲突时，才中断任务提示确认
+  5. 其他普通任务可继续执行，并在任务完成后按“草案静默转正检查”递增或重置计数
 
 - `status: not_found`：进入初始化流程
 
@@ -209,21 +216,23 @@ LLM 禁止自行遍历上述四个路径查找规则卡。路径解析由脚本�
 2. 明确向用户展示草案中的关键决策点（状态管理、路由、目录结构等）
 3. 询问用户是否确认草案，或需要调整哪些字段
 4. 用户确认后，将 `_draft` 后缀去掉，写入正式规则卡路径
-5. 输出 `[f-forge] 规则卡已初始化：{路径}`
+5. 输出 `[f-forge] 主控：规则卡已初始化：{路径}`
 
 ### 草案期间的行为
 
-- 草案未确认期间，如果用户发起新任务，按草案内容作为参考（非强制约束）执行
+- 草案未确认期间，如果用户发起新任务，默认按草案内容作为参考（非强制约束）执行，不因 `draft` 状态反复阻塞主流程
 - 草案中的规则不具有正式规则卡的强制力，但应尽量遵循以保持一致性
 - 如果新任务的执行结果与草案冲突，在任务完成后提示用户更新草案
+- 如果用户当前请求就是确认、查看、修改或放弃草案，则优先处理草案确认流程
+- 如果本轮任务会明显违背草案中的高风险工程约束（状态管理、路由体系、目录结构、模块边界），先提示用户确认是更新草案还是按草案执行
 
 ### 草案超时
 
-- 草案超时计数持久化到 `.flutter-forge/session.md` 的 `draft_reminder_count` 字段，跨会话累积
-- 每次触发 flutter-forge 任务且草案未确认时，计数 +1
+- 草案超时计数持久化到 `.flutter-forge/runtime/rule_card_status.json` 的 `draft_reminder_count` 字段，跨会话累积
+- 每次触发 flutter-forge 任务且草案未确认时，运行 `scripts/check_rule_card.sh <project_root> --increment-reminder`，计数 +1
 - 计数达到 3 时，在第 4 次任务开始时再次提醒用户确认或放弃草案
-- 用户确认后计数清零；用户明确放弃时，删除草案文件并清零计数
-- 如果 session 文件不存在或无法写入，回退为会话内计数（不跨会话）
+- 用户确认后运行 `scripts/check_rule_card.sh <project_root> --reset-reminder` 清零；用户明确放弃时，删除草案文件并清零计数
+- 如果 runtime 状态文件不存在或无法写入，回退为会话内计数（不跨会话）
 
 ### 草案校验
 
@@ -248,13 +257,14 @@ LLM 禁止自行遍历上述四个路径查找规则卡。路径解析由脚本�
 1. `draft_usage_count` 达到 5 时，在下次任务开始时（规则卡检查环节）自动执行：
    - 将 `*.rule_card_draft.yaml` 重命名为 `*.rule_card.yaml`（去掉 `_draft` 后缀）
    - 清零 `draft_usage_count` 和 `draft_reminder_count`
-   - 输出日志：`[f-forge] 规则卡草案已连续 5 次任务无冲突使用，自动转为正式规则卡：{路径}`
+   - 输出日志：`[f-forge] 主控：规则卡草案已连续 5 次任务无冲突使用，自动转为正式规则卡：{路径}`
 2. 转正后，规则卡具有正式强制力
 3. 用户可随时手动确认草案（不必等 5 次），手动确认优先级高于静默转正
 
 **计数持久化**：
 
 - `draft_usage_count` 持久化到 `.flutter-forge/runtime/rule_card_status.json` 的 `draft_usage_count` 字段
+- `draft_reminder_count` 同样持久化到 `.flutter-forge/runtime/rule_card_status.json`
 - 由 `scripts/check_rule_card.sh` 在输出 `status: draft` 时一并返回当前计数
 - 由任务完成时的 controller 逻辑递增或清零（通过 `scripts/check_rule_card.sh` 的 `--increment-usage` 或 `--reset-usage` 参数）
 
@@ -288,7 +298,7 @@ LLM 禁止自行遍历上述四个路径查找规则卡。路径解析由脚本�
 - 大任务执行完后，对比规则卡与实际代码的差异
 - 先询问用户是否刷新规则卡
 - 用户确认后，只更新有变化的字段，不重写整个规则卡
-- 输出一行日志：`[f-forge] 规则卡已刷新：{变更字段列表}`
+- 输出一行日志：`[f-forge] 主控：规则卡已刷新：{变更字段列表}`
 - 如果变更涉及高风险项（状态管理、目录结构），明确提示本次变更点
 
 不更新的情况：

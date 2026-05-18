@@ -96,7 +96,7 @@
 草案生成后，向用户展示的确认摘要推荐格式：
 
 ```text
-[f-forge] 规则卡草案已生成，请确认以下关键决策：
+[f-forge] 主控：规则卡草案已生成，请确认以下关键决策：
 
 1. 状态管理：Riverpod StateNotifier（confidence: medium，基于 3 个 feature 扫描）
 2. 目录结构：lib/features/<module>/pages/ + widgets/ + state/（confidence: high）

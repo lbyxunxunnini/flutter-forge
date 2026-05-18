@@ -14,6 +14,8 @@
 #   project_name : 项目名（目录名）
 #   has_draft    : true | false
 #   draft_path   : 草案相对路径（无则 -）
+#   draft_usage_count    : 草案连续无冲突使用次数
+#   draft_reminder_count : 草案确认提醒计数
 #
 # JSON 模式额外字段:
 #   project_root : 项目根绝对路径（缓存校验用）
@@ -106,6 +108,50 @@ print('draft_usage_count: 0')
   exit 0
 fi
 
+# --increment-reminder 模式：草案确认提醒计数 +1
+# 用法: scripts/check_rule_card.sh <project_root> --increment-reminder
+if [[ "${2:-}" == "--increment-reminder" ]]; then
+  STATE_FILE="${PROJECT_ROOT}/.flutter-forge/runtime/rule_card_status.json"
+  if [ -f "$STATE_FILE" ]; then
+    STATE_FILE="$STATE_FILE" python3 -c "
+import json, os, time
+state_file = os.environ['STATE_FILE']
+with open(state_file) as f:
+    s = json.load(f)
+count = s.get('draft_reminder_count', 0) + 1
+s['draft_reminder_count'] = count
+s['checked_at'] = int(time.time())
+with open(state_file, 'w') as f:
+    json.dump(s, f, ensure_ascii=False, indent=2)
+print(f'draft_reminder_count: {count}')
+" 2>/dev/null
+  else
+    echo "draft_reminder_count: 0"
+  fi
+  exit 0
+fi
+
+# --reset-reminder 模式：草案确认提醒计数清零
+# 用法: scripts/check_rule_card.sh <project_root> --reset-reminder
+if [[ "${2:-}" == "--reset-reminder" ]]; then
+  STATE_FILE="${PROJECT_ROOT}/.flutter-forge/runtime/rule_card_status.json"
+  if [ -f "$STATE_FILE" ]; then
+    STATE_FILE="$STATE_FILE" python3 -c "
+import json, os
+state_file = os.environ['STATE_FILE']
+with open(state_file) as f:
+    s = json.load(f)
+s['draft_reminder_count'] = 0
+with open(state_file, 'w') as f:
+    json.dump(s, f, ensure_ascii=False, indent=2)
+print('draft_reminder_count: 0')
+" 2>/dev/null
+  else
+    echo "draft_reminder_count: 0"
+  fi
+  exit 0
+fi
+
 # --promote-draft 模式：将草案转为正式规则卡
 # 用法: scripts/check_rule_card.sh <project_root> --promote-draft
 if [[ "${2:-}" == "--promote-draft" ]]; then
@@ -135,6 +181,7 @@ s['path'] = formal_path
 s['has_draft'] = False
 s['draft_path'] = '-'
 s['draft_usage_count'] = 0
+s['draft_reminder_count'] = 0
 import time
 s['checked_at'] = int(time.time())
 with open(state_file, 'w') as f:
@@ -204,23 +251,29 @@ fi
 
 # --json 模式：输出 JSON 供 hook / 自动化消费
 if [[ "${2:-}" == "--json" ]]; then
-  # 读取已有的 draft_usage_count
+  # 读取已有的草案计数
   STATE_FILE_PATH="${PROJECT_ROOT}/.flutter-forge/runtime/rule_card_status.json"
   EXISTING_COUNT=0
+  EXISTING_REMINDER_COUNT=0
   if [ -f "$STATE_FILE_PATH" ]; then
-    EXISTING_COUNT="$(python3 -c "
+    EXISTING_COUNTS="$(python3 -c "
 import json
 try:
     with open('$STATE_FILE_PATH') as f:
-        print(json.load(f).get('draft_usage_count', 0))
+        s = json.load(f)
+        print(s.get('draft_usage_count', 0))
+        print(s.get('draft_reminder_count', 0))
 except Exception:
     print(0)
+    print(0)
 " 2>/dev/null || echo 0)"
+    EXISTING_COUNT="$(printf '%s\n' "$EXISTING_COUNTS" | sed -n '1p')"
+    EXISTING_REMINDER_COUNT="$(printf '%s\n' "$EXISTING_COUNTS" | sed -n '2p')"
   fi
   STATUS="$status" CARD_PATH="$card_path" PROJ_NAME="$PROJECT_NAME" \
   HAS_DRAFT_PY="$has_draft_py" DRAFT_PATH="${found_draft:--}" \
   PROJECT_ROOT_ABS="$(cd "$PROJECT_ROOT" && pwd)" \
-  EXISTING_COUNT="$EXISTING_COUNT" \
+  EXISTING_COUNT="$EXISTING_COUNT" EXISTING_REMINDER_COUNT="$EXISTING_REMINDER_COUNT" \
   python3 -c "
 import json, os, time
 st = os.environ['STATUS']
@@ -232,7 +285,8 @@ state = {
     'draft_path': os.environ['DRAFT_PATH'],
     'project_root': os.environ['PROJECT_ROOT_ABS'],
     'checked_at': int(time.time()),
-    'draft_usage_count': int(os.environ['EXISTING_COUNT']) if st == 'draft' else 0,
+    'draft_usage_count': int(os.environ.get('EXISTING_COUNT') or 0) if st == 'draft' else 0,
+    'draft_reminder_count': int(os.environ.get('EXISTING_REMINDER_COUNT') or 0) if st == 'draft' else 0,
 }
 print(json.dumps(state, ensure_ascii=False))
 "
@@ -249,23 +303,27 @@ STATE_DIR="$STATE_DIR" \
 python3 -c "
 import json, os, time
 state_file = os.path.join(os.environ['STATE_DIR'], 'rule_card_status.json')
-# 保留已有的 draft_usage_count
+# 保留已有的草案计数
 existing_count = 0
+existing_reminder_count = 0
 try:
     with open(state_file) as f:
         old = json.load(f)
     existing_count = old.get('draft_usage_count', 0)
+    existing_reminder_count = old.get('draft_reminder_count', 0)
 except Exception:
     pass
+status = os.environ['STATUS']
 state = {
-    'status': os.environ['STATUS'],
+    'status': status,
     'path': os.environ['CARD_PATH'],
     'project_name': os.environ['PROJ_NAME'],
     'has_draft': os.environ['HAS_DRAFT_PY'] == 'True',
     'draft_path': os.environ['DRAFT_PATH'],
     'project_root': os.environ['PROJECT_ROOT_ABS'],
     'checked_at': int(time.time()),
-    'draft_usage_count': existing_count if os.environ['STATUS'] == 'draft' else 0,
+    'draft_usage_count': existing_count if status == 'draft' else 0,
+    'draft_reminder_count': existing_reminder_count if status == 'draft' else 0,
 }
 with open(state_file, 'w') as f:
     json.dump(state, f, ensure_ascii=False, indent=2)
@@ -276,3 +334,17 @@ echo "path: $card_path"
 echo "project_name: $PROJECT_NAME"
 echo "has_draft: $([ -n "$found_draft" ] && echo true || echo false)"
 echo "draft_path: ${found_draft:--}"
+if [ "$status" = "draft" ]; then
+  STATE_FILE_PATH="${PROJECT_ROOT}/.flutter-forge/runtime/rule_card_status.json"
+  python3 -c "
+import json
+try:
+    with open('$STATE_FILE_PATH') as f:
+        s = json.load(f)
+    print(f\"draft_usage_count: {s.get('draft_usage_count', 0)}\")
+    print(f\"draft_reminder_count: {s.get('draft_reminder_count', 0)}\")
+except Exception:
+    print('draft_usage_count: 0')
+    print('draft_reminder_count: 0')
+" 2>/dev/null || true
+fi
