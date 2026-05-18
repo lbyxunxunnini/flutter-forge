@@ -5,6 +5,23 @@
 - `0.2.x` 中出现的 `legacy_project_scan.md`、`~/.flutter-forge/projects/*.rule_card.yaml` 等表述保留为当时版本的历史事实
 - 当前现行入口与规则卡路径策略以 `references/existing_project_entry.md`、`references/existing_project_scan.md`、`references/rule_card_protocol.md` 为准
 
+## v0.2.2
+
+修复 flutter-forge 流程掉链和输出格式回归。
+
+### P0 流程闭环
+
+- **S2→S4 硬阻断**：S2 方案确认完成后必须继续输出 `[f-forge] 阶段：S4 实现中` 并开始实现，不允许停在 S2 结论或等待下一步指令
+- **阶段检查点文档化**：新增 `references/phase_checkpoint.md`，集中描述阶段切换、S2→S4 防掉链、角色日志和 session 恢复检查点
+- **Session 状态持久化对齐**：阶段切换要求通过 `scripts/ff_session.sh` 写入宿主 session，避免手写 `.flutter-forge/session.md` 与现有脚本格式冲突
+
+### 输出格式校验
+
+- **阶段全名校验**：`validate_output.sh` 新增完整阶段名检查，拦截 `S1 需求分析`、`S2 方案设计`、`S4 开发中` 等非法阶段名
+- **裸结论拦截**：`validate_output.sh` 新增裸角色结论和裸分析结论检查，要求 `需求分析师：...`、`分析结论：...` 等输出必须改为 `[f-forge] 角色名：...`
+- **S4 必达校验**：新增 `--require-s4` 参数，用于拦截页面开发/功能开发流程中 S2 后未进入 S4 的输出
+- **发布回归用例**：`validate_release.sh` 覆盖非法阶段名、裸角色结论、裸分析结论、S2-only 默认校验、`--require-s4` 硬阻断和参数顺序兼容
+
 ## v0.2.1
 
 P0 强制层闭环 + P1 路由脚本增强 + P2 文档精简。

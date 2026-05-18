@@ -87,6 +87,66 @@ if printf '%s\n' \
   fail "validate_output accepted missing completion log"
 fi
 
+if printf '%s\n' \
+  '[f-forge] 进入 controller' \
+  '[f-forge] 模式：页面开发' \
+  '[f-forge] 阶段：S1 需求分析' \
+  | scripts/validate_output.sh >/dev/null 2>&1; then
+  fail "validate_output accepted invalid full phase name"
+fi
+
+if printf '%s\n' \
+  '[f-forge] 进入 controller' \
+  '[f-forge] 模式：页面开发' \
+  '[f-forge] 阶段：S1 需求确认' \
+  '需求分析师：需求已确认' \
+  | scripts/validate_output.sh >/dev/null 2>&1; then
+  fail "validate_output accepted bare role result without [f-forge] prefix"
+fi
+
+if printf '%s\n' \
+  '[f-forge] 进入 controller' \
+  '[f-forge] 模式：页面开发' \
+  '[f-forge] 阶段：S1 需求确认' \
+  '分析结论：需求已确认' \
+  | scripts/validate_output.sh >/dev/null 2>&1; then
+  fail "validate_output accepted bare conclusion without role prefix"
+fi
+
+printf '%s\n' \
+  '[f-forge] 进入 controller' \
+  '[f-forge] 模式：页面开发' \
+  '[f-forge] 阶段：S2 方案确认' \
+  '[f-forge] 页面工程师：方案已确认，继续进入实现' \
+  | scripts/validate_output.sh >/dev/null
+
+if printf '%s\n' \
+  '[f-forge] 进入 controller' \
+  '[f-forge] 模式：页面开发' \
+  '[f-forge] 阶段：S2 方案确认' \
+  '[f-forge] 页面工程师：方案已确认，继续进入实现' \
+  | scripts/validate_output.sh --require-s4 >/dev/null 2>&1; then
+  fail "validate_output accepted S2 without S4 under --require-s4"
+fi
+
+printf '%s\n' \
+  '[f-forge] 进入 controller' \
+  '[f-forge] 模式：页面开发' \
+  '[f-forge] 阶段：S2 方案确认' \
+  '[f-forge] 页面工程师：方案已确认，继续进入实现' \
+  '[f-forge] 阶段：S4 实现中' \
+  '[f-forge] 本轮完成：已完成实现和验证' \
+  | scripts/validate_output.sh --require-s4 --require-complete >/dev/null
+
+printf '%s\n' \
+  '[f-forge] 进入 controller' \
+  '[f-forge] 模式：页面开发' \
+  '[f-forge] 阶段：S2 方案确认' \
+  '[f-forge] 页面工程师：方案已确认，继续进入实现' \
+  '[f-forge] 阶段：S4 实现中' \
+  '[f-forge] 本轮完成：已完成实现和验证' \
+  | scripts/validate_output.sh --require-complete --require-s4 >/dev/null
+
 printf '%s\n' \
   '[f-forge] 进入 controller' \
   '[f-forge] 模式：启动握手' \

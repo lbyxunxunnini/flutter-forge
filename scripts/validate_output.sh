@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 # validate_output.sh — 校验 LLM 输出是否符合 [f-forge] 可见性协议
 #
-# 用法: scripts/validate_output.sh [--require-complete] < <llm_output>
-#   或: scripts/validate_output.sh [--require-complete] "llm output text"
-#   或: scripts/validate_output.sh [--require-complete] /path/to/output_file
+# 用法: scripts/validate_output.sh [--require-complete] [--require-s4] < <llm_output>
+#   或: scripts/validate_output.sh [--require-complete] [--require-s4] "llm output text"
+#   或: scripts/validate_output.sh [--require-complete] [--require-s4] /path/to/output_file
 #
 # 校验规则：
 #   1. 含 [f-forge] 的行必须以 [f-forge] 开头
@@ -13,6 +13,8 @@
 #   5. 阶段日志中的阶段编号必须合法
 #   6. 角色名必须在允许列表中
 #   7. --require-complete 时必须包含完成日志
+#   8. 阶段日志中的完整阶段名必须合法（如 S1 需求确认）
+#   9. --require-s4 时，页面开发/功能开发在 S2 后必须包含 S4 阶段日志
 #
 # 输出: PASS 或 FAIL + 具体违规行和原因
 
@@ -27,18 +29,48 @@ ALLOWED_PHASES="C0|C1|C2|C3|S0|S1|S2|S3|S4|S5|S6"
 # 允许的角色名
 ALLOWED_ROLES="需求分析师|UI 设计师|架构设计师|页面工程师|验证工程师|主控"
 
-# 读取输入
-require_complete=false
-if [ $# -ge 1 ] && [ "${1:-}" = "--require-complete" ]; then
-  require_complete=true
-  shift
-fi
+# 需要 [f-forge] 角色前缀的裸结论行
+BARE_CONCLUSION_PREFIXES="分析结论|结论|方案结论|需求结论|UI 结论|架构结论|实现结论|验证结论"
 
-if [ $# -ge 1 ]; then
-  if [ -f "$1" ]; then
-    INPUT="$(cat "$1")"
+# 需要 S4 阶段日志的模式（S2→S4 硬阻断）
+MODES_NEEDING_S4="功能开发|页面开发"
+
+require_complete=false
+require_s4=false
+input_args=()
+
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --require-complete)
+      require_complete=true
+      shift
+      ;;
+    --require-s4)
+      require_s4=true
+      shift
+      ;;
+    --)
+      shift
+      input_args+=("$@")
+      break
+      ;;
+    -*)
+      echo "ERROR: unknown option: $1"
+      exit 2
+      ;;
+    *)
+      input_args+=("$1")
+      shift
+      ;;
+  esac
+done
+
+# 读取输入
+if [ ${#input_args[@]} -ge 1 ]; then
+  if [ ${#input_args[@]} -eq 1 ] && [ -f "${input_args[0]}" ]; then
+    INPUT="$(cat "${input_args[0]}")"
   else
-    INPUT="$*"
+    INPUT="${input_args[*]}"
   fi
 else
   INPUT="$(cat)"
@@ -49,21 +81,36 @@ line_num=0
 has_forge=false
 first_forge_seen=false
 mode_seen=false
+detected_mode=""
 stage_seen=false
+s2_seen=false
+s4_seen=false
 completion_seen=false
 waiting_seen=false
 exit_seen=false
+phase_lines=""
 
 while IFS= read -r line; do
   line_num=$((line_num + 1))
 
-  # 跳过空行和非 [f-forge] 行
+  # 跳过空行
   if [ -z "$line" ]; then
     continue
   fi
 
   # 如果整段输出中没有任何 [f-forge] 行，跳过（可能是纯代码输出）
   if ! echo "$INPUT" | grep -q '\[f-forge\]'; then
+    continue
+  fi
+
+  if ! echo "$line" | grep -q '\[f-forge\]'; then
+    if echo "$line" | grep -qE "^[[:space:]]*($ALLOWED_ROLES)："; then
+      echo "FAIL line $line_num: role result missing [f-forge] prefix: $line"
+      errors=$((errors + 1))
+    elif echo "$line" | grep -qE "^[[:space:]]*($BARE_CONCLUSION_PREFIXES)："; then
+      echo "FAIL line $line_num: conclusion line must use '[f-forge] 角色名：' prefix: $line"
+      errors=$((errors + 1))
+    fi
     continue
   fi
 
@@ -84,8 +131,20 @@ while IFS= read -r line; do
       fi
     fi
 
-    if echo "$line" | grep -qE '\[f-forge\][[:space:]]*(模式：|页面工程师：.*任务|直通模式：)'; then
+    # 检测模式名
+    if echo "$line" | grep -qE '\[f-forge\][[:space:]]*模式：'; then
       mode_seen=true
+      detected_mode=$(echo "$line" | sed -E 's/.*模式：//' | sed -E 's/[[:space:]]*$//' | sed -E 's/[^一-龥a-zA-Z ]*$//')
+    elif echo "$line" | grep -qE '\[f-forge\][[:space:]]*页面工程师：.*任务'; then
+      mode_seen=true
+      if echo "$line" | grep -qE '轻量任务'; then
+        detected_mode="轻量任务"
+      elif echo "$line" | grep -qE '中等任务'; then
+        detected_mode="中等任务"
+      fi
+    elif echo "$line" | grep -qE '\[f-forge\][[:space:]]*直通模式：'; then
+      mode_seen=true
+      detected_mode="直通模式"
     fi
 
     if echo "$line" | grep -qE '\[f-forge\][[:space:]]*(本轮完成：|直通模式：完成|页面工程师：已完成|页面工程师：已按 ff-fast 完成)'; then
@@ -102,9 +161,6 @@ while IFS= read -r line; do
 
     # 规则2: 模式日志中的模式名校验
     if echo "$line" | grep -qE '\[f-forge\] *(模式：|页面工程师：.*任务|直通模式|页面工程师：ff-fast|全自动：)'; then
-      # 提取模式名部分进行校验
-      mode_part=$(echo "$line" | sed -E 's/.*\[f-forge\][[:space:]]*//' | sed -E 's/：.*//')
-      # 对于 "模式：XXX" 格式，提取 XXX
       if echo "$line" | grep -qE '模式：'; then
         mode_name=$(echo "$line" | sed -E 's/.*模式：//' | sed -E 's/[[:space:]]*$//' | sed -E 's/[^一-龥a-zA-Z ]*$//')
         if ! echo "$mode_name" | grep -qE "^($ALLOWED_MODES)$"; then
@@ -114,17 +170,47 @@ while IFS= read -r line; do
       fi
     fi
 
-    # 规则3: 阶段日志中的阶段编号校验
+    # 规则3: 阶段日志中的阶段编号+名称校验
     if echo "$line" | grep -qE '阶段：'; then
       stage_seen=true
       if [ "$mode_seen" = false ]; then
         echo "FAIL line $line_num: phase log appears before mode log: $line"
         errors=$((errors + 1))
       fi
+      # 提取阶段编号
       phase=$(echo "$line" | sed -E 's/.*阶段：//' | sed -E 's/[[:space:]]*$//' | sed -E 's/ .*//')
       if ! echo "$phase" | grep -qE "^($ALLOWED_PHASES)$"; then
         echo "FAIL line $line_num: invalid phase '$phase'"
         errors=$((errors + 1))
+      fi
+      # 提取完整阶段名（编号+中文名）并校验
+      full_phase=$(echo "$line" | sed -E 's/.*阶段：//' | sed -E 's/[[:space:]]*$//')
+      # 允许的完整阶段名
+      case "$phase" in
+        S0) allowed_full="S0 未收口" ;;
+        S1) allowed_full="S1 需求确认" ;;
+        S2) allowed_full="S2 方案确认" ;;
+        S3) allowed_full="S3 拆包冻结" ;;
+        S4) allowed_full="S4 实现中" ;;
+        S5) allowed_full="S5 验证中" ;;
+        C0) allowed_full="C0 想法收口" ;;
+        C1) allowed_full="C1 方向共创" ;;
+        C2) allowed_full="C2 工程定型" ;;
+        C3) allowed_full="C3 首批范围冻结" ;;
+        *) allowed_full="" ;;
+      esac
+      if [ -n "$allowed_full" ] && [ "$full_phase" != "$allowed_full" ]; then
+        echo "FAIL line $line_num: invalid phase name '$full_phase' (should be '$allowed_full')"
+        errors=$((errors + 1))
+      fi
+      # 记录阶段出现顺序
+      phase_lines="$phase_lines $phase"
+      # 跟踪 S2 和 S4
+      if [ "$phase" = "S2" ]; then
+        s2_seen=true
+      fi
+      if [ "$phase" = "S4" ]; then
+        s4_seen=true
       fi
     fi
 
@@ -142,6 +228,7 @@ while IFS= read -r line; do
   fi
 done <<< "$INPUT"
 
+# 基础校验
 if [ "$has_forge" = true ] && [ "$mode_seen" = false ] && [ "$waiting_seen" = false ] && [ "$exit_seen" = false ]; then
   echo "FAIL: missing [f-forge] mode log"
   errors=$((errors + 1))
@@ -150,6 +237,16 @@ fi
 if [ "$has_forge" = true ] && [ "$require_complete" = true ] && [ "$completion_seen" = false ]; then
   echo "FAIL: missing [f-forge] completion log"
   errors=$((errors + 1))
+fi
+
+# 规则9: --require-s4 校验
+if [ "$require_s4" = true ] && [ "$has_forge" = true ]; then
+  if [ "$s2_seen" = true ] && [ "$s4_seen" = false ]; then
+    if [ -z "$detected_mode" ] || echo "$detected_mode" | grep -qE "^($MODES_NEEDING_S4)$"; then
+      echo "FAIL: S2 phase seen but S4 phase missing; S2→S4 hard blocker violated"
+      errors=$((errors + 1))
+    fi
+  fi
 fi
 
 if [ $errors -eq 0 ]; then

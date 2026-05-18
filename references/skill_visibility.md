@@ -44,22 +44,24 @@
 
 ## 输出校验脚本
 
-`scripts/validate_output.sh` **不在每条日志后单独运行**，而是在以下时机一次性 batch 校验当前会话累积的 `[f-forge]` 输出（P0 强制）。阶段切换时使用默认校验；任务收口时使用 `--require-complete` 强制检查完成日志：
+`scripts/validate_output.sh` **不在每条日志后单独运行**，而是在以下时机一次性 batch 校验当前会话累积的 `[f-forge]` 输出（P0 强制）。阶段切换时使用默认校验；S2→S4 防掉链使用 `--require-s4`；任务收口时使用 `--require-complete` 强制检查完成日志：
 
 | 任务类型 | 校验时机 |
 |---------|---------|
 | 直通模式 | 完成日志输出后运行 `scripts/validate_output.sh --require-complete` |
 | 轻量任务 | 完成日志输出后运行 `scripts/validate_output.sh --require-complete` |
 | 中等任务 | 完成日志输出后运行 `scripts/validate_output.sh --require-complete`（升级到大任务后按下方规则） |
-| UI 优化 / 架构级任务 / 功能开发 / 页面开发 / 新项目共创 | 每次阶段切换前运行默认校验（回看已输出的全部 `[f-forge]` 行）+ 任务收口前运行 `scripts/validate_output.sh --require-complete` |
+| UI 优化 / 架构级任务 / 功能开发 / 页面开发 / 新项目共创 | 每次阶段切换前运行默认校验；功能开发/页面开发在输出 S4 阶段日志后立刻运行 `scripts/validate_output.sh --require-s4`；任务收口前运行 `scripts/validate_output.sh --require-complete` |
 
 校验失败时必须立即修正并重新输出，不允许带着违规输出进入下一阶段。
 
 ```bash
 echo '<llm_output>' | scripts/validate_output.sh
+echo '<llm_output>' | scripts/validate_output.sh --require-s4
 echo '<llm_output>' | scripts/validate_output.sh --require-complete
 # 或
 scripts/validate_output.sh /path/to/output.txt
+scripts/validate_output.sh --require-s4 /path/to/output.txt
 scripts/validate_output.sh --require-complete /path/to/output.txt
 ```
 
@@ -69,7 +71,9 @@ scripts/validate_output.sh --require-complete /path/to/output.txt
 - 模式日志必须出现在阶段日志之前
 - 模式名必须在允许列表中（直通模式/轻量任务/中等任务/UI 优化/架构级任务/功能开发/页面开发/新项目共创/启动握手）
 - 阶段编号必须合法（C0-C3 / S0-S6）
+- 阶段完整名称必须合法（如 `S1 需求确认`，禁止 `S1 需求分析`）
 - 角色名必须在允许列表中（需求分析师/UI 设计师/架构设计师/页面工程师/验证工程师/主控）
+- 裸角色结论和裸分析结论必须失败（如 `需求分析师：...`、`分析结论：...` 必须改为 `[f-forge] 需求分析师：...`）
 - `--require-complete` 时必须包含完成日志
 
 输出 `PASS` 或 `FAIL + 违规行`。

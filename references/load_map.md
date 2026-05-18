@@ -67,6 +67,7 @@
 - [decision_and_question_protocol.md](decision_and_question_protocol.md)
 - [fast_mode.md](fast_mode.md)
 - [autonomous_mode.md](autonomous_mode.md)
+- [phase_checkpoint.md](phase_checkpoint.md)
 
 ### 需要可见性标记或当前大任务状态规则
 
@@ -96,6 +97,7 @@
 | 参考文件 | 被引用方 |
 |---------|---------|
 | task_runtime_prompt.md | SKILL.md（执行协议）、load_map.md |
+| phase_checkpoint.md | task_runtime_prompt.md（阶段转换自检）、load_map.md |
 | fast_mode.md | SKILL.md（ff-fast）、load_map.md |
 | autonomous_mode.md | SKILL.md（ff-a）、load_map.md |
 | decision_and_question_protocol.md | task_runtime_prompt.md、skill_visibility.md、load_map.md |
