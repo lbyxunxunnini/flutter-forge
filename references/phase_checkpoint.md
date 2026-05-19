@@ -18,6 +18,7 @@
 ```bash
 scripts/ff_session.sh init --track execution --phase S1 --mode 页面开发
 scripts/ff_session.sh update --phase S4 --mode 页面开发 --recent_action "进入 S4，实现已确认方案"
+scripts/ff_session.sh wait --waiting_state artifact --expected_input screenshot --pending_question "请补充当前 UI 截图"
 ```
 
 ### 2. 输出校验（P0）
@@ -67,13 +68,13 @@ scripts/ff_session.sh update --phase S4 --mode 页面开发 --recent_action "进
 
 **禁止裸输出分析结论**——即使只是补充说明，也必须带角色前缀。
 
-### 5. S2→S4 硬阻断检查（仅页面开发/功能开发）
+### 5. S2→S4 硬阻断检查（UI 优化/架构级任务/页面开发/功能开发）
 
 S2 方案确认完成后，在进入 S4 前额外检查：
 
 - [ ] S2 的阶段日志已输出？
 - [ ] S2 的角色结果日志已输出（带角色前缀）？
-- [ ] 用户确认已收到（回写"已确认"）？
+- [ ] 非 `ff-a` 场景下用户确认已收到（回写"已确认"）？如果正在等待确认，已通过 `ff_session.sh wait` 写入等待态？
 - [ ] 下一条回复将输出 `[f-forge] 阶段：S4 实现中`？
 
 如果任一检查未通过，先补全再进入 S4，不允许在 S2 输出"结论"后退出。
@@ -82,7 +83,8 @@ S2 方案确认完成后，在进入 S4 前额外检查：
 
 如果从宿主 session 恢复：
 
-1. 通过 `scripts/ff_session.sh read` 读取 `当前阶段`、`当前模式` 和 `最近操作`
-2. 输出 `[f-forge] 恢复阶段：{当前阶段}` 告知用户
+1. 通过 `scripts/ff_session.sh read` 读取 `当前阶段`、`当前模式`、`等待状态`、`等待输入类型`、`任务对象`、`恢复键` 和 `最近操作`
+2. 如果 `等待状态 != none`，输出 `[f-forge] 恢复等待：上一轮正在等待{等待输入类型}，已接入本轮补充并继续 {当前模式} / {当前阶段}`；否则输出 `[f-forge] 恢复阶段：{当前阶段}` 告知用户
 3. 从 `最近操作` 指示的位置继续执行
-4. 不重新走路由和分类
+4. 等待态恢复并消费用户输入后，运行 `scripts/ff_session.sh update --waiting_state none --expected_input none --last_user_input "<摘要>"`
+5. 不重新走路由和分类

@@ -77,7 +77,7 @@ ff a 新建商品详情页
 
 ## 文档引用规则
 
-- `SKILL.md` frontmatter `description` 字段：只写"何时触发 + 一句话定位"，不复述触发词列表
+- `SKILL.md` frontmatter `description` 字段：必须内联正式触发词，因为 skill 召回只读取 frontmatter，不会为了触发去读取本文件；详细匹配规则仍以本文件为准
 - `SKILL.md` 正文："命中路由 - 进入条件" 节引用本文件，正文里只列匹配规则要点
 - `README.md` / `QUICKSTART.md` / `CHEATSHEET.md`：用例中可使用具体触发词，但不维护"完整列表"，需要时链接到本文件
 - 所有其他 reference 文件：需要列触发词时引用本文件路径，不重复
@@ -85,5 +85,5 @@ ff a 新建商品详情页
 ## 维护规则
 
 - 新增/废弃触发词必须先改本文件，再同步到引用方
-- description 收敛到 ≤ 220 字符（宿主截断风险线）
+- description 收敛到 ≤ 220 字符（宿主截断风险线），且必须保留正式触发词入口
 - 不在多个文档同时维护触发词清单

@@ -108,6 +108,18 @@ elif echo "$INPUT" | grep -qE '优化' && echo "$INPUT" | grep -qE '视觉|样�
   mode="UI 优化"
   confidence="high"
   matched_by="ui_optimize_keywords"
+# 4b. UI 优化（截图/文字化 UI 规则驱动）
+elif echo "$INPUT" | grep -qE '截图|设计图|参考图|UI|视觉|样式|布局|头像|尺寸|叠放|压住|间距|圆角|禁用播放' \
+  && echo "$INPUT" | grep -qE '头像|布局|叠放|压住|尺寸|[0-9]+x[0-9]+|禁用播放|文案|卡片|按钮'; then
+  mode="UI 优化"
+  confidence="high"
+  matched_by="ui_visual_spec_keywords"
+# 5. 架构级任务（简化/抽取/复用类链路改造）
+elif echo "$INPUT" | grep -qE '简化|抽出|抽取|复用|减少分支|统一入口|重复点|重复逻辑|收敛' \
+  && echo "$INPUT" | grep -qE '弹窗|链路|流程|状态|入口|逻辑|handler|utils|shared|core|公共|模块'; then
+  mode="架构级任务"
+  confidence="high"
+  matched_by="structural_refactor_keywords"
 # 5. 架构级任务
 elif echo "$INPUT" | grep -qE '包体积|重构|迁移|依赖清理|性能优化|代码审查|i18n|a11y|国际化|无障碍'; then
   mode="架构级任务"
@@ -212,6 +224,9 @@ esac
 # upgrade_signals: 预判可能的升级信号
 upgrade_signals=""
 if echo "$INPUT" | grep -qE '路由|状态管理|Provider|Bloc|Riverpod|GetX'; then
+  upgrade_signals="${upgrade_signals}architecture_boundary,"
+fi
+if echo "$INPUT" | grep -qE '简化|抽出|抽取|复用|减少分支|统一入口|重复点|重复逻辑|收敛'; then
   upgrade_signals="${upgrade_signals}architecture_boundary,"
 fi
 if echo "$INPUT" | grep -qE '新增.*组件|新增.*区块|布局.*调整|结构.*调整'; then

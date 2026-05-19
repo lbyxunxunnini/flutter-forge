@@ -18,6 +18,11 @@
 | APM-WORKFLOW-003 | P1 | fixed | 轻量任务规则卡启动跳过与写操作 hook 硬阻断冲突 | `classify_task.sh --write-gate` 写入 task gate；hook 仅在 gate 明确允许且目标文件不触碰架构边界时放行无规则卡轻量/直通写入 |
 | APM-WORKFLOW-004 | P1 | fixed | 空触发和首次接入提示被误分到中等任务 | `classify_task.sh` 增加 `等待态` 与 `启动握手`；route golden 增加 `ff-` 空触发和首次接入用例 |
 | APM-TOOL-003 | P1 | fixed | 规则卡状态日志被 `validate_output.sh` 误判为非法角色 | 规则卡初始化、转正、刷新日志统一改为 `[f-forge] 主控：...`，release gate 增加正反例 |
+| APM-TOOL-004 | P1 | fixed | `validate_output.sh --require-s4` 未覆盖 UI 优化/架构级任务，且未检查 S2 到 S4 之间的角色结果日志 | 将 UI 优化/架构级任务纳入 S2→S4 校验，新增“缺 S2”和“缺角色结论”的 release gate 反例 |
+| APM-TOOL-005 | P1 | fixed | 中等任务只有开始/完成日志时也能通过校验，导致实现前缺少角色分析与执行策略 | `validate_output.sh --require-complete` 对中等及以上任务要求非模式/非完成角色结果日志，release gate 增加中等任务正反例 |
+| APM-SAFETY-001 | P0 | fixed | 简化/抽取/复用业务链路时未先声明改动范围与禁改范围，标准流程可能未确认就写代码 | 结构性链路收敛路由到架构级；中等及以上写前必须输出改动契约，标准 `ff-` 未确认不得写；release gate 增加缺改动契约反例 |
+| APM-SAFETY-002 | P0 | superseded | 曾将轻量、`ff-fast`、`ff-a` 全部纳入最强写前确认，后续被产品口径纠正为过度门禁 | 现口径：轻量、直通、`ff-a` 豁免最强写前确认等待；中等及以上非 `ff-a` 仍需改动契约和用户确认 |
+| APM-SESSION-001 | P0 | fixed | 等待用户输入、截图、文稿或上下文压缩时缺少可恢复等待态，容易退出工作模式 | `ff_session.sh` 增加等待态字段、宿主路径解析和 `wait` 命令；运行时要求等待前写 session、补材料时优先恢复 |
 | APM-LOGIC-002 | P2 | fixed | `draft_reminder_count` 只有文档承诺，没有脚本状态实现 | `check_rule_card.sh` 增加 `draft_reminder_count` 输出、`--increment-reminder` 和 `--reset-reminder` |
 | APM-DESIGN-002 | P2 | fixed | 路由 golden 复制分类逻辑，不能验证真实脚本 | `route_golden_tests.py` 改为直接调用 `scripts/classify_task.sh` 并断言输出字段 |
 

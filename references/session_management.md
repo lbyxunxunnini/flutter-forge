@@ -1,6 +1,6 @@
 # Flutter Forge Reference - 会话管理
 
-这个文件定义 `.flutter-forge/session.md` 的结构和使用规则。它服务的是当前未完成大任务的运行状态，不是每轮消息的默认恢复机制。
+这个文件定义 `.flutter-forge/session.md` 的结构和使用规则。它服务的是当前未完成任务与等待态的运行状态，不是每轮消息的默认恢复机制。
 
 ## Session 文件路径
 
@@ -40,8 +40,19 @@ session 路径与规则卡路径采用**同一套宿主优先级**：根据 `scr
 - 工作包：无 / P1 / P2 / P3
 - 失效结果：无 / impl-agent:v2 / ui-agent:v1
 - 最近操作：具体做了什么
+- 等待状态：none / user_input / artifact / confirmation
+- 等待输入类型：none / text / screenshot / document / design / confirmation / any
+- 待确认问题：等待用户回答的问题；无则 `-`
+- 任务对象：页面、模块、业务链路或文件对象；无则 `-`
+- 恢复键：用于判断用户补充输入是否属于同一任务的关键词；无则 `-`
+- 改动契约：最近一次待确认或已确认的改动契约摘要；无则 `-`
+- 确认状态：不需要 / 未确认 / 用户已确认
+- 摘要包：当前阶段摘要包路径或摘要标识；无则 `-`
+- 最后用户输入摘要：最近一次用户补充输入摘要；无则 `-`
 - 更新时间：YYYY-MM-DD HH:mm
 ```
+
+等待态字段是恢复链路的硬依赖：只要 controller 要等待用户输入、截图、文稿或确认，就必须写入；用户补充材料时优先用这些字段恢复原任务。
 
 ## 带工作包的结构
 
@@ -69,6 +80,11 @@ session 路径与规则卡路径采用**同一套宿主优先级**：根据 `scr
 scripts/ff_session.sh read                                    # 读取
 scripts/ff_session.sh init --track execution --phase S1       # 初始化
 scripts/ff_session.sh update --phase S4 --mode 功能开发       # 更新字段
+scripts/ff_session.sh wait --waiting_state artifact \
+  --expected_input screenshot \
+  --pending_question "请补充当前 UI 截图" \
+  --task_object "订单详情页" \
+  --resume_keys "订单详情页,截图,头像叠放"
 scripts/ff_session.sh reset                                   # 重置（任务完成时）
 scripts/ff_session.sh validate                                # 校验字段完整性
 ```
@@ -80,7 +96,11 @@ scripts/ff_session.sh validate                                # 校验字段完�
 3. 决策版本变化时 → `update --decision_version`
 4. 工作包完成时 → `update --work_packages --recent_action`
 5. 下游结果失效时 → `update --stale_results`
-6. 整个任务完成时 → `reset`
+6. 等待用户输入、截图、文稿、设计说明或确认前 → `wait --waiting_state --expected_input --pending_question --task_object --resume_keys`
+7. 输出改动契约并等待确认前（非豁免模式）→ `wait --waiting_state confirmation --expected_input confirmation --change_contract --confirmation_status 未确认`
+8. 生成长文档 / 长 UI 文档摘要包后 → `update --summary_package --recent_action`
+9. 用户补充材料被消费后 → `update --last_user_input --waiting_state none --expected_input none`
+10. 整个任务完成时 → `reset`
 
 ### 不必写
 
@@ -95,9 +115,11 @@ scripts/ff_session.sh validate                                # 校验字段完�
 
 ### 可读场景
 
-1. 当前大任务被压缩或中断时
+1. 当前任务被压缩或中断时
 2. 用户明确要求继续同一未完成任务时
 3. 当前工作包尚未完成，且仍在同一轮任务内部时
+4. `等待状态 != none`，且用户发来了文本、截图、文稿、设计说明或确认
+5. 上一轮曾向用户补要材料或确认，但本轮输入没有显式触发词
 
 任务已经完成时，不再读取旧 `session`（已通过 `reset` 清除）。
 
@@ -111,6 +133,8 @@ scripts/ff_session.sh validate                                # 校验字段完�
 4. 当前有效 `decision_version` 是什么
 5. 是否有未完成工作包
 6. 是否有已失效结果需要丢弃
+7. 是否处于等待态，以及当前用户输入是否满足 `等待输入类型`
+8. 是否存在 `摘要包`，需要先消费摘要包而不是要求用户重发长文档
 
 如果任务已完成或 `session` 已被重置，直接按新任务处理。
 
@@ -132,6 +156,13 @@ scripts/ff_session.sh validate                                # 校验字段完�
 [f-forge] 页面工程师：恢复上一轮实现进度，当前继续未完成工作包。
 ```
 
+等待态恢复示例：
+
+```text
+[f-forge] 恢复等待：上一轮正在等待截图，已接入用户补充材料并继续页面开发 / S2。
+[f-forge] UI 设计师：基于补充截图继续冻结头像叠放和禁用播放规则。
+```
+
 ## 防误判规则
 
 1. 不要只看”最近操作”，要看阶段和工作包状态
@@ -139,6 +170,8 @@ scripts/ff_session.sh validate                                # 校验字段完�
 3. 如果 `决策版本` 已变化，旧实现结果可能失效
 4. 如果用户开启新任务，默认覆盖旧 session，而不是恢复旧任务
 5. 任务结束后不要保留可继续恢复的旧任务状态
+6. 如果 `等待状态 != none`，用户直接补截图、文稿、JSON、长文本或回复“确认/可以/按这个来”，默认优先恢复等待中的任务
+7. 如果用户补充材料与 `任务对象`、`恢复键`、`待确认问题` 都无关，再视为新任务
 
 ## 失效结果（stale_results）写入规则
 
@@ -162,7 +195,9 @@ scripts/ff_session.sh validate                                # 校验字段完�
 - 每个子任务有独立的路由判定和模式
 - 直通模式子任务完成后，session 不写入（直通模式不创建 session）
 - 轻量任务完成后，session 不写入
-- 只有中等及以上任务才创建和维护 session
+- `ff-a` 全自动任务只有在长文档压缩、跨轮等待高风险确认或发生中断时才写 session
+- 中等及以上任务创建和维护 session
+- 任何模式只要主动等待用户补截图、文稿、文本或确认，都必须临时写等待态 session；恢复并消费后可清空等待态
 - 用户在同一轮对话中提出新任务时，如果旧任务已完成，重置 session 后按新任务处理
 
 ## 与规则卡的关系

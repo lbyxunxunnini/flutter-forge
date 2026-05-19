@@ -14,7 +14,11 @@
 #   6. 角色名必须在允许列表中
 #   7. --require-complete 时必须包含完成日志
 #   8. 阶段日志中的完整阶段名必须合法（如 S1 需求确认）
-#   9. --require-s4 时，页面开发/功能开发在 S2 后必须包含 S4 阶段日志
+#   9. --require-s4 时，UI 优化/架构级任务/页面开发/功能开发必须包含 S2 和 S4 阶段日志
+#   10. --require-s4 时，S2 到 S4 之间必须有角色结果日志
+#   11. --require-complete 时，中等及以上任务必须包含非模式/非完成的角色结果日志
+#   12. --require-complete 时，非豁免写代码任务必须包含写前改动契约
+#   13. --require-complete/--require-s4 时，非豁免改动契约必须已由用户确认
 #
 # 输出: PASS 或 FAIL + 具体违规行和原因
 
@@ -32,8 +36,14 @@ ALLOWED_ROLES="需求分析师|UI 设计师|架构设计师|页面工程师|验�
 # 需要 [f-forge] 角色前缀的裸结论行
 BARE_CONCLUSION_PREFIXES="分析结论|结论|方案结论|需求结论|UI 结论|架构结论|实现结论|验证结论"
 
-# 需要 S4 阶段日志的模式（S2→S4 硬阻断）
-MODES_NEEDING_S4="功能开发|页面开发"
+# 需要 S2→S4 阶段日志的模式
+MODES_NEEDING_S2_S4="UI 优化|架构级任务|功能开发|页面开发"
+
+# 收口时必须有角色结果日志的模式
+MODES_NEEDING_ROLE_RESULT="中等任务|UI 优化|架构级任务|功能开发|页面开发|新项目共创|启动握手"
+
+# 写代码前必须有改动契约的模式
+MODES_NEEDING_WRITE_CONTRACT="中等任务|UI 优化|架构级任务|功能开发|页面开发"
 
 require_complete=false
 require_s4=false
@@ -85,9 +95,16 @@ detected_mode=""
 stage_seen=false
 s2_seen=false
 s4_seen=false
+role_result_after_s2=false
+role_result_seen=false
+write_contract_seen=false
+write_contract_before_s4=false
+write_contract_confirmed=false
+write_contract_confirmed_before_s4=false
 completion_seen=false
 waiting_seen=false
 exit_seen=false
+autonomous_seen=false
 phase_lines=""
 
 while IFS= read -r line; do
@@ -147,8 +164,10 @@ while IFS= read -r line; do
       detected_mode="直通模式"
     fi
 
+    is_completion_line=false
     if echo "$line" | grep -qE '\[f-forge\][[:space:]]*(本轮完成：|直通模式：完成|页面工程师：已完成|页面工程师：已按 ff-fast 完成)'; then
       completion_seen=true
+      is_completion_line=true
     fi
 
     if echo "$line" | grep -qE '\[f-forge\][[:space:]]*主控：任务描述不明确'; then
@@ -157,6 +176,10 @@ while IFS= read -r line; do
 
     if echo "$line" | grep -qE '\[f-forge\][[:space:]]*误触发，退出'; then
       exit_seen=true
+    fi
+
+    if echo "$line" | grep -qE '\[f-forge\][[:space:]]*全自动：已启用 ff-a'; then
+      autonomous_seen=true
     fi
 
     # 规则2: 模式日志中的模式名校验
@@ -222,6 +245,32 @@ while IFS= read -r line; do
         if ! echo "$role" | grep -qE "^($ALLOWED_ROLES)$"; then
           echo "FAIL line $line_num: invalid role name '$role'"
           errors=$((errors + 1))
+        else
+          is_mode_role_line=false
+          if echo "$line" | grep -qE '\[f-forge\][[:space:]]*页面工程师：.*任务'; then
+            is_mode_role_line=true
+          elif echo "$line" | grep -qE '\[f-forge\][[:space:]]*页面工程师：ff-fast 快速策略'; then
+            is_mode_role_line=true
+          fi
+
+          if [ "$is_mode_role_line" = false ] && [ "$is_completion_line" = false ]; then
+            role_result_seen=true
+            if echo "$line" | grep -qE '改动契约：'; then
+              write_contract_seen=true
+              if echo "$line" | grep -qE '确认状态：用户已确认'; then
+                write_contract_confirmed=true
+              fi
+              if [ "$s4_seen" = false ]; then
+                write_contract_before_s4=true
+                if echo "$line" | grep -qE '确认状态：用户已确认'; then
+                  write_contract_confirmed_before_s4=true
+                fi
+              fi
+            fi
+            if [ "$s2_seen" = true ] && [ "$s4_seen" = false ]; then
+              role_result_after_s2=true
+            fi
+          fi
         fi
       fi
     fi
@@ -239,11 +288,48 @@ if [ "$has_forge" = true ] && [ "$require_complete" = true ] && [ "$completion_s
   errors=$((errors + 1))
 fi
 
+if [ "$has_forge" = true ] && [ "$require_complete" = true ] && [ "$role_result_seen" = false ]; then
+  if echo "$detected_mode" | grep -qE "^($MODES_NEEDING_ROLE_RESULT)$"; then
+    echo "FAIL: missing role result log before completion for mode '$detected_mode'"
+    errors=$((errors + 1))
+  fi
+fi
+
+if [ "$has_forge" = true ] && [ "$require_complete" = true ] && [ "$autonomous_seen" = false ] && [ "$write_contract_seen" = false ]; then
+  if echo "$detected_mode" | grep -qE "^($MODES_NEEDING_WRITE_CONTRACT)$"; then
+    echo "FAIL: missing pre-write change contract for mode '$detected_mode'"
+    errors=$((errors + 1))
+  fi
+fi
+
+if [ "$has_forge" = true ] && [ "$require_complete" = true ] && [ "$autonomous_seen" = false ] && [ "$write_contract_seen" = true ] && [ "$write_contract_confirmed" = false ]; then
+  if echo "$detected_mode" | grep -qE "^($MODES_NEEDING_WRITE_CONTRACT)$"; then
+    echo "FAIL: pre-write change contract is not user-confirmed for mode '$detected_mode'"
+    errors=$((errors + 1))
+  fi
+fi
+
 # 规则9: --require-s4 校验
 if [ "$require_s4" = true ] && [ "$has_forge" = true ]; then
-  if [ "$s2_seen" = true ] && [ "$s4_seen" = false ]; then
-    if [ -z "$detected_mode" ] || echo "$detected_mode" | grep -qE "^($MODES_NEEDING_S4)$"; then
+  if [ -z "$detected_mode" ] || echo "$detected_mode" | grep -qE "^($MODES_NEEDING_S2_S4)$"; then
+    if [ "$s4_seen" = true ] && [ "$s2_seen" = false ]; then
+      echo "FAIL: S4 phase seen but S2 phase missing; S2→S4 hard blocker violated"
+      errors=$((errors + 1))
+    fi
+    if [ "$s2_seen" = true ] && [ "$s4_seen" = false ]; then
       echo "FAIL: S2 phase seen but S4 phase missing; S2→S4 hard blocker violated"
+      errors=$((errors + 1))
+    fi
+    if [ "$s2_seen" = true ] && [ "$s4_seen" = true ] && [ "$role_result_after_s2" = false ]; then
+      echo "FAIL: S2→S4 missing role result log between phases"
+      errors=$((errors + 1))
+    fi
+    if [ "$autonomous_seen" = false ] && [ "$s4_seen" = true ] && [ "$write_contract_before_s4" = false ]; then
+      echo "FAIL: S4 reached before pre-write change contract"
+      errors=$((errors + 1))
+    fi
+    if [ "$autonomous_seen" = false ] && [ "$s4_seen" = true ] && [ "$write_contract_confirmed_before_s4" = false ]; then
+      echo "FAIL: S4 reached before user-confirmed change contract"
       errors=$((errors + 1))
     fi
   fi

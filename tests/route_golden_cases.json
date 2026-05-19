@@ -38,9 +38,25 @@
     "expected_mode": "UI 优化"
   },
   {
+    "name": "ui_visual_spec_from_json_and_screenshot",
+    "prompt": "ff- {\"speakers\":[{\"name\":\"A\"},{\"name\":\"B\"}]} 按截图调整双人音色 UI：头像 40x40，第二个压住第一个 8，禁用播放",
+    "expected_mode": "UI 优化",
+    "expected_required_phases": "S2,S4,S5",
+    "expected_rule_card_check": "required",
+    "expected_should_load_rule_card": "true"
+  },
+  {
     "name": "architecture_optimization",
     "prompt": "ff- 帮我做包体积优化",
     "expected_mode": "架构级任务"
+  },
+  {
+    "name": "structural_refactor_invite_share_chain",
+    "prompt": "ff- 阅读 third_party_handler.dart 与 share_action_utils.dart，定位邀请好友录制弹出和晚上邀请链路的当前实现与重复点；确定简化策略：抽出/复用 share_action_utils 的分享链接生成与统一入口，减少分支与重复弹窗逻辑",
+    "expected_mode": "架构级任务",
+    "expected_required_phases": "S2,S4,S5",
+    "expected_rule_card_check": "required",
+    "expected_should_load_rule_card": "true"
   },
   {
     "name": "feature_flow",
