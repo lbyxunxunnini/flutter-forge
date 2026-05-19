@@ -25,6 +25,7 @@
 | APM-SESSION-001 | P0 | fixed | 等待用户输入、截图、文稿或上下文压缩时缺少可恢复等待态，容易退出工作模式 | `ff_session.sh` 增加等待态字段、宿主路径解析和 `wait` 命令；运行时要求等待前写 session、补材料时优先恢复 |
 | APM-LOGIC-002 | P2 | fixed | `draft_reminder_count` 只有文档承诺，没有脚本状态实现 | `check_rule_card.sh` 增加 `draft_reminder_count` 输出、`--increment-reminder` 和 `--reset-reminder` |
 | APM-DESIGN-002 | P2 | fixed | 路由 golden 复制分类逻辑，不能验证真实脚本 | `route_golden_tests.py` 改为直接调用 `scripts/classify_task.sh` 并断言输出字段 |
+| APM-DESIGN-003 | P1 | fixed | `SKILL.md` description 只引用 `references/trigger_words.md`，宿主召回不读取 reference 导致显式触发词失灵 | description 直接内联正式触发入口，`trigger_words.md` 改为要求 frontmatter 保留触发词，详细匹配规则仍单源维护 |
 
 ### Candidate Rules
 
