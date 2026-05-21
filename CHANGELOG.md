@@ -5,6 +5,23 @@
 - `0.2.x` 中出现的 `legacy_project_scan.md`、`~/.flutter-forge/projects/*.rule_card.yaml` 等表述保留为当时版本的历史事实
 - 当前现行入口与规则卡路径策略以 `references/existing_project_entry.md`、`references/existing_project_scan.md`、`references/rule_card_protocol.md` 为准
 
+## v0.2.4
+
+基于 agent-pm 最佳实践与产品维度审查的协议补全与设计优化。
+
+### 最佳实践补全
+
+- **Iron Law 新增**：SKILL.md 新增 Iron Law —— 需求/方案未确认且无 `auto_assumption` 时禁止写实现代码，覆盖所有模式和策略
+- **类型标注**：SKILL.md 和 task_runtime_prompt.md 补充 `[Rigid]` / `[Flexible]` 标注（共 15 处），明确哪些规则不可动、哪些可适配
+- **Red Flags 预判表**：task_runtime_prompt.md 新增执行过程中的自我欺骗预判（11 条规则，覆盖任务分类、阶段门禁、实现三个阶段）
+- **工作流可视化**：新增 `references/workflow_diagram.md`，包含主工作流、阶段门禁、策略选择 3 张 digraph 流程图
+- **中等任务合并确认**：范围明确时扫描结论、执行策略和改动契约可在同一条回复中连续输出，用户只需确认一次
+
+### 验证工程师两阶段审查
+
+- **规格合规 + 代码质量分离**：verify_agent checklist 拆为两阶段——先审"做了对的事"（规格合规），再审"事做得好"（代码质量），顺序不可颠倒
+- **validate_checklist.py 同步**：verify_agent schema 更新，新增 `spec_compliance`、`contract_alignment`、`code_quality` 等字段
+
 ## v0.2.2
 
 修复 flutter-forge 流程掉链和输出格式回归。
