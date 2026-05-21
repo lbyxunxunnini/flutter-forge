@@ -100,9 +100,14 @@ ROLE_SCHEMAS: dict[str, list[FieldSpec]] = {
         FieldSpec("commands_run", field_type="list", min_items=0),
     ],
     "verify_agent": [
-        FieldSpec("scope", field_type="list", min_items=1),
+        # 第一阶段：规格合规审查
+        FieldSpec("spec_compliance", field_type="bool"),
         FieldSpec("requirement_coverage", field_type="bool"),
+        FieldSpec("contract_alignment", field_type="bool"),
         FieldSpec("edge_cases_checked", field_type="list", min_items=1),
+        FieldSpec("spec_issues", field_type="list", min_items=0),
+        # 第二阶段：代码质量审查
+        FieldSpec("code_quality", field_type="bool"),
         FieldSpec("regression_clear", field_type="bool"),
         FieldSpec("quality_checks", field_type="list", min_items=1),
         FieldSpec("logs_compliant", field_type="bool"),
