@@ -5,6 +5,22 @@
 - `0.2.x` 中出现的 `legacy_project_scan.md`、`~/.flutter-forge/projects/*.rule_card.yaml` 等表述保留为当时版本的历史事实
 - 当前现行入口与规则卡路径策略以 `references/existing_project_entry.md`、`references/existing_project_scan.md`、`references/rule_card_protocol.md` 为准
 
+## v0.2.5
+
+补强 flutter-forge 的日志门禁，修复不同模型下可见性输出不完整却仍被校验放行的问题。
+
+### 日志校验强化
+
+- **缺少 `[f-forge]` 硬失败**：`validate_output.sh` 现在会拦截整段工作流输出没有任何 `[f-forge]` 状态行的情况，同时对裸 `模式/阶段/本轮完成` 状态行直接失败
+- **策略日志显式门禁**：新增 `--expect-fast` 与 `--expect-autonomous`，分别校验 `ff-fast` 启动日志、`ff-a` 启动日志与全自动摘要
+- **重流程阶段链补齐**：`功能开发` / `页面开发` 收口时必须包含 `S1`，所有重流程模式必须包含 `S5`，避免只校 `S2→S4`
+- **角色门禁落地**：新增 `S1→S2` 间角色结果日志要求，以及 `S5` 后 `验证工程师` 日志要求，减少“有模式没角色”或“有阶段没验证”的漏检
+
+### 回归覆盖补齐
+
+- **发布回归新增反例**：`validate_release.sh` 新增“整段无 `[f-forge]`”、“缺 `ff-fast` 启动日志”、“缺全自动摘要”、“页面开发缺 `S1`/`S5`”、“缺 `S1` 角色结论”等负例
+- **协议文档同步**：`references/skill_visibility.md` 同步新增 fast/autonomous 校验参数和新的阶段链/角色链校验项，避免脚本与文档再次漂移
+
 ## v0.2.4
 
 基于 agent-pm 最佳实践与产品维度审查的协议补全与设计优化。

@@ -48,7 +48,7 @@
 
 ## 输出校验脚本
 
-`scripts/validate_output.sh` **不在每条日志后单独运行**，而是在以下时机一次性 batch 校验当前会话累积的 `[f-forge]` 输出（P0 强制）。阶段切换时使用默认校验；S2→S4 防掉链使用 `--require-s4`；任务收口时使用 `--require-complete` 强制检查完成日志：
+`scripts/validate_output.sh` **不在每条日志后单独运行**，而是在以下时机一次性 batch 校验当前会话累积的 `[f-forge]` 输出（P0 强制）。阶段切换时使用默认校验；S2→S4 防掉链使用 `--require-s4`；任务收口时使用 `--require-complete` 强制检查完成日志；已知启用 `ff-fast` / `ff-a` 时，额外使用 `--expect-fast` / `--expect-autonomous` 校验策略日志：
 
 | 任务类型 | 校验时机 |
 |---------|---------|
@@ -63,10 +63,14 @@
 echo '<llm_output>' | scripts/validate_output.sh
 echo '<llm_output>' | scripts/validate_output.sh --require-s4
 echo '<llm_output>' | scripts/validate_output.sh --require-complete
+echo '<llm_output>' | scripts/validate_output.sh --require-complete --expect-fast
+echo '<llm_output>' | scripts/validate_output.sh --require-complete --require-s4 --expect-autonomous
 # 或
 scripts/validate_output.sh /path/to/output.txt
 scripts/validate_output.sh --require-s4 /path/to/output.txt
 scripts/validate_output.sh --require-complete /path/to/output.txt
+scripts/validate_output.sh --require-complete --expect-fast /path/to/output.txt
+scripts/validate_output.sh --require-complete --require-s4 --expect-autonomous /path/to/output.txt
 ```
 
 校验内容：
@@ -78,10 +82,14 @@ scripts/validate_output.sh --require-complete /path/to/output.txt
 - 阶段完整名称必须合法（如 `S1 需求确认`，禁止 `S1 需求分析`）
 - 角色名必须在允许列表中（需求分析师/UI 设计师/架构设计师/页面工程师/验证工程师/主控）
 - 裸角色结论和裸分析结论必须失败（如 `需求分析师：...`、`分析结论：...` 必须改为 `[f-forge] 需求分析师：...`）
+- 整段工作流输出若缺少任何 `[f-forge]` 状态行必须失败；裸 `模式：...` / `阶段：...` / `本轮完成：...` 也必须失败
 - `--require-complete` 时必须包含完成日志
 - `--require-complete` 时，中等及以上任务必须包含非模式/非完成的角色结果日志
 - `--require-complete` 时，中等及以上非 `ff-a` 写代码任务必须包含 `改动契约：` 且包含 `确认状态：用户已确认`
+- `--require-complete` 时，`功能开发` / `页面开发` 必须包含 `S1`，`UI 优化` / `架构级任务` / `功能开发` / `页面开发` 必须包含 `S5`
+- `--require-complete` 时，`功能开发` / `页面开发` 必须在 `S1→S2` 之间出现角色结果日志；所有重流程模式必须在 `S5` 后出现 `验证工程师` 结果日志
 - `--require-s4` 时，UI 优化/架构级任务/功能开发/页面开发必须包含 S2 和 S4，且 S2 到 S4 之间必须有角色结果日志
+- `--expect-fast` 时必须包含 `ff-fast` 启动日志；`--expect-autonomous` 时必须包含 `ff-a` 启动日志，且在 `--require-complete` 时必须包含全自动摘要
 
 输出 `PASS` 或 `FAIL + 违规行`。
 

@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 # validate_output.sh — 校验 LLM 输出是否符合 [f-forge] 可见性协议
 #
-# 用法: scripts/validate_output.sh [--require-complete] [--require-s4] < <llm_output>
-#   或: scripts/validate_output.sh [--require-complete] [--require-s4] "llm output text"
-#   或: scripts/validate_output.sh [--require-complete] [--require-s4] /path/to/output_file
+# 用法: scripts/validate_output.sh [--require-complete] [--require-s4] [--expect-fast] [--expect-autonomous] < <llm_output>
+#   或: scripts/validate_output.sh [--require-complete] [--require-s4] [--expect-fast] [--expect-autonomous] "llm output text"
+#   或: scripts/validate_output.sh [--require-complete] [--require-s4] [--expect-fast] [--expect-autonomous] /path/to/output_file
 #
 # 校验规则：
 #   1. 含 [f-forge] 的行必须以 [f-forge] 开头
@@ -19,6 +19,9 @@
 #   11. --require-complete 时，中等及以上任务必须包含非模式/非完成的角色结果日志
 #   12. --require-complete 时，非豁免写代码任务必须包含写前改动契约
 #   13. --require-complete/--require-s4 时，非豁免改动契约必须已由用户确认
+#   14. --expect-fast 时必须包含 ff-fast 启动日志
+#   15. --expect-autonomous 时必须包含 ff-a 启动日志；--require-complete 时还必须包含全自动摘要
+#   16. --require-complete 时，重流程模式必须满足最小阶段链和验证角色日志
 #
 # 输出: PASS 或 FAIL + 具体违规行和原因
 
@@ -39,14 +42,25 @@ BARE_CONCLUSION_PREFIXES="分析结论|结论|方案结论|需求结论|UI 结�
 # 需要 S2→S4 阶段日志的模式
 MODES_NEEDING_S2_S4="UI 优化|架构级任务|功能开发|页面开发"
 
+# 收口时必须包含 S1 的模式
+MODES_NEEDING_S1="功能开发|页面开发"
+
+# 收口时必须包含 S5 的模式
+MODES_NEEDING_S5="UI 优化|架构级任务|功能开发|页面开发"
+
 # 收口时必须有角色结果日志的模式
 MODES_NEEDING_ROLE_RESULT="中等任务|UI 优化|架构级任务|功能开发|页面开发|新项目共创|启动握手"
 
 # 写代码前必须有改动契约的模式
 MODES_NEEDING_WRITE_CONTRACT="中等任务|UI 优化|架构级任务|功能开发|页面开发"
 
+# 缺少 [f-forge] 前缀也必须拦截的工作流状态行
+BARE_WORKFLOW_PREFIXES="模式|阶段|本轮完成|全自动摘要|恢复等待|恢复阶段|直通模式"
+
 require_complete=false
 require_s4=false
+expect_fast=false
+expect_autonomous=false
 input_args=()
 
 while [ $# -gt 0 ]; do
@@ -57,6 +71,14 @@ while [ $# -gt 0 ]; do
       ;;
     --require-s4)
       require_s4=true
+      shift
+      ;;
+    --expect-fast)
+      expect_fast=true
+      shift
+      ;;
+    --expect-autonomous)
+      expect_autonomous=true
       shift
       ;;
     --)
@@ -93,10 +115,15 @@ first_forge_seen=false
 mode_seen=false
 detected_mode=""
 stage_seen=false
+s1_seen=false
 s2_seen=false
 s4_seen=false
+s5_seen=false
+role_result_after_s1=false
 role_result_after_s2=false
 role_result_seen=false
+verify_role_seen=false
+verify_role_after_s5=false
 write_contract_seen=false
 write_contract_before_s4=false
 write_contract_confirmed=false
@@ -104,8 +131,11 @@ write_contract_confirmed_before_s4=false
 completion_seen=false
 waiting_seen=false
 exit_seen=false
+fast_mode_seen=false
 autonomous_seen=false
+autonomous_summary_seen=false
 phase_lines=""
+has_nonempty_line=false
 
 while IFS= read -r line; do
   line_num=$((line_num + 1))
@@ -114,11 +144,7 @@ while IFS= read -r line; do
   if [ -z "$line" ]; then
     continue
   fi
-
-  # 如果整段输出中没有任何 [f-forge] 行，跳过（可能是纯代码输出）
-  if ! echo "$INPUT" | grep -q '\[f-forge\]'; then
-    continue
-  fi
+  has_nonempty_line=true
 
   if ! echo "$line" | grep -q '\[f-forge\]'; then
     if echo "$line" | grep -qE "^[[:space:]]*($ALLOWED_ROLES)："; then
@@ -126,6 +152,9 @@ while IFS= read -r line; do
       errors=$((errors + 1))
     elif echo "$line" | grep -qE "^[[:space:]]*($BARE_CONCLUSION_PREFIXES)："; then
       echo "FAIL line $line_num: conclusion line must use '[f-forge] 角色名：' prefix: $line"
+      errors=$((errors + 1))
+    elif echo "$line" | grep -qE "^[[:space:]]*($BARE_WORKFLOW_PREFIXES)："; then
+      echo "FAIL line $line_num: workflow status line missing [f-forge] prefix: $line"
       errors=$((errors + 1))
     fi
     continue
@@ -174,12 +203,20 @@ while IFS= read -r line; do
       waiting_seen=true
     fi
 
+    if echo "$line" | grep -qE '\[f-forge\][[:space:]]*页面工程师：ff-fast 快速策略'; then
+      fast_mode_seen=true
+    fi
+
     if echo "$line" | grep -qE '\[f-forge\][[:space:]]*误触发，退出'; then
       exit_seen=true
     fi
 
     if echo "$line" | grep -qE '\[f-forge\][[:space:]]*全自动：已启用 ff-a'; then
       autonomous_seen=true
+    fi
+
+    if echo "$line" | grep -qE '\[f-forge\][[:space:]]*全自动摘要：'; then
+      autonomous_summary_seen=true
     fi
 
     # 规则2: 模式日志中的模式名校验
@@ -229,11 +266,17 @@ while IFS= read -r line; do
       # 记录阶段出现顺序
       phase_lines="$phase_lines $phase"
       # 跟踪 S2 和 S4
+      if [ "$phase" = "S1" ]; then
+        s1_seen=true
+      fi
       if [ "$phase" = "S2" ]; then
         s2_seen=true
       fi
       if [ "$phase" = "S4" ]; then
         s4_seen=true
+      fi
+      if [ "$phase" = "S5" ]; then
+        s5_seen=true
       fi
     fi
 
@@ -255,6 +298,9 @@ while IFS= read -r line; do
 
           if [ "$is_mode_role_line" = false ] && [ "$is_completion_line" = false ]; then
             role_result_seen=true
+            if [ "$s1_seen" = true ] && [ "$s2_seen" = false ]; then
+              role_result_after_s1=true
+            fi
             if echo "$line" | grep -qE '改动契约：'; then
               write_contract_seen=true
               if echo "$line" | grep -qE '确认状态：用户已确认'; then
@@ -270,6 +316,12 @@ while IFS= read -r line; do
             if [ "$s2_seen" = true ] && [ "$s4_seen" = false ]; then
               role_result_after_s2=true
             fi
+            if echo "$role" | grep -qE '^验证工程师$'; then
+              verify_role_seen=true
+              if [ "$s5_seen" = true ]; then
+                verify_role_after_s5=true
+              fi
+            fi
           fi
         fi
       fi
@@ -278,8 +330,28 @@ while IFS= read -r line; do
 done <<< "$INPUT"
 
 # 基础校验
+if [ "$has_nonempty_line" = true ] && [ "$has_forge" = false ]; then
+  echo "FAIL: missing any [f-forge] workflow log"
+  errors=$((errors + 1))
+fi
+
 if [ "$has_forge" = true ] && [ "$mode_seen" = false ] && [ "$waiting_seen" = false ] && [ "$exit_seen" = false ]; then
   echo "FAIL: missing [f-forge] mode log"
+  errors=$((errors + 1))
+fi
+
+if [ "$has_forge" = true ] && [ "$expect_fast" = true ] && [ "$fast_mode_seen" = false ]; then
+  echo "FAIL: missing ff-fast startup log"
+  errors=$((errors + 1))
+fi
+
+if [ "$has_forge" = true ] && [ "$expect_autonomous" = true ] && [ "$autonomous_seen" = false ]; then
+  echo "FAIL: missing ff-a startup log"
+  errors=$((errors + 1))
+fi
+
+if [ "$has_forge" = true ] && [ "$expect_autonomous" = true ] && [ "$require_complete" = true ] && [ "$autonomous_summary_seen" = false ]; then
+  echo "FAIL: missing autonomous summary before completion"
   errors=$((errors + 1))
 fi
 
@@ -305,6 +377,27 @@ fi
 if [ "$has_forge" = true ] && [ "$require_complete" = true ] && [ "$autonomous_seen" = false ] && [ "$write_contract_seen" = true ] && [ "$write_contract_confirmed" = false ]; then
   if echo "$detected_mode" | grep -qE "^($MODES_NEEDING_WRITE_CONTRACT)$"; then
     echo "FAIL: pre-write change contract is not user-confirmed for mode '$detected_mode'"
+    errors=$((errors + 1))
+  fi
+fi
+
+if [ "$has_forge" = true ] && [ "$require_complete" = true ]; then
+  if echo "$detected_mode" | grep -qE "^($MODES_NEEDING_S1)$" && [ "$s1_seen" = false ]; then
+    echo "FAIL: missing S1 phase log for mode '$detected_mode'"
+    errors=$((errors + 1))
+  fi
+  if echo "$detected_mode" | grep -qE "^($MODES_NEEDING_S5)$" && [ "$s5_seen" = false ]; then
+    echo "FAIL: missing S5 phase log for mode '$detected_mode'"
+    errors=$((errors + 1))
+  fi
+  if [ "$detected_mode" = "页面开发" ] || [ "$detected_mode" = "功能开发" ]; then
+    if [ "$s1_seen" = true ] && [ "$role_result_after_s1" = false ]; then
+      echo "FAIL: missing role result log between S1 and S2 for mode '$detected_mode'"
+      errors=$((errors + 1))
+    fi
+  fi
+  if echo "$detected_mode" | grep -qE "^($MODES_NEEDING_S5)$" && [ "$verify_role_after_s5" = false ]; then
+    echo "FAIL: missing 验证工程师 result log after S5 for mode '$detected_mode'"
     errors=$((errors + 1))
   fi
 fi

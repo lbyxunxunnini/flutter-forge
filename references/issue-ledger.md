@@ -23,6 +23,10 @@
 | APM-SAFETY-001 | P0 | fixed | 简化/抽取/复用业务链路时未先声明改动范围与禁改范围，标准流程可能未确认就写代码 | 结构性链路收敛路由到架构级；中等及以上写前必须输出改动契约，标准 `ff-` 未确认不得写；release gate 增加缺改动契约反例 |
 | APM-SAFETY-002 | P0 | superseded | 曾将轻量、`ff-fast`、`ff-a` 全部纳入最强写前确认，后续被产品口径纠正为过度门禁 | 现口径：轻量、直通、`ff-a` 豁免最强写前确认等待；中等及以上非 `ff-a` 仍需改动契约和用户确认 |
 | APM-SESSION-001 | P0 | fixed | 等待用户输入、截图、文稿或上下文压缩时缺少可恢复等待态，容易退出工作模式 | `ff_session.sh` 增加等待态字段、宿主路径解析和 `wait` 命令；运行时要求等待前写 session、补材料时优先恢复 |
+| APM-TOOL-006 | P0 | fixed | 整段工作流输出缺少 `[f-forge]` 前缀时 `validate_output.sh` 仍会直接通过 | 校验器新增“至少一条 `[f-forge]` 状态行”硬失败，并拦截裸 `模式/阶段/本轮完成` 工作流状态行 |
+| APM-TOOL-007 | P1 | fixed | `ff-fast` / `ff-a` 的策略启动日志与全自动摘要没有真正门禁 | `validate_output.sh` 新增 `--expect-fast` / `--expect-autonomous`，发布回归覆盖缺快速策略日志、缺全自动摘要的反例 |
+| APM-TOOL-008 | P1 | fixed | 重流程阶段链只校到 `S2→S4`，缺 `S1` 或 `S5` 仍可通过 | 收口校验新增最小阶段链：`功能/页面开发` 必须含 `S1`，重流程模式必须含 `S5` |
+| APM-DESIGN-004 | P1 | fixed | “角色按需输出”没有落成可执行门禁，导致缺角色结论时仍可通过 | 收口校验新增 `S1→S2` 间角色日志与 `S5` 后 `验证工程师` 日志要求，避免只靠任意一条角色结论过门 |
 | APM-LOGIC-002 | P2 | fixed | `draft_reminder_count` 只有文档承诺，没有脚本状态实现 | `check_rule_card.sh` 增加 `draft_reminder_count` 输出、`--increment-reminder` 和 `--reset-reminder` |
 | APM-DESIGN-002 | P2 | fixed | 路由 golden 复制分类逻辑，不能验证真实脚本 | `route_golden_tests.py` 改为直接调用 `scripts/classify_task.sh` 并断言输出字段 |
 | APM-DESIGN-003 | P1 | fixed | `SKILL.md` description 只引用 `references/trigger_words.md`，宿主召回不读取 reference 导致显式触发词失灵 | description 直接内联正式触发入口，`trigger_words.md` 改为要求 frontmatter 保留触发词，详细匹配规则仍单源维护 |
