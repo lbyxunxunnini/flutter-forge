@@ -18,7 +18,7 @@ digraph flutter_forge_workflow {
     enter [label="[f-forge] 进入 controller"];
 
     classify [label="任务分类\nscripts/classify_task.sh\n[Flexible]"];
-    rule_card [label="规则卡检查\n按任务类型分级\n[Rigid]"];
+    guardrails_check [label="guardrails 检查\n按任务类型分级\n[Rigid]"];
 
     wait [label="等待态\n追问用户目标"];
     passthrough [label="直通模式\n主控直做，完成退出"];
@@ -50,17 +50,17 @@ digraph flutter_forge_workflow {
     session_match -> enter [label="不恢复"];
 
     enter -> classify;
-    classify -> rule_card;
+    classify -> guardrails_check;
 
-    rule_card -> wait [label="任务不明确"];
-    rule_card -> passthrough [label="直通"];
-    rule_card -> lightweight [label="轻量"];
-    rule_card -> medium [label="中等"];
-    rule_card -> ui_opt [label="UI 优化"];
-    rule_card -> arch [label="架构级"];
-    rule_card -> feature [label="功能开发"];
-    rule_card -> page [label="页面开发"];
-    rule_card -> cocreate [label="新项目共创"];
+    guardrails_check -> wait [label="任务不明确"];
+    guardrails_check -> passthrough [label="直通"];
+    guardrails_check -> lightweight [label="轻量"];
+    guardrails_check -> medium [label="中等"];
+    guardrails_check -> ui_opt [label="UI 优化"];
+    guardrails_check -> arch [label="架构级"];
+    guardrails_check -> feature [label="功能开发"];
+    guardrails_check -> page [label="页面开发"];
+    guardrails_check -> cocreate [label="新项目共创"];
 
     // 轻量路径
     lightweight -> upgrade [label="发现边界风险"];

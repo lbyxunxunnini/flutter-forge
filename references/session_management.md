@@ -4,9 +4,9 @@
 
 ## Session 文件路径
 
-session 路径与规则卡路径采用**同一套宿主优先级**：根据 `scripts/check_rule_card.sh` 输出的规则卡 `path` 字段所在的宿主目录定位 session，LLM 不自行遍历多个目录。
+session 路径与 `project_guardrails` 路径采用**同一套宿主优先级**：根据 `scripts/check_project_guardrails.sh` 输出的 `path` 字段所在的宿主目录定位 session，LLM 不自行遍历多个目录。
 
-路径优先级（与规则卡一致）：
+路径优先级（与项目护栏一致）：
 
 1. `.claude/.flutter-forge/session.md`
 2. `.trae/.flutter-forge/session.md`
@@ -15,13 +15,13 @@ session 路径与规则卡路径采用**同一套宿主优先级**：根据 `scr
 
 定位规则：
 
-- 优先使用**与当前规则卡同宿主目录**下的 session 文件
-- 如果当前规则卡在 `.claude/.flutter-forge/projects/`，session 应写到 `.claude/.flutter-forge/session.md`
-- 如果项目尚未初始化规则卡，session 暂存到 `.flutter-forge/session.md`；规则卡正式初始化后，由 `scripts/ff_session.sh` 在下次写入时自动迁移到对应宿主目录
+- 优先使用**与当前 `project_guardrails` 同宿主目录**下的 session 文件
+- 如果当前 `project_guardrails` 在 `.claude/.flutter-forge/projects/`，session 应写到 `.claude/.flutter-forge/session.md`
+- 如果项目尚未初始化 `project_guardrails`，session 暂存到 `.flutter-forge/session.md`；项目锚点正式初始化后，由 `scripts/ff_session.sh` 在下次写入时自动迁移到对应宿主目录
 
 兼容性说明：旧版本 session 固定写在 `.flutter-forge/session.md`。`scripts/ff_session.sh read` 优先读对应宿主目录，未命中再回退到 `.flutter-forge/`，避免历史数据丢失。
 
-> 实现层依赖：`scripts/check_rule_card.sh` 当前输出 `path` 字段，session 寻址通过 `dirname(path)` 推导宿主根目录。后续可选：在 `check_rule_card.sh` 中新增 `session_path` 字段直接返回，避免在 `ff_session.sh` 内重复推导。
+> 实现层依赖：`scripts/check_project_guardrails.sh` 当前输出 `path` 字段，session 寻址通过 `dirname(path)` 推导宿主根目录。
 
 ## 基础结构
 
@@ -34,8 +34,8 @@ session 路径与规则卡路径采用**同一套宿主优先级**：根据 `scr
 - 当前阶段：C0-C3 / S0-S6
 - 当前模式：直通模式 / 轻量任务 / 中等任务 / UI 优化 / 架构级任务 / 功能开发 / 页面开发 / 新项目共创
 - 决策版本：v1 / v2 / v3
-- 规则卡：已加载 / 未加载
-- 规则卡摘要：2-3 个关键字段
+- 项目护栏：已加载 / 未加载 / 待生成
+- 项目护栏摘要：2-3 个关键字段
 - 活跃代理：controller / ui-agent / arch-agent / impl-agent / verify-agent
 - 工作包：无 / P1 / P2 / P3
 - 失效结果：无 / impl-agent:v2 / ui-agent:v1
@@ -85,9 +85,25 @@ scripts/ff_session.sh wait --waiting_state artifact \
   --pending_question "请补充当前 UI 截图" \
   --task_object "订单详情页" \
   --resume_keys "订单详情页,截图,头像叠放"
+scripts/ff_session.sh save-resume \
+  --waiting_state confirmation \
+  --expected_input confirmation \
+  --pending_question "方案A和方案B你倾向哪个？" \
+  --task_object "订单详情页" \
+  --resume_keys "订单详情页,方案A,方案B"
+scripts/ff_session.sh check-resume --user-input "方案A"
+scripts/ff_session.sh check-resume --user-input "" --has-attachment true
+scripts/ff_session.sh consume-resume --user-input "方案A"
 scripts/ff_session.sh reset                                   # 重置（任务完成时）
 scripts/ff_session.sh validate                                # 校验字段完整性
 ```
+
+补充说明：
+
+- `save-resume` 是对 `wait/update` 的语义化封装，用于提问、中断和等待确认前保存恢复点；新链路优先用它，不再重复手写一套 `wait + update`
+- `check-resume` 会基于 `等待状态 / 等待输入类型 / 任务对象 / 恢复键` 判断当前输入是否应恢复旧任务；如果当前轮包含截图、文稿或设计稿附件，调用时追加 `--has-attachment true`
+- `consume-resume` 在恢复命中后清空等待态，并写入 `最后用户输入摘要`
+- 关键状态变化会自动追加到 `.flutter-forge/runtime/session_events.log`，不再依赖 LLM 自己输出阶段日志
 
 ### 必写
 
@@ -99,7 +115,7 @@ scripts/ff_session.sh validate                                # 校验字段完�
 6. 等待用户输入、截图、文稿、设计说明或确认前 → `wait --waiting_state --expected_input --pending_question --task_object --resume_keys`
 7. 输出改动契约并等待确认前（非豁免模式）→ `wait --waiting_state confirmation --expected_input confirmation --change_contract --confirmation_status 未确认`
 8. 生成长文档 / 长 UI 文档摘要包后 → `update --summary_package --recent_action`
-9. 用户补充材料被消费后 → `update --last_user_input --waiting_state none --expected_input none`
+9. 用户补充材料被消费后 → `consume-resume --user-input "<摘要>"`
 10. 整个任务完成时 → `reset`
 
 ### 不必写
@@ -170,7 +186,7 @@ scripts/ff_session.sh validate                                # 校验字段完�
 3. 如果 `决策版本` 已变化，旧实现结果可能失效
 4. 如果用户开启新任务，默认覆盖旧 session，而不是恢复旧任务
 5. 任务结束后不要保留可继续恢复的旧任务状态
-6. 如果 `等待状态 != none`，用户直接补截图、文稿、JSON、长文本或回复“确认/可以/按这个来”，默认优先恢复等待中的任务
+6. 如果 `等待状态 != none`，用户直接补截图、文稿、JSON、长文本或回复“确认/可以/按这个来”，默认优先恢复等待中的任务；附件轮次调用 `check-resume` 时显式带 `--has-attachment true`
 7. 如果用户补充材料与 `任务对象`、`恢复键`、`待确认问题` 都无关，再视为新任务
 
 ## 失效结果（stale_results）写入规则
@@ -200,9 +216,9 @@ scripts/ff_session.sh validate                                # 校验字段完�
 - 任何模式只要主动等待用户补截图、文稿、文本或确认，都必须临时写等待态 session；恢复并消费后可清空等待态
 - 用户在同一轮对话中提出新任务时，如果旧任务已完成，重置 session 后按新任务处理
 
-## 与规则卡的关系
+## 与 project_guardrails 的关系
 
 - `session`：记录当前任务做到哪了
-- 规则卡：记录这个项目长期怎么做
+- `project_guardrails`：记录这个项目是否是 flutter-forge 目标，以及少量长期护栏
 
-不要把项目规则写进 session，也不要把当前任务进度写进规则卡。
+不要把项目长期护栏写进 session，也不要把当前任务进度写进 `project_guardrails`。

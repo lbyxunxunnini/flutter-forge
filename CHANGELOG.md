@@ -3,7 +3,39 @@
 说明：
 
 - `0.2.x` 中出现的 `legacy_project_scan.md`、`~/.flutter-forge/projects/*.rule_card.yaml` 等表述保留为当时版本的历史事实
-- 当前现行入口与规则卡路径策略以 `references/existing_project_entry.md`、`references/existing_project_scan.md`、`references/rule_card_protocol.md` 为准
+- 当前现行入口与项目护栏路径策略以 `references/existing_project_entry.md`、`references/existing_project_scan.md`、`references/project_guardrails_protocol.md` 为准
+
+## v0.2.6
+
+门禁代码化 + 角色边界硬隔离 + 语义清理（rule_card → project_guardrails）。
+
+### 门禁代码化（gate_check.py）
+
+- **Gate 2（S2 强制推进）**：S2 已确认 + 改动契约已冻结时，阻断 metadata/test/project_config 写入，只放行实现类——LLM 想留在 S2 输出"结论"就写不了代码，必须先切 S4
+- **Gate 3（S5 验证隔离）**：S5 验证阶段阻断实现/配置文件写入，只允许测试和元数据
+- **Gate 4（阶段日志强制）**：实现类写入前检查 session `最近操作` 是否包含 `[f-forge]` 前缀，缺失则阻断
+- **Gate 5（角色边界硬隔离）**：基于 session `活跃代理` 字段强制执行文件写入权限——需求/UI/架构分析师只能写 metadata，页面工程师只能写实现和测试，验证工程师只能写测试，越权写入直接 block
+- **Iron Law 门禁**：无 session 时阻断实现类写入（之前允许一切）
+
+### 角色隔离执行
+
+- **controller.py 扩展**：新增 `generate-agent-prompt` 子命令，读取 `references/roles/<role>.md` 角色合约，组装上下文，生成隔离提示词；恢复场景自动注入恢复上下文
+- **agent_isolation_protocol.md**：新增协议文档，定义角色隔离架构、上下文传递、降级路径和代码强制边界
+- **SKILL.md**：新增"角色隔离执行"段落，描述子代理启动流程和角色边界硬隔离
+
+### 上下文注入与恢复增强
+
+- **hook 上下文提醒**：写操作时 stderr 输出当前角色、角色边界、阶段、模式——LLM 在工具结果中能看到角色约束
+- **恢复指令增强**：`ff_session.sh` 恢复指令自动附带角色合约路径和护栏摘要
+- **validate_output_prefix.sh**：新增独立脚本校验 `[f-forge]` 前缀
+
+### 语义清理（rule_card → project_guardrails）
+
+- **术语统一**：30+ 参考文档从 `rule_card/规则卡` 迁移到 `project_guardrails/项目护栏`
+- **脚本重命名**：`check_rule_card.sh` → `check_project_guardrails.sh`、`init_rule_card.py` → `init_project_guardrails.py`、`hook_check_rule_card.sh` → `hook_check_project_guardrails.sh`、`validate_rule_card.py` → `validate_project_guardrails.py`、`validate_rule_card_resolution.py` → `validate_project_guardrails_resolution.py`
+- **草案流程移除**：不再生成 `_draft.yaml`，脚本直接写 `*.project_guardrails.yaml`
+- **stub 清理**：删除 4 个旧 stub 脚本、2 个旧模板、1 个旧协议文档
+- **controller.py**：新增最小控制器，负责 session 检查、恢复检测、角色选择、门禁检查
 
 ## v0.2.5
 

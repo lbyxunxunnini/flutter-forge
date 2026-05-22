@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate that rule cards resolve only from the current project directory."""
+"""Validate that project_guardrails resolve only from the current project directory."""
 
 from __future__ import annotations
 
@@ -30,7 +30,7 @@ def write_minimal_flutter_project(root: Path) -> None:
 def write_card(path: Path) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(
-        "project_rule_card:\n"
+        "project_guardrails:\n"
         "  project:\n"
         "    name: test\n"
         "    status: existing\n",
@@ -50,32 +50,32 @@ def main() -> int:
         write_minimal_flutter_project(project)
 
         # Simulate Claude Code global project memory. It must never count as a
-        # Flutter Forge rule card for the current target project.
+        # Flutter Forge project_guardrails file for the current target project.
         fake_home = temp_root / "home"
         os.environ["HOME"] = str(fake_home)
-        write_card(fake_home / ".claude/projects/other/memory/facesong_project_rule_card.yaml")
+        write_card(fake_home / ".claude/projects/other/memory/facesong_project_guardrails.yaml")
 
         data = snapshot.snapshot(project)
-        if data["rule_cards"]:
-            errors.append(f"global memory was incorrectly loaded: {data['rule_cards']}")
+        if data["project_guardrails"]:
+            errors.append(f"global memory was incorrectly loaded: {data['project_guardrails']}")
 
-        write_card(project / ".flutter-forge/projects/facesong.rule_card.yaml")
+        write_card(project / ".flutter-forge/projects/facesong.project_guardrails.yaml")
         data = snapshot.snapshot(project)
-        if data["rule_cards"]:
-            errors.append(f"unrelated local project card was incorrectly loaded: {data['rule_cards']}")
+        if data["project_guardrails"]:
+            errors.append(f"unrelated local project guardrails were incorrectly loaded: {data['project_guardrails']}")
 
-        write_card(project / ".flutter-forge/projects/current_app.rule_card.yaml")
+        write_card(project / ".flutter-forge/projects/current_app.project_guardrails.yaml")
         data = snapshot.snapshot(project)
-        expected = [".flutter-forge/projects/current_app.rule_card.yaml"]
-        if data["rule_cards"] != expected:
-            errors.append(f"current project card was not resolved exactly: {data['rule_cards']}")
+        expected = [".flutter-forge/projects/current_app.project_guardrails.yaml"]
+        if data["project_guardrails"] != expected:
+            errors.append(f"current project guardrails were not resolved exactly: {data['project_guardrails']}")
 
     if errors:
         for error in errors:
             print(f"FAIL {error}")
         return 1
 
-    print("PASS rule-card resolution is project-local and exact")
+    print("PASS project_guardrails resolution is project-local and exact")
     return 0
 
 

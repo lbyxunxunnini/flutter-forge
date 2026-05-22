@@ -1,10 +1,10 @@
 # Flutter Forge Reference - Flutter Stack Detection
 
-这个文件定义首次接入 Flutter 项目时的技术栈识别口径。它补强规则卡扫描，避免只停留在“目录结构 / 命名风格”的通用判断。
+这个文件定义首次接入 Flutter 项目时的技术栈识别口径。它补强guardrails扫描，避免只停留在“目录结构 / 命名风格”的通用判断。
 
 ## 目标
 
-扫描目标不是替代架构判断，而是为规则卡提供 evidence：
+扫描目标不是替代架构判断，而是为guardrails提供 evidence：
 
 - 当前主状态管理方案是什么
 - 当前路由方案是什么
@@ -38,7 +38,7 @@ python3 scripts/validate_flutter_stack_scan.py
 | 测试 | flutter_test / mocktail / mockito / integration_test |
 | 代码生成 | build_runner / build.yaml |
 
-## 规则卡写入原则
+## guardrails写入原则
 
 - `high` confidence 至少需要 3 条 evidence，且无明显反例。
 - 仅 `pubspec.yaml` 出现依赖，不足以证明项目主流模式，只能作为 medium 或 low evidence。
@@ -46,9 +46,9 @@ python3 scripts/validate_flutter_stack_scan.py
 - 如果代码里出现多个状态管理方案，把非主流方案写入 `inferred_rules.conflicts_to_watch`。
 - 如果最近 feature 与历史实现冲突，优先记录最近主流，但 confidence 不应高于 medium。
 
-## 与规则卡字段的映射
+## 与guardrails字段的映射
 
-| 扫描结果 | 规则卡字段 |
+| 扫描结果 | guardrails字段 |
 |----------|------------|
 | `state_management.*` | `team_rules.state_management.primary_pattern` |
 | `routing.*` | `team_rules.routing_and_navigation.route_definition_rule` |
@@ -64,4 +64,4 @@ python3 scripts/validate_flutter_stack_scan.py
 - 不要因为检测到依赖就强行改造项目架构。
 - 不要把孤立样例当成项目主流。
 - 不要在没有代码 evidence 时把 confidence 标为 high。
-- 不要让扫描器输出直接覆盖用户已确认的规则卡。
+- 不要让扫描器输出直接覆盖用户已确认的guardrails。

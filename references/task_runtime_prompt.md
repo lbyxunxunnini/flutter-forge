@@ -15,25 +15,25 @@
 每次任务开始时，按这个顺序检查：
 
 1. **立即输出进入日志**：命中触发词后，在执行任何脚本调用、文件读取、判定动作之前，**第一行**必须输出 `[f-forge] 进入 controller`（P0 硬规则，不输出不允许进入后续步骤）
-2. 运行 `scripts/classify_task.sh "<用户输入>"` 获取任务类型预判和执行策略，LLM 消费预判结果（`confidence: low` 时做二次判定）。如果最终采用脚本预判结果，补运行 `scripts/classify_task.sh --project-root <project_root> --write-gate "<用户输入>"` 写入 `.flutter-forge/runtime/task_gate.json`；规则卡 hook 只在该 gate 明确允许且目标文件不触碰架构边界时，才放行无规则卡的轻量/直通写操作。脚本不存在或执行失败时，按降级顺序自行判定：先执行本节第 7 步（任务是否明确）→ 不明确则进入等待态 → 明确后按 `SKILL.md` 路由顺序第 4-13 步分类 → 分类完成后再执行本节第 3-4 步决定并处理规则卡检查。不因脚本缺失阻塞启动
-3. **按任务类型决定是否检查规则卡**（按需触发，不再每次启动强制）：
+2. 先运行 `scripts/detect_project_root_state.py <project_root>` 获取项目根状态：`empty_new` / `flutter_existing` / `non_flutter`。`empty_new` 进入新项目共创，`flutter_existing` 允许继续 forge 流程，`non_flutter` 直接退出不介入。随后运行 `scripts/classify_task.sh "<用户输入>"` 获取任务类型预判和执行策略，LLM 消费预判结果（`confidence: low` 时做二次判定）。如果最终采用脚本预判结果，补运行 `scripts/classify_task.sh --project-root <project_root> --write-gate "<用户输入>"` 写入 `.flutter-forge/runtime/task_gate.json`；project_guardrails hook 只在该 gate 明确允许且目标文件不触碰架构边界时，才放行缺护栏的轻量/直通写操作。
+3. **按任务类型决定是否检查 project_guardrails**（按需触发，不再每次启动强制）：
 
-   | 任务类型 | 规则卡检查 |
+   | 任务类型 | 项目护栏检查 |
    |---------|------------|
    | 直通模式（文档/打包/CI/闲聊） | **跳过** |
    | 轻量任务（已定位的小改动） | **跳过启动检查**；进入实现且发现触碰状态管理/路由/目录约定时再"按需触发" |
    | 中等任务（confidence high 且范围明确） | **跳过**；confidence low 或范围模糊时检查 |
    | UI 优化 / 架构级 / 功能开发 / 页面开发 | **必须检查** |
-   | 新项目共创 | **C0/C1 跳过**；进入 C2 前必须检查（在 C2 完成规则卡初始化或确认） |
+   | 新项目共创 | **C0/C1 跳过**；进入 C2 前可初始化 |
 
-4. 需要检查规则卡时，按以下顺序执行（缓存优先）：
-   - **优先读缓存**：运行 `scripts/check_rule_card.sh <project_root> --cached 300`（300 秒 TTL）
+4. 需要检查 `project_guardrails` 时，按以下顺序执行（缓存优先）：
+   - **优先读缓存**：运行 `scripts/check_project_guardrails.sh <project_root> --cached 300`（300 秒 TTL）
    - 缓存命中（输出包含 `cache_hit: true`）→ 直接消费状态，不再重跑完整检查
    - 缓存未命中或过期 → 脚本内部自动回退到完整检查
-   - 状态判定：`found` 加载规则卡；`draft` 加载草案作为 advisory，并按 [rule_card_protocol.md](rule_card_protocol.md) "草案期间的行为"节决定是否提示确认；`not_found` 按 [rule_card_protocol.md](rule_card_protocol.md) "无规则卡时的强制处理"节进入初始化流程
-   - 禁止 LLM 自行搜索路径；脚本失败时按 [rule_card_protocol.md](rule_card_protocol.md) "脚本降级路径解析"节处理
+   - 状态判定：`found` 加载项目护栏；`missing` 说明 Flutter 老项目尚未初始化项目锚点；`empty_new` 说明空目录进入新项目共创；`non_flutter` 说明当前项目不在 flutter-forge 介入范围
+   - 禁止 LLM 自行搜索路径；脚本失败时按当前文件中的降级路径处理
 5. **确认当前任务仍在 flutter-forge 处理范围内**：若分类结果或二次判定发现当前输入属于误触发（如 `ffmpeg` 相关、引用代码块中的 `ff-`、与 Flutter 无关的普通对话），输出 `[f-forge] 误触发，退出` 并终止流程，不继续后续步骤
-6. 检查 session 恢复条件：如果存在未完成 session 且用户输入匹配恢复条件（详见下方"Session 恢复"节），或 session 处于等待态且本轮用户补充了文本、截图、文稿、设计说明或确认，优先恢复 session，跳过等待态判定
+6. 检查 session 恢复条件：优先运行 `scripts/ff_session.sh check-resume --user-input "<用户输入>"`。如果当前轮包含截图/文稿/设计稿附件，再追加 `--has-attachment true`。如果输出 `status: resume_match`，直接恢复当前阶段，跳过普通等待态判定；恢复成功并消费用户输入后，运行 `scripts/ff_session.sh consume-resume --user-input "<摘要>"` 清空等待态
 7. 用户当前任务是否明确；不明确则进入内部等待态并先追问任务目标
 8. 当前任务规模是小 / 中 / 大（轻量任务判定参见 `SKILL.md` 路由顺序第 11 步的"10 秒测试"：非需求/设计起步 + 可直接定位 + 不涉及新组件/状态/路由变更，三者同时满足才走轻量）
 9. 是否需要补扫描上下文
@@ -46,20 +46,19 @@
 16. 输出模式日志：路由判定完成后、开始执行前，必须输出 `[f-forge]` 模式日志（格式见 [skill_visibility.md](skill_visibility.md)）。这是 P0 硬规则，不输出不允许继续执行
 17. 输出格式校验：阶段切换或任务收口时一次性 batch 校验当前会话累积的 `[f-forge]` 输出；阶段切换运行 `scripts/validate_output.sh`，任务收口运行 `scripts/validate_output.sh --require-complete`（详见 [skill_visibility.md](skill_visibility.md) "输出校验脚本"节）。校验失败时必须立即修正并重新输出。轻量任务在完成日志后校验一次即可
 
-规则卡检查硬约束（**仅在按上方表格判定为"必须检查"或"按需触发"实际命中时生效**）：
+project_guardrails 检查硬约束（**仅在按上方表格判定为"必须检查"或"按需触发"实际命中时生效**）：
 
-- `check_rule_card.sh` 输出 `status: not_found` 时，不得输出”规则卡：已加载”
-- 不得用 `.trae/rules/rules.md`、`.claude/*.md`、`CLAUDE.md`、`AGENTS.md` 或其他项目规则文件替代正式规则卡
-- `status: not_found` 时，不得直接进入”等待用户任务”或普通执行流程；必须按 [rule_card_protocol.md](rule_card_protocol.md) "无规则卡时的强制处理"节先进入初始化处理
-- 只有 [rule_card_protocol.md](rule_card_protocol.md) 定义的"用户单纯询问规则卡位置/状态"这类直通说明场景，才允许只回答现状而不立即展开初始化执行
-- 禁止 LLM 自行遍历路径查找规则卡；路径解析由脚本完成，LLM 只消费输出结果
+- `check_project_guardrails.sh` 输出 `status: missing` 时，不得输出”项目护栏：已加载”
+- 不得用 `.trae/rules/rules.md`、`.claude/*.md`、`CLAUDE.md`、`AGENTS.md` 或其他项目规则文件替代 `project_guardrails`
+- `status: missing` 时，不得直接进入普通实现流程；必须先初始化 `project_guardrails`
+- 禁止 LLM 自行遍历路径查找项目护栏；路径解析由脚本完成，LLM 只消费输出结果
 
 按需触发的实现侧规则：
 
-- 轻量任务在实现中如果发现需要触碰状态管理、路由、目录约定、命名规范，立刻"按需触发"规则卡检查
+- 轻量任务在实现中如果发现需要触碰状态管理、路由、目录约定、命名规范，立刻"按需触发"项目护栏检查
 - 中等任务的 `confidence: low` 或范围模糊判定，由 controller 在路由后、进入实现前判断
-- 中等任务即便初始判定跳过，若任务被升级到 UI 优化 / 架构级 / 功能开发 / 页面开发，升级时必须补做规则卡检查
-- 写操作（Edit/Write/创建文件）由 preToolCall hook 兜底：未初始化项目走重流程写操作时硬阻断，强制初始化；直通 / 轻量 / 高置信中等任务只有在 task gate 有效且目标文件不触碰状态管理、路由、依赖、`lib/core`、`lib/shared` 等边界文件时才放行（详见 `scripts/hook_check_rule_card.sh`）
+- 中等任务即便初始判定跳过，若任务被升级到 UI 优化 / 架构级 / 功能开发 / 页面开发，升级时必须补做项目护栏检查
+- 写操作（Edit/Write/创建文件）由 preToolCall hook 兜底：Flutter 老项目缺少 `project_guardrails` 时，重流程写操作硬阻断，强制先初始化项目锚点；进入项目护栏已加载阶段后，再由 `scripts/gate_check.py` 基于 `session + task_gate + target_path` 判断 phase / 改动契约 / 用户确认是否满足写入条件；`lib/**/*.dart` 之外的高风险项目配置（如 `pubspec.yaml`、Podfile、Gradle 配置）同样受 gate 约束
 
 ## 先判定，再执行 [Rigid]
 
@@ -125,7 +124,7 @@ matched_by: <命中的关键词类别>
 
 - 需求缺口 → 需求分析师给推荐方案并标记 `auto_assumption`
 - UI 缺口 → UI 设计师给推荐草案并标注来源
-- 架构缺口 → 架构设计师优先沿用规则卡 / 相似实现 / 项目主流
+- 架构缺口 → 架构设计师优先沿用 guardrails / 相似实现 / 项目主流
 - 功能/逻辑/UI 写改动 → 可用 `auto_assumption` 作为自动放行依据；命中高风险中断条件时必须等待用户确认
 - 只有命中 [autonomous_mode.md](autonomous_mode.md) "必须中断确认的情况"节定义的高风险中断条件才问用户
 
@@ -138,8 +137,8 @@ matched_by: <命中的关键词类别>
 运行时只需关注以下运行时特有事项：
 
 - `scripts/classify_task.sh` 的预判结果供参考；`confidence: low` 时 LLM 做二次判定
-- 规则卡检查由 `scripts/check_rule_card.sh` 完成，LLM 消费输出结果
-- 首次接入且无规则卡时，必须先进入初始化处理，不得直接进入普通执行流程
+- guardrails 检查由 `scripts/check_project_guardrails.sh` 完成，LLM 消费输出结果
+- 首次接入且无 guardrails 时，必须先进入初始化处理，不得直接进入普通执行流程
 
 ### 2. Session 恢复 [Rigid]
 
@@ -173,14 +172,14 @@ matched_by: <命中的关键词类别>
 - 直接回到记录的 `track + phase`
 - 继承当前模式
 - 继承有效的 `decision_version`
-- 若是等待态恢复，先输出 `[f-forge] 恢复等待：...`，消费用户补充输入后将 `waiting_state/expected_input` 清为 `none`
+- 若是等待态恢复，先输出 `[f-forge] 恢复等待：...`，随后运行 `scripts/ff_session.sh consume-resume --user-input "<摘要>"` 清空等待态
 - 不要重新走普通问答路径
 
 如果上一轮任务已经完成，则不恢复，直接按新任务处理。
 
-### 3. 规则卡读取 [Rigid]
+### 3. Guardrails 读取 [Rigid]
 
-遇到以下场景时必须读取规则卡：
+遇到以下场景时必须读取 guardrails：
 
 - 涉及状态管理、路由、网络层、目录命名、组件复用
 - 涉及新页面或新模块
@@ -189,14 +188,14 @@ matched_by: <命中的关键词类别>
 
 读取流程（缓存优先）：
 
-1. 先运行 `scripts/check_rule_card.sh <project_root> --cached 300` 获取状态（300 秒 TTL）
+1. 先运行 `scripts/check_project_guardrails.sh <project_root> --cached 300` 获取状态（300 秒 TTL）
 2. 缓存命中（输出 `cache_hit: true`）→ 直接读取 `path` 字段对应的 yaml 文件
 3. 缓存未命中或过期 → 脚本内部自动回退到完整检查
-4. 脚本失败按 [rule_card_protocol.md](rule_card_protocol.md) "脚本降级路径解析"节处理
+4. 脚本失败按 [project_guardrails_protocol.md](project_guardrails_protocol.md) "脚本降级路径解析"节处理
 
 LLM 禁止自行搜索路径。
 
-直通模式、轻量任务、`confidence: high` 的中等任务**默认不读规则卡**；只在实现中真的触碰到状态管理、路由、目录约定、命名规范时按需触发。
+直通模式、轻量任务、`confidence: high` 的中等任务**默认不读 guardrails**；只在实现中真的触碰到状态管理、路由、目录约定、命名规范时按需触发。
 
 ### 4. 阶段摘要包 [Flexible]
 
@@ -314,20 +313,14 @@ LLM 禁止自行搜索路径。
 - 轻量 / 中等 / 架构级 / 功能开发 / 页面开发 / 新项目共创在本轮任务收口后统一退出
 - 退出前必须输出完成日志，格式为 `[f-forge] 本轮完成：xxx`，包含本轮完成的核心内容摘要
 - `ff-a` 结束前必须输出”全自动摘要”，列出自动采用的推荐方案和是否存在后续可调整项
-- 只有 `任务规模 = 大` 且命中长期约束变化时，才在完成前输出”是否需要更新规则卡”的判断出口
+- 只有 `任务规模 = 大` 且命中长期约束变化时，才在完成前输出”是否需要更新 project_guardrails”的判断出口
 - 退出时清理当前运行态，不把本轮接管自动延续到下一轮消息
 
-### 草案静默转正检查（任务完成时） [Rigid]
+### Guardrails 检查（任务完成时） [Rigid]
 
-当规则卡状态为 `draft` 且当前任务为中等及以上时，任务完成后执行：
+当 guardrails 状态为 `missing` 且当前任务为中等及以上时，任务完成后检查是否需要更新。
 
-1. **冲突判定**：controller 检查本轮实现是否与草案规则冲突（目录结构/状态管理/路由/命名规则）
-   - 无冲突 → 运行 `scripts/check_rule_card.sh <project_root> --increment-usage`，计数 +1
-   - 有冲突 → 运行 `scripts/check_rule_card.sh <project_root> --reset-usage`，计数清零，提醒用户确认或更新草案
-2. **转正判定**：如果 `--increment-usage` 返回 `draft_usage_count: 5`（或更高），在下次规则卡检查时自动执行转正：
-   - 运行 `scripts/check_rule_card.sh <project_root> --promote-draft`
-   - 输出 `[f-forge] 主控：规则卡草案已连续 5 次任务无冲突使用，自动转为正式规则卡：{promoted 路径}`
-3. 直通模式和轻量任务不触发此检查（它们不读规则卡，无法验证一致性）
+直通模式和轻量任务不触发此检查（它们不读 guardrails，无法验证一致性）。
 
 ## 用户确认与提问
 
@@ -382,6 +375,22 @@ LLM 禁止自行搜索路径。
 - [roles/verify_agent.md](roles/verify_agent.md)（Mandatory Checklist）
 - 归档参考：[archive/quality_gates.md](archive/quality_gates.md)、[archive/testing_strategy.md](archive/testing_strategy.md)
 
+### 角色隔离执行 [Rigid]
+
+每个角色通过隔离子代理执行，防止上下文污染和角色越权。完整协议见 [agent_isolation_protocol.md](agent_isolation_protocol.md)。
+
+**启动子代理**：
+
+1. 主控调用 `python3 scripts/controller.py generate-agent-prompt --project-root <root> --user-input "<输入>"`
+2. controller 从 session 自动检测当前阶段对应的角色，读取 `references/roles/<role>.md` 角色合约
+3. 输出 JSON 包含 `agent_prompt`（完整隔离提示词）和 `context`（项目上下文摘要）
+4. 主控使用 Agent tool 启动子代理，传入 `agent_prompt` 作为独立上下文
+5. 子代理在隔离上下文中执行角色合约，输出结果返回主控
+
+**上下文传递**：角色间通过摘要包传递结论（需求冻结摘要包 → UI 冻结摘要包 → 架构冻结摘要包 → 实现结果 → 验证结论），由 controller 中转，不直接共享对话历史。
+
+**降级路径**：Agent tool 不可用时，降级为串行单 LLM 模式——主控按角色顺序依次执行，角色切换时输出 `[f-forge] 角色切换：xxx → yyy`。
+
 ## 阶段转换自检矩阵 [Rigid]
 
 每次阶段转换前，controller 按 [phase_checkpoint.md](phase_checkpoint.md) 执行检查点动作（状态回写 → 输出校验 → 阶段日志输出）。S2→S4 时不得停在 S2 结论，必须继续输出 S4 阶段日志并开始实现，然后内部过一遍：
@@ -434,7 +443,7 @@ S2 方案确认完成后，用户追加的补充信息（如数据口径、接�
 |------|------|
 | "这个改动很小，不用走完整流程" | 小改动触碰状态管理/路由时最容易引入隐式破坏；轻量判定必须过 10 秒测试 |
 | "用户说快就直接做" | 用户说快 ≠ 用户放弃对改动边界的知情权；中等及以上仍需改动契约 |
-| "先做再说，规则卡后面补" | 无规则卡的写操作最容易违反项目约定；not_found 必须先初始化 |
+| "先做再说，guardrails 后面补" | 无 guardrails 的写操作最容易违反项目约定；missing 必须先初始化 |
 | "这个任务描述很清楚了，不用分类" | 描述清楚 ≠ 任务类型明确；必须走完路由判定 |
 
 ### 阶段门禁阶段

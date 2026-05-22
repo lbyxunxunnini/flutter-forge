@@ -1,10 +1,11 @@
-project_rule_card:
+project_guardrails:
   project:
     name: ""
     type: "flutter"
     status: "new|existing"
+    root_type: "flutter_existing|empty_new"
     overall_confidence: "low|medium|high"
-    source_rules: []  # 规则卡内容来源，如 [".trae/rules/rules.md", "project scan"]
+    source_rules: []  # guardrails 内容来源，如 [".trae/rules/rules.md", "project scan"]
 
   team_rules:
     directory_structure:

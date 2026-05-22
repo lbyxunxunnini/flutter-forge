@@ -26,13 +26,13 @@ ff- 新建一个商品详情页，包含轮播图、价格、规格选择和底�
 
 适合新页面、新模块、路由接入、状态接入。Flutter Forge 会先收口结构，再实现。
 
-## 3. 先扫描项目生成规则卡
+## 3. 先扫描项目生成 project_guardrails
 
 ```text
-ff- 这是一个迭代中的 Flutter 项目。先扫描项目结构，输出规则卡草案，不要先写代码。
+ff- 这是一个迭代中的 Flutter 项目。先扫描项目结构，输出 project_guardrails，不要先写代码。
 ```
 
-适合第一次接入已有项目。规则卡会记录目录、状态管理、路由、网络层、命名和复用规则。
+适合第一次接入已有项目。project_guardrails 会记录目录、状态管理、路由、网络层、命名和复用规则。
 
 ## 4. 新项目想法先共创
 
@@ -48,14 +48,14 @@ ff- 我想做一个新的 Flutter 项目，先帮我收口需求、风格和首�
 scripts/doctor.sh
 scripts/validate_project.sh /path/to/flutter/app
 python3 scripts/project_snapshot.py /path/to/flutter/app
-python3 scripts/init_rule_card.py /path/to/flutter/app --profile auto --interactive
+python3 scripts/init_project_guardrails.py /path/to/flutter/app --profile auto --interactive
 ```
 
 ## 使用原则
 
 - 小改动用 `ff-fast`。
 - 新页面、新模块、PRD、设计图用 `ff-`。
-- 第一次接入已有项目，先生成规则卡草案。
+- 第一次接入已有项目，先生成 project_guardrails。
 - 不确定时直接用 `ff-`，controller 会分流。
 
 > 完整触发词与匹配规则：[references/trigger_words.md](references/trigger_words.md)

@@ -1,9 +1,10 @@
-project_rule_card:
+project_guardrails:
   project:
     name: "example_project"        # 项目名称，用 snake_case
     type: "flutter"                # 固定值
     status: "existing"             # existing = 存量/迭代中项目, new = 新项目
-    overall_confidence: "medium"   # 规则卡整体置信度
+    root_type: "flutter_existing"  # flutter_existing | empty_new
+    overall_confidence: "medium"   # guardrails 整体置信度
 
   team_rules:
     directory_structure:

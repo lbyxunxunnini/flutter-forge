@@ -1,8 +1,9 @@
-project_rule_card:
+project_guardrails:
   project:
     name: "sample_flutter_app"
     type: "flutter"
     status: "existing"
+    root_type: "flutter_existing"
     overall_confidence: "medium"
 
   team_rules:

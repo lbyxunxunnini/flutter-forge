@@ -4,7 +4,7 @@
 
 Flutter Forge 是一个面向 Flutter 开发的结构化 AI 协作工作流 skill。它不是代码生成器，而是一个**项目内的编排与决策层**：在动手写代码之前，先理解项目上下文、收口设计方案、统一工程规则。
 
-GitHub: [lbyxunxunnini/flutter-forge](https://github.com/lbyxunxunnini/flutter-forge) · License: MIT · 当前版本：**v0.2.5**
+GitHub: [lbyxunxunnini/flutter-forge](https://github.com/lbyxunxunnini/flutter-forge) · License: MIT · 当前版本：**v0.2.6**
 
 ---
 
@@ -45,7 +45,7 @@ ff-a      全自动路径：缺少的非阻塞信息用推荐方案，一路做�
 第一次接入已有项目时：
 
 ```text
-ff- 这是一个迭代中的 Flutter 项目。先扫描项目结构，输出规则卡草案，不要先写代码。
+ff- 这是一个迭代中的 Flutter 项目。先扫描项目结构并初始化 project_guardrails，不要先写代码。
 ```
 
 ## 适合 / 不适合
@@ -152,7 +152,7 @@ ff-fast 把登录页按钮文案改成“立即开始”
 
 **已有 Flutter 项目首次接入**
 ```text
-ff- 这是一个迭代中的 Flutter 项目，先扫描项目结构，输出规则卡草案，不要先写代码。
+ff- 这是一个迭代中的 Flutter 项目，先扫描项目结构并初始化 project_guardrails，不要先写代码。
 ```
 
 **新 Flutter 应用**
@@ -229,7 +229,7 @@ ff-a 新建商品详情页，包含轮播图、价格、规格选择和底部购
 
 | 直接让 AI 写代码常见的问题 | Flutter Forge 的做法 |
 |------|---------------------|
-| 不了解现有项目风格，生成的代码格格不入 | 首次接入扫描项目，生成规则卡，后续都基于规则卡 |
+| 不了解现有项目风格，生成的代码格格不入 | 首次接入扫描项目，生成 project_guardrails，后续都基于护栏约束 |
 | 拿到不完整需求就硬编 | 显式处理不完整输入，缺什么告诉你 |
 | 把猜的 UI 当成设计图真实内容 | UI 来源标注：真实视觉 / 文字描述 / 结构推断 |
 | 轻任务啰嗦、复杂任务又不收口 | 任务路由：10 秒测试快速分流 |
@@ -268,7 +268,7 @@ ff-a 新建商品详情页，包含轮播图、价格、规格选择和底部购
 全自动并不跳过流程。它会：
 
 - 自动采用空态、加载态、错误态、页面结构、状态接入和路由接入的推荐方案
-- 优先沿用规则卡、相似实现和项目主流 Flutter 技术栈
+- 优先沿用 project_guardrails、相似实现和项目主流 Flutter 技术栈
 - 做完后输出全自动摘要，列出采用了哪些默认方案
 - 遇到删除数据、生产环境、密钥、支付、隐私权限、不可逆迁移或全项目架构切换时中断确认
 
@@ -282,8 +282,8 @@ ff-a 新建商品详情页，包含轮播图、价格、规格选择和底部购
 ### 2. 阶段门禁
 需求未确认 → 不进实现；方案未稳定 → 不进实现；拆包未冻结 → 不进并行；上游变化 → 下游失效。轻量/中等任务跳过门禁，直接读→改→验证。
 
-### 3. 规则卡（Rule Card）
-一份 YAML 文件捕获项目工程约定（命名、状态管理、路由、性能预算等），首次接入时自动生成草案，确认后成为后续所有任务的约束。存储在 `.claude/.flutter-forge/projects/` 等宿主目录下。
+### 3. Project Guardrails（项目护栏）
+一份 YAML 文件捕获项目工程约定（命名、状态管理、路由、性能预算等），首次接入时自动生成，成为后续所有任务的长期约束。存储在 `.claude/.flutter-forge/projects/` 等宿主目录下。同时作为项目锚点，决定 flutter-forge 是否介入当前工作区。
 
 ### 4. 不完整输入处理
 只给 PRD → 先做需求分析；只给设计图 → 先做 UI 解析；上下文不足 → 明确告诉你缺什么，不会硬编。UI 来源标注：真实视觉 / 文字描述 / 结构推断。
@@ -318,7 +318,7 @@ ff-a 新建商品详情页，包含轮播图、价格、规格选择和底部购
           ▼               ▼               ▼
 ┌──────────────┐ ┌──────────────┐ ┌──────────────┐
 │  按需加载     │ │ 本地 Flutter │ │  记忆协议     │
-│  30+ 参考文档 │ │ Skills 委托  │ │  规则卡/偏好  │
+│  30+ 参考文档 │ │ Skills 委托  │ │  护栏/偏好    │
 └──────────────┘ └──────────────┘ └──────────────┘
 ```
 
@@ -335,7 +335,7 @@ flutter-forge/
 │
 ├── references/                     # 按需加载的参考文档
 │   ├── load_map.md
-│   ├── rule_card_protocol.md
+│   ├── project_guardrails_protocol.md
 │   ├── project_init_flow.md
 │   ├── memory_protocol.md
 │   ├── skill_visibility.md
@@ -384,7 +384,7 @@ ls ~/.codex/skills/flutter-forge/SKILL.md 2>/dev/null && echo "OK" || echo "未�
 ## 本地验证
 
 ```bash
-# 发布前总检查：版本一致性、规则卡 schema、路由 golden cases
+# 发布前总检查：版本一致性、guardrails schema、路由 golden cases
 scripts/validate_release.sh
 
 # 本地健康检查
@@ -396,8 +396,8 @@ scripts/validate_project.sh /path/to/flutter/app
 # 输出冷启动项目摘要
 python3 scripts/project_snapshot.py /path/to/flutter/project --json
 
-# 生成规则卡草案
-python3 scripts/init_rule_card.py /path/to/flutter/project --profile auto --interactive
+# 生成 project_guardrails
+python3 scripts/init_project_guardrails.py /path/to/flutter/project --profile auto --interactive
 
 # 单独扫描 Flutter 技术栈
 python3 scripts/flutter_stack_scan.py /path/to/flutter/project --json
@@ -405,8 +405,8 @@ python3 scripts/flutter_stack_scan.py /path/to/flutter/project --json
 # 单独检查路由用例
 python3 scripts/route_golden_tests.py
 
-# 单独检查规则卡模板 / 示例
-python3 scripts/validate_rule_card.py --allow-placeholders references/rule_card_template.yaml memory/projects/example_project.rule_card.yaml
+# 单独检查 guardrails 模板 / 示例
+python3 scripts/validate_project_guardrails.py --allow-placeholders references/project_guardrails_template.yaml memory/projects/example_project.project_guardrails.yaml
 
 # 单独检查文档链接和必备引用
 python3 scripts/validate_docs_sync.py
@@ -416,9 +416,9 @@ python3 scripts/validate_docs_sync.py
 
 ## 当前状态
 
-当前版本：**v0.2.5**（详见 [VERSION](VERSION) 与 [CHANGELOG](CHANGELOG.md)）。版本号从 `v0.1.0` 起重置加 `v` 前缀，与历史无 `v` 的 `0.x.x` 系列隔离，避免新读者混淆。
+当前版本：**v0.2.6**（详见 [VERSION](VERSION) 与 [CHANGELOG](CHANGELOG.md)）。版本号从 `v0.1.0` 起重置加 `v` 前缀，与历史无 `v` 的 `0.x.x` 系列隔离，避免新读者混淆。
 
-当前已具备：完整文档、任务路由、规则卡、角色协作、官方 Flutter skills 委托策略和本地发布检查。
+当前已具备：完整文档、任务路由、project_guardrails、角色协作、官方 Flutter skills 委托策略和本地发布检查。
 
 当前已提供：
 
@@ -426,7 +426,7 @@ python3 scripts/validate_docs_sync.py
 - 真实回归记录：[references/archive/validation_log.md](references/archive/validation_log.md)
 - Flutter 技术栈扫描器：`scripts/flutter_stack_scan.py`
 - 项目快照：`scripts/project_snapshot.py`
-- 规则卡初始化向导：`scripts/init_rule_card.py`
+- 护栏初始化向导：`scripts/init_project_guardrails.py`
 - 任务预分类：`scripts/classify_task.sh`
 - 输出格式校验：`scripts/validate_output.sh`
 - Doctor / 项目校验：`scripts/doctor.sh`、`scripts/validate_project.sh`
@@ -451,7 +451,7 @@ python3 scripts/validate_docs_sync.py
 - 宿主子代理支持：[references/host_subagent_support.md](references/host_subagent_support.md)
 - 真实试跑记录模板：[references/archive/validation_log.md](references/archive/validation_log.md)
 
-如果你在真实项目中试用过，优先提交 GitHub issue 中的 `Validation case`，这比泛泛的反馈更有助于改进路由和规则卡。
+如果你在真实项目中试用过，优先提交 GitHub issue 中的 `Validation case`，这比泛泛的反馈更有助于改进路由和 project_guardrails。
 
 ## 第三方组件归属
 
@@ -463,6 +463,6 @@ python3 scripts/validate_docs_sync.py
 
 ## 版本
 
-当前版本：**v0.2.5** · 完整变更记录见 [CHANGELOG.md](CHANGELOG.md)。
+当前版本：**v0.2.6** · 完整变更记录见 [CHANGELOG.md](CHANGELOG.md)。
 
 > 历史版本要点已迁移到 CHANGELOG，README 不再单独列出。

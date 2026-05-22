@@ -1,6 +1,6 @@
 # Flutter Forge Reference - Stack Profiles
 
-技术栈 profile 是规则卡初始化的建议模板。它不覆盖项目扫描结果，只用于给 `init_rule_card.py` 补足低置信度字段和确认清单。
+技术栈 profile 是guardrails初始化的建议模板。它不覆盖项目扫描结果，只用于给 `init_project_guardrails.py` 补足低置信度字段和确认清单。
 
 ## 内置 profile
 
@@ -14,7 +14,7 @@
 
 ## 自动选择规则
 
-`scripts/init_rule_card.py --profile auto` 的推荐顺序：
+`scripts/init_project_guardrails.py --profile auto` 的推荐顺序：
 
 1. 检测到 Bloc / Cubit → `bloc_module_profile`
 2. 检测到 Riverpod → `riverpod_feature_profile`
@@ -25,16 +25,16 @@
 ## 使用方式
 
 ```bash
-python3 scripts/init_rule_card.py /path/to/app --profile auto
-python3 scripts/init_rule_card.py /path/to/app --profile riverpod_feature_profile
-python3 scripts/init_rule_card.py /path/to/app --interactive
+python3 scripts/init_project_guardrails.py /path/to/app --profile auto
+python3 scripts/init_project_guardrails.py /path/to/app --profile riverpod_feature_profile
+python3 scripts/init_project_guardrails.py /path/to/app --interactive
 ```
 
-`--interactive` 会输出推荐 profile、扫描摘要和高风险确认清单。脚本仍只写 `_draft` 草案，不直接生成正式规则卡。
+`--interactive` 会输出推荐 profile、扫描摘要和高风险确认清单。
 
 ## 原则
 
 - profile 是建议，不是事实。
 - 扫描 evidence 优先于 profile。
 - profile 填补低置信度字段时必须保留 low / medium confidence。
-- 用户确认前只能写 `*.rule_card_draft.yaml`。
+- 脚本直接写 `*.project_guardrails.yaml`，无需草案确认流程。

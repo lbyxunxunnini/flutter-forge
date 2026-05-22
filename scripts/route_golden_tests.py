@@ -50,9 +50,11 @@ def main() -> int:
         }
         for optional_key in (
             "confidence",
-            "rule_card_check",
-            "should_load_rule_card",
+            "guardrails_check",
+            "should_load_guardrails",
             "required_phases",
+            "project_root_state",
+            "forge_enabled",
         ):
             case_key = f"expected_{optional_key}"
             if case_key in case:

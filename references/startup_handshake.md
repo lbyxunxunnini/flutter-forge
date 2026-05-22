@@ -7,8 +7,8 @@
 只有在以下情况，才向用户展开启动握手：
 
 1. 当前项目首次被 `flutter-forge` 接管
-2. 规则卡不存在、刚生成、刚迁移或刚失效
-3. 当前项目是空项目或近似空项目，需要判断是否进入共创
+2. `project_guardrails` 不存在、刚生成、刚迁移或刚失效
+3. 当前项目是空目录（忽略隐藏文件），需要进入共创
 4. 用户明确要求查看当前接管状态
 5. Flutter skills 或本地协作链路状态不明确
 
@@ -22,24 +22,24 @@
 [f-forge] 模式：启动握手
 ```
 
-后面补最小状态（其中规则卡状态由 `scripts/check_rule_card.sh` 输出决定）：
+后面补最小状态（其中项目锚点状态由 `scripts/check_project_guardrails.sh` 输出决定）：
 
 ```text
-- 项目阶段：新项目 / 迭代项目
-- 规则卡：已加载 / 未发现 / 待生成
-- 规则卡路径：<check_rule_card.sh 输出的 path 字段>
+- 项目根状态：empty_new / flutter_existing / non_flutter
+- 项目护栏：已加载 / 未发现 / 待生成
+- 项目护栏路径：<check_project_guardrails.sh 输出的 path 字段>
 - Flutter skills：已就绪 / 未就绪
 - 下一步：进入新项目共创 / 进入页面开发 / 继续当前任务
 ```
 
-规则卡路径由 `scripts/check_rule_card.sh` 精确解析，LLM 禁止自行搜索路径。禁止把 `~/.claude/projects/.../memory/*.yaml`、其他项目目录中的规则卡、当前项目目录下其他项目名的规则卡当作已加载规则卡。
+项目护栏路径由 `scripts/check_project_guardrails.sh` 精确解析，LLM 禁止自行搜索路径。
 
-如果脚本输出 `status: not_found`，启动握手必须输出：
+如果脚本输出 `status: missing`，启动握手必须输出：
 
 ```text
-- 规则卡：未发现，准备初始化
-- 规则卡草案路径：.flutter-forge/projects/<project>.rule_card_draft.yaml
-- 下一步：扫描当前项目并生成规则卡草案
+- 项目护栏：未发现，准备初始化
+- 项目护栏路径：.flutter-forge/projects/<project>.project_guardrails.yaml
+- 下一步：初始化项目锚点，再进入当前任务
 ```
 
 ## 握手后续
@@ -50,11 +50,11 @@
 
 ```text
 [f-forge] 模式：启动握手
-- 项目阶段：迭代项目
-- 规则卡：未发现
-- 规则卡草案路径：.flutter-forge/projects/<project>.rule_card_draft.yaml
+- 项目根状态：flutter_existing
+- 项目护栏：未发现
+- 项目护栏路径：.flutter-forge/projects/<project>.project_guardrails.yaml
 - Flutter skills：已就绪
-- 下一步：扫描当前项目并生成规则卡草案
+- 下一步：初始化项目锚点，再进入当前任务
 
 [f-forge] 模式：页面开发
 - 升级原因：当前任务涉及页面结构和路由接入
@@ -65,8 +65,8 @@
 
 ```text
 [f-forge] 模式：启动握手
-- 项目阶段：新项目
-- 规则卡：待生成
+- 项目根状态：empty_new
+- 项目护栏：待生成
 - Flutter skills：已就绪
 - 下一步：进入新项目共创
 

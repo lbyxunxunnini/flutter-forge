@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate Flutter Forge rule-card files without external dependencies."""
+"""Validate Flutter Forge project-guardrails files without external dependencies."""
 
 from __future__ import annotations
 
@@ -10,18 +10,18 @@ from pathlib import Path
 
 
 REQUIRED_FIELDS = [
-    "project_rule_card.project.name",
-    "project_rule_card.project.status",
-    "project_rule_card.team_rules.directory_structure.rule",
-    "project_rule_card.team_rules.state_management.primary_pattern",
-    "project_rule_card.team_rules.naming_conventions.pages",
+    "project_guardrails.project.name",
+    "project_guardrails.project.status",
+    "project_guardrails.team_rules.directory_structure.rule",
+    "project_guardrails.team_rules.state_management.primary_pattern",
+    "project_guardrails.team_rules.naming_conventions.pages",
 ]
 
 RECOMMENDED_FIELDS = [
-    "project_rule_card.team_rules.routing_and_navigation.route_definition_rule",
-    "project_rule_card.team_rules.component_boundaries.shared_component_rule",
-    "project_rule_card.team_rules.api_integration.request_layer_rule",
-    "project_rule_card.team_rules.module_boundaries.rule",
+    "project_guardrails.team_rules.routing_and_navigation.route_definition_rule",
+    "project_guardrails.team_rules.component_boundaries.shared_component_rule",
+    "project_guardrails.team_rules.api_integration.request_layer_rule",
+    "project_guardrails.team_rules.module_boundaries.rule",
 ]
 
 VALID_CONFIDENCE = {"low", "medium", "high"}
@@ -101,8 +101,8 @@ def is_missing(value: str, allow_placeholders: bool) -> bool:
 def validate_file(path: Path, allow_placeholders: bool) -> list[str]:
     values, list_counts, errors = parse_yaml_like(path)
 
-    if "project_rule_card" not in values:
-        errors.append("missing root key: project_rule_card")
+    if "project_guardrails" not in values:
+        errors.append("missing root key: project_guardrails")
 
     for field in REQUIRED_FIELDS:
         if field not in values:
@@ -127,8 +127,8 @@ def validate_file(path: Path, allow_placeholders: bool) -> list[str]:
                         f"high confidence needs at least 3 evidence items: {field}"
                     )
 
-    if "project_rule_card.inferred_rules.conflicts_to_watch" not in values:
-        errors.append("missing conflicts tracker: project_rule_card.inferred_rules.conflicts_to_watch")
+    if "project_guardrails.inferred_rules.conflicts_to_watch" not in values:
+        errors.append("missing conflicts tracker: project_guardrails.inferred_rules.conflicts_to_watch")
 
     return errors
 

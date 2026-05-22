@@ -3,13 +3,13 @@
 迭代中 Flutter 项目首次接入时，目标是：
 
 - 识别项目现状
-- 生成或校正规则卡
+- 初始化或校准 `project_guardrails`
 - 然后进入执行轨道
 
 ## 推荐入口表达
 
 ```text
-这是一个迭代中的 Flutter 项目。先用 flutter-forge 识别项目结构和规则卡，再进入当前任务。
+这是一个迭代中的 Flutter 项目。先用 flutter-forge 识别项目结构和 project_guardrails，再进入当前任务。
 ```
 
 ## 首次接入时需要回答的问题
@@ -24,22 +24,22 @@
 
 ## 推荐输出格式
 
-无规则卡时：
+缺少 `project_guardrails` 时：
 
 ```text
 [f-forge] 模式：启动握手
 - 项目阶段：迭代项目
-- 规则卡：未发现
-- 下一步：扫描现有结构并生成规则卡草案
+- 项目护栏：未发现
+- 下一步：初始化项目锚点，再进入当前任务
 ```
 
-已有规则卡时：
+已有 `project_guardrails` 时：
 
 ```text
 [f-forge] 模式：启动握手
 - 项目阶段：迭代项目
-- 规则卡：已加载
-- 规则卡路径：.claude/.flutter-forge/projects/<project>.rule_card.yaml
+- 项目护栏：已加载
+- 项目护栏路径：.claude/.flutter-forge/projects/<project>.project_guardrails.yaml
 - 下一步：进入当前任务
 ```
 
@@ -59,9 +59,9 @@
 
 ## 后续策略
 
-规则卡生成后，后续开发优先遵守：
+项目护栏初始化后，后续开发优先遵守：
 
 1. 已有项目规则
 2. 当前模块主流写法
-3. 已生成规则卡
+3. 已生成的 `project_guardrails`
 4. Flutter 通用建议

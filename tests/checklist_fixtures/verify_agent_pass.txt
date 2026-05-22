@@ -16,7 +16,7 @@ checklist:
   regression_clear: true
   quality_checks:
     - "flutter analyze 无 error"
-    - "命名符合规则卡"
+    - "命名符合guardrails"
   logs_compliant: true
   decision: pass
 ```

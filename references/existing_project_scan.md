@@ -29,7 +29,7 @@
 python3 scripts/flutter_stack_scan.py /path/to/flutter/project --json
 ```
 
-扫描结果只作为规则卡 evidence，不直接覆盖用户已确认规则。具体检测范围和 confidence 写入规则见 [flutter_stack_detection.md](flutter_stack_detection.md)。
+扫描结果只作为guardrails evidence，不直接覆盖用户已确认规则。具体检测范围和 confidence 写入规则见 [flutter_stack_detection.md](flutter_stack_detection.md)。
 
 ## 扫描原则
 
@@ -44,12 +44,12 @@ python3 scripts/flutter_stack_scan.py /path/to/flutter/project --json
 输出三部分：
 
 1. 项目规则理解摘要
-2. 结构化规则卡
+2. 结构化guardrails
 3. 高风险确认项
 
 ## 必读配套文件
 
-- `references/rule_card_template.yaml`
+- `references/project_guardrails_template.yaml`
 - `references/flutter_stack_detection.md`
 - `references/engineering_heuristics.md`
 - `references/memory_protocol.md`

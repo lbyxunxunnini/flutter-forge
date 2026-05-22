@@ -45,7 +45,7 @@
 - 规则卡正式来源限定为当前目标项目目录内 `<project>.rule_card.yaml` 精确命中
 - 当前项目没有精确命中时，必须输出 `规则卡：未发现，准备初始化`
 - 初始化路径固定为当前项目 `.flutter-forge/projects/<project>.rule_card_draft.yaml`
-- 新增 `scripts/validate_rule_card_resolution.py` 覆盖全局 Claude memory、当前目录其它项目卡、当前项目精确卡三种情况
+- 新增 `scripts/validate_project_guardrails_resolution.py` 覆盖全局 Claude memory、当前目录其它项目护栏、当前项目精确护栏三种情况
 
 ### 结论
 

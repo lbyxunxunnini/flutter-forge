@@ -8,7 +8,7 @@ Flutter Forge is a workflow skill for AI-assisted Flutter development. Contribut
 - Better reference material under `references/`.
 - Real validation logs from actual Flutter projects.
 - Installation, diagnosis, and compatibility fixes.
-- More precise rule-card fields or examples.
+- More precise guardrails fields or examples.
 - Bug reports where the skill chose the wrong workflow.
 
 ## Before Opening a PR
@@ -33,7 +33,7 @@ For focused checks:
 python3 scripts/route_golden_tests.py
 python3 scripts/validate_flutter_stack_scan.py
 python3 scripts/validate_docs_sync.py
-python3 scripts/validate_rule_card.py --allow-placeholders references/rule_card_template.yaml memory/projects/example_project.rule_card.yaml
+python3 scripts/validate_project_guardrails.py --allow-placeholders references/project_guardrails_template.yaml memory/projects/example_project.project_guardrails.yaml
 ```
 
 For workflow changes, test at least one prompt from each affected mode:

@@ -39,18 +39,18 @@ def top_dirs(root: Path) -> list[str]:
     return sorted(str(path.relative_to(root)) + "/" for path in lib.iterdir() if path.is_dir())[:12]
 
 
-def find_rule_cards(root: Path) -> list[str]:
+def find_project_guardrails(root: Path) -> list[str]:
     project_name = root.name
     patterns = [
-        f".claude/.flutter-forge/projects/{project_name}.rule_card.yaml",
-        f".trae/.flutter-forge/projects/{project_name}.rule_card.yaml",
-        f".agents/.flutter-forge/projects/{project_name}.rule_card.yaml",
-        f".flutter-forge/projects/{project_name}.rule_card.yaml",
+        f".claude/.flutter-forge/projects/{project_name}.project_guardrails.yaml",
+        f".trae/.flutter-forge/projects/{project_name}.project_guardrails.yaml",
+        f".agents/.flutter-forge/projects/{project_name}.project_guardrails.yaml",
+        f".flutter-forge/projects/{project_name}.project_guardrails.yaml",
     ]
-    cards: list[str] = []
+    guardrails: list[str] = []
     for pattern in patterns:
-        cards.extend(str(path.relative_to(root)) for path in root.glob(pattern))
-    return cards
+        guardrails.extend(str(path.relative_to(root)) for path in root.glob(pattern))
+    return guardrails
 
 
 def snapshot(root: Path) -> dict[str, object]:
@@ -63,7 +63,7 @@ def snapshot(root: Path) -> dict[str, object]:
         "is_flutter_project": stack["is_flutter_project"],
         "pubspec": "pubspec.yaml" if (root / "pubspec.yaml").exists() else None,
         "lib_top_dirs": top_dirs(root),
-        "rule_cards": find_rule_cards(root),
+        "project_guardrails": find_project_guardrails(root),
         "routing_entries": first_existing(root, ["lib/**/*router*.dart", "lib/**/routes*.dart"]),
         "state_entries": first_existing(
             root,
@@ -85,7 +85,7 @@ def print_text(data: dict[str, object]) -> None:
     print(f"project_root: {data['project_root']}")
     print(f"is_flutter_project: {str(data['is_flutter_project']).lower()}")
     print(f"pubspec: {data['pubspec']}")
-    print(f"rule_cards: {', '.join(data['rule_cards']) if data['rule_cards'] else 'none'}")
+    print(f"project_guardrails: {', '.join(data['project_guardrails']) if data['project_guardrails'] else 'none'}")
     print(f"lib_top_dirs: {', '.join(data['lib_top_dirs']) if data['lib_top_dirs'] else 'none'}")
     print(f"routing_entries: {', '.join(data['routing_entries']) if data['routing_entries'] else 'none'}")
     print(f"state_entries: {', '.join(data['state_entries']) if data['state_entries'] else 'none'}")

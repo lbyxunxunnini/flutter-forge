@@ -13,8 +13,8 @@
 - [existing_project_scan.md](existing_project_scan.md)
 - [flutter_stack_detection.md](flutter_stack_detection.md)
 - [stack_profiles.md](stack_profiles.md)
-- [rule_card_template.yaml](rule_card_template.yaml)
-- [example_rule_card.yaml](example_rule_card.yaml)
+- [project_guardrails_template.yaml](project_guardrails_template.yaml)
+- [example_project_guardrails.yaml](example_project_guardrails.yaml)
 - [existing_rules_discovery.md](existing_rules_discovery.md)
 
 ### 新 Flutter 应用从 0 到 1
@@ -22,7 +22,7 @@
 - [new_project_cocreation_mode.md](new_project_cocreation_mode.md)
 - [stack_profiles.md](stack_profiles.md)
 - [project_init_flow.md](project_init_flow.md)
-- [rule_card_template.yaml](rule_card_template.yaml)
+- [project_guardrails_template.yaml](project_guardrails_template.yaml)
 
 ### 进入具体任务执行
 
@@ -49,6 +49,7 @@
 ### 需要判断宿主对子代理的支持与降级路径
 
 - [host_subagent_support.md](host_subagent_support.md)
+- [agent_isolation_protocol.md](agent_isolation_protocol.md)
 
 ### 需要网络层项目规则
 
@@ -78,9 +79,9 @@
 
 - [startup_handshake.md](startup_handshake.md)
 
-### 需要规则卡协议
+### 需要 Project Guardrails 协议
 
-- [rule_card_protocol.md](rule_card_protocol.md)
+- [project_guardrails_protocol.md](project_guardrails_protocol.md)
 
 ### 需要项目初始化流程
 
@@ -108,7 +109,7 @@
 | skill_visibility.md | SKILL.md（输出日志）、load_map.md |
 | session_management.md | SKILL.md（上下文恢复）、load_map.md |
 | startup_handshake.md | SKILL.md（启动判定）、load_map.md |
-| rule_card_protocol.md | SKILL.md（规则卡检查）、load_map.md |
+| project_guardrails_protocol.md | SKILL.md（guardrails 检查）、load_map.md |
 | project_init_flow.md | SKILL.md（项目初始化）、load_map.md |
 | memory_protocol.md | SKILL.md（记忆机制）、load_map.md |
 | engineering_heuristics.md | load_map.md |
@@ -117,6 +118,7 @@
 | official_flutter_skills.md | SKILL.md（Flutter skills）、load_map.md |
 | delegation_map.yaml | load_map.md |
 | host_subagent_support.md | SKILL.md（并行协议）、load_map.md |
+| agent_isolation_protocol.md | SKILL.md（角色隔离执行）、load_map.md |
 | network_and_api.md | load_map.md |
 | routing_and_navigation.md | load_map.md |
 | roles/verify_agent.md | load_map.md |

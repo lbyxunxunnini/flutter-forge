@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
-"""Create a Flutter Forge rule-card draft from project snapshot evidence."""
+"""Create a Flutter Forge project-guardrails file from project snapshot evidence.
+
+Supports profile detection (--profile auto), interactive wizard (--interactive),
+and generates a full guardrails file with evidence and confidence scores.
+"""
 
 from __future__ import annotations
 
@@ -112,7 +116,7 @@ def evidence_lines(info: dict[str, object], indent: str = "      ") -> str:
     return "\n".join(lines)
 
 
-def render_card(project_root: Path, data: dict[str, object], profile_name: str, profile_reason: str) -> str:
+def render_guardrails(project_root: Path, data: dict[str, object], profile_name: str, profile_reason: str) -> str:
     signals = data["stack_signals"]
     state = best_signal(signals, "state_management")
     routing = best_signal(signals, "routing")
@@ -130,11 +134,12 @@ def render_card(project_root: Path, data: dict[str, object], profile_name: str, 
     defaults = profile_defaults(profile_name)
 
     project_name = project_root.name.replace("-", "_")
-    return f"""project_rule_card:
+    return f"""project_guardrails:
   project:
     name: "{project_name}"
     type: "flutter"
     status: "existing"
+    root_type: "flutter_existing"
     overall_confidence: "medium"
     source_rules:
       - "project_snapshot"
@@ -209,7 +214,7 @@ def render_card(project_root: Path, data: dict[str, object], profile_name: str, 
       confidence: "low"
 
   quick_context:
-    snapshot_generated_by: "scripts/init_rule_card.py"
+    snapshot_generated_by: "scripts/init_project_guardrails_legacy.py"
     recommended_profile: "{profile_name}"
     profile_reason: "{profile_reason}"
     lib_top_dirs: {data['lib_top_dirs']}
@@ -248,14 +253,14 @@ def render_card(project_root: Path, data: dict[str, object], profile_name: str, 
 
 
 def print_wizard_summary(project_root: Path, data: dict[str, object], profile_name: str, profile_reason: str, output: Path) -> None:
-    print("Flutter Forge rule-card initialization")
+    print("Flutter Forge project-guardrails initialization")
     print(f"project: {project_root}")
     print(f"profile: {profile_name} ({profile_reason})")
     print(f"output: {output}")
     print(f"lib_top_dirs: {', '.join(data['lib_top_dirs']) if data['lib_top_dirs'] else 'none'}")
     print(f"routing_entries: {', '.join(data['routing_entries']) if data['routing_entries'] else 'none'}")
     print(f"state_entries: {', '.join(data['state_entries']) if data['state_entries'] else 'none'}")
-    print("confirm before promoting draft:")
+    print("confirmation checklist:")
     print("  - directory structure")
     print("  - state management")
     print("  - routing entry")
@@ -272,7 +277,7 @@ def main() -> int:
         "--profile",
         choices=sorted(PROFILE_NAMES),
         default="auto",
-        help="Rule-card profile to apply. Defaults to auto-detection.",
+        help="Profile to apply. Defaults to auto-detection.",
     )
     parser.add_argument("--interactive", action="store_true", help="Print wizard summary and confirmation checklist.")
     args = parser.parse_args()
@@ -286,12 +291,12 @@ def main() -> int:
 
     profile_name, profile_reason = choose_profile(data["stack_signals"], args.profile)
 
-    output = args.output or project_root / ".flutter-forge" / "projects" / f"{project_root.name}.rule_card_draft.yaml"
+    output = args.output or project_root / ".flutter-forge" / "projects" / f"{project_root.name}.project_guardrails.yaml"
     output.parent.mkdir(parents=True, exist_ok=True)
-    output.write_text(render_card(project_root, data, profile_name, profile_reason), encoding="utf-8")
+    output.write_text(render_guardrails(project_root, data, profile_name, profile_reason), encoding="utf-8")
     if args.interactive:
         print_wizard_summary(project_root, data, profile_name, profile_reason, output)
-    print(f"PASS rule-card draft written: {output}")
+    print(f"PASS project-guardrails written: {output}")
     return 0
 
 

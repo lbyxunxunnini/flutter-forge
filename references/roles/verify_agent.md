@@ -33,7 +33,7 @@
 
 - 当前阶段和模式
 - 当前工作包结果
-- 当前规则卡约束
+- 当前guardrails约束
 - 当前冻结约束
 - 需要执行的验证范围
 
@@ -121,6 +121,6 @@ checklist:
 - `spec_issues`：规格合规发现的问题（需求遗漏、契约越界等）
 - `code_quality`：第二阶段审查结论——lint、测试、回归是否全部通过
 - `regression_clear`：改动是否未破坏已有功能
-- `quality_checks`：实际执行的质量检查（lint/类型/命名/规则卡约束）
+- `quality_checks`：实际执行的质量检查（lint/类型/命名/guardrails约束）
 - `logs_compliant`：输出日志是否符合可见性协议
 - `decision`：`pass` 允许完成 / `back_to_implementation` 需回实现 / `back_to_design` 需回设计

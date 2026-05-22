@@ -45,8 +45,8 @@ ff- 把旧目录结构迁移到 feature-first，但先给迁移方案
 ## 项目接入
 
 ```text
-ff- 这是迭代中的 Flutter 项目。先扫描项目结构，生成规则卡草案，不要写代码。
-ff- 校验当前规则卡和项目实际代码是否一致
+ff- 这是迭代中的 Flutter 项目。先扫描项目结构，生成 project_guardrails，不要写代码。
+ff- 校验当前 project_guardrails 和项目实际代码是否一致
 ```
 
 ## 新项目共创

@@ -31,7 +31,7 @@
 - 不自动拍板高风险架构迁移。
 - 不绕过安全、生产、支付、隐私、密钥相关确认。
 - 不跳过验证。
-- 不假装读过不存在的规则卡。
+- 不假装读过不存在的guardrails。
 
 ## 自动扫描摘要
 
@@ -49,9 +49,9 @@ python3 scripts/project_snapshot.py /path/to/flutter/project
 - 状态管理入口
 - 网络层入口
 - 测试入口
-- 规则卡路径状态
+- guardrails路径状态
 
-如果存在规则卡的 `quick_context`，优先使用；如果过期或缺失，再重新扫描。
+如果存在guardrails的 `quick_context`，优先使用；如果过期或缺失，再重新扫描。
 
 ## 升级条件
 
@@ -62,7 +62,7 @@ python3 scripts/project_snapshot.py /path/to/flutter/project
 - 需要新增 / 调整路由、状态管理、网络层或公共组件边界。
 - 必须改共享核心文件且 write scope 不清晰。
 - 简化/抽取/复用会影响业务链路、弹窗触发时机、共享工具入口或兜底分支。
-- 发现项目规则卡与实际代码冲突。
+- 发现项目guardrails与实际代码冲突。
 
 ## UI 信息不足时的边界
 
