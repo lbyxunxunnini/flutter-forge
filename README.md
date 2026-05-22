@@ -28,6 +28,8 @@ ff-a 新建商品详情页，缺的自动补完  # 全自动路径
 
 所有策略通过 `ff-`、`ff-fast`、`ff-a` 触发（也兼容 `ff a`、`/flutter-forge`）。上面 3 行描述的是执行行为差异，不是触发词差异。
 
+> **触发可靠性**：`/flutter-forge` 是原生斜杠命令，100% 可靠触发；`ff-` 等前缀依赖 AI 识别，偶尔可能不触发。如果 `ff-` 没生效，改用 `/flutter-forge` 即可。
+
 > 完整触发词与匹配规则的唯一权威来源：[references/trigger_words.md](references/trigger_words.md)。其他文档不维护并列清单。
 
 更短的上手说明见 [QUICKSTART.md](QUICKSTART.md)，常用 prompt 见 [CHEATSHEET.md](CHEATSHEET.md)。

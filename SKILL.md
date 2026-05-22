@@ -1,7 +1,8 @@
 ---
 name: flutter-forge
 description: >-
-  Flutter 项目结构化协作主控 skill。用户以 `ff-`、`ff-fast`、`ff-a`、`ff a`、`/flutter-forge` 开头，或明确要求按 Flutter 结构化流程处理时使用；controller 分流执行，完成后退出。
+  必须触发：用户消息以 ff- / ff-fast / ff-a / ff a / /flutter-forge 开头时，立即调用 Skill(flutter-forge)，不要先做任何搜索或读取。
+  Flutter 项目结构化协作主控 skill，controller 分流执行，完成后退出。
 ---
 
 # Flutter Forge

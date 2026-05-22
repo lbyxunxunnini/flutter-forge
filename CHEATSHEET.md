@@ -1,5 +1,6 @@
 # Flutter Forge Cheatsheet
 
+> **触发方式**：`/flutter-forge`（推荐，100% 可靠）或 `ff-`（快捷，尽力识别）
 > 完整触发词与匹配规则：[references/trigger_words.md](references/trigger_words.md)
 
 ## 快速任务
