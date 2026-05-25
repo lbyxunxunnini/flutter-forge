@@ -141,6 +141,17 @@ def main() -> int:
     confirmation_status = session.get("确认状态", "-")
     change_contract = session.get("改动契约", "-")
     exempt = exempt_by_policy(task_gate, mode)
+    goal_status = session.get("目标状态", "未确认")
+    scope_status = session.get("范围状态", "未确认")
+    acceptance_status = session.get("验收状态", "未确认")
+    constraint_status = session.get("约束状态", "未确认")
+    current_work_unit = session.get("当前子单元", "-")
+    work_unit_status = session.get("子单元状态", "未冻结")
+    verification_status = session.get("验证状态", "未验证")
+    scope_risk = session.get("超范围风险", "无")
+    plan_conflict = session.get("计划冲突状态", "无")
+    mode_lock = session.get("工作模式锁", "激活")
+    exit_permission = session.get("退出许可", "禁止")
 
     decisions: list[tuple[str, str]] = []
 
@@ -181,6 +192,48 @@ def main() -> int:
                 "verify_agent": "验证工程师",
             }.get(active_agent, active_agent)
             decisions.append(("role_scope", f"{role_display}（{active_agent}）无权写入 {target_kind} 类文件，当前角色只能操作：{', '.join(sorted(allowed))}"))
+
+    # Gate 6: 输出校验缺失 → 阶段切换后必须先运行 validate_output.sh
+    if not exempt and phase in {"S2", "S3", "S4", "S5"} and target_kind in {"implementation", "core_shared", "router", "state"}:
+        output_validation = session.get("输出校验", "未校验")
+        validation_phase = session.get("校验阶段", "-")
+        if output_validation != "已通过" or validation_phase != phase:
+            decisions.append(("output_validation", f"当前阶段 {phase} 尚未通过输出校验，请先运行 scripts/validate_output.sh 并更新 session（--output_validation 已通过 --validation_phase {phase}）"))
+
+    # Gate 7: 工作模式锁未释放 → 禁止收口
+    if phase == "S6" and mode_lock == "激活" and exit_permission != "允许":
+        decisions.append(("mode_exit", "工作模式锁仍处于激活状态，且退出许可未打开，禁止进入 S6 收口"))
+
+    # Gate 8: 核心任务定义未冻结 → 阻断实现类写入
+    if target_kind in {"implementation", "project_config", "core_shared", "router", "state"}:
+        missing_core = [
+            label
+            for label, field in (
+                ("目标", goal_status),
+                ("范围", scope_status),
+                ("验收", acceptance_status),
+                ("约束", constraint_status),
+            )
+            if field != "已确认"
+        ]
+        if missing_core:
+            decisions.append(("core_definition", f"进入实现前必须先冻结核心任务定义，当前未确认：{', '.join(missing_core)}"))
+
+    # Gate 9: 当前子单元未冻结 → 阻断实现类写入
+    if target_kind in {"implementation", "project_config", "core_shared", "router", "state"}:
+        if current_work_unit == "-" or work_unit_status not in {"已冻结", "实现中", "待验证", "已通过"}:
+            decisions.append(("current_work_unit", "进入实现前必须先冻结当前子单元，并在 session 中记录 current_work_unit/work_unit_status"))
+
+    # Gate 10: 发现超范围风险或计划冲突 → 先回退再继续
+    if target_kind in {"implementation", "project_config", "core_shared", "router", "state"}:
+        if scope_risk == "已发现":
+            decisions.append(("scope_expansion", "已发现超范围风险，必须先回退到 S2/S3 重新确认，不能继续实现"))
+        if plan_conflict == "已发现待回退":
+            decisions.append(("plan_conflict", "当前计划与代码现实冲突，必须先回退对应确认阶段，不能继续实现"))
+
+    # Gate 11: 当前子单元未验证通过 → 禁止切换收口
+    if phase == "S5" and target_kind in {"metadata", "test"} and verification_status != "已通过":
+        decisions.append(("verification_truth", "当前子单元验证尚未通过，禁止用验证日志或收口元数据伪装完成"))
 
     if not exempt and mode_needs_contract(mode) and change_contract == "-":
         decisions.append(("change_contract", "当前写入缺少已冻结的改动契约"))

@@ -189,6 +189,18 @@ if [ "$IS_WRITE" = "true" ]; then
   fi
 fi
 
+# 自动刷新标记：写 pubspec.yaml 或 lib/ 下文件时标记 guardrails 需要刷新
+if [ "$IS_WRITE" = "true" ] && [ -n "$TARGET_PATH" ]; then
+  NORM_TARGET="$(printf '%s' "$TARGET_PATH" | sed 's|\\|/|g')"
+  case "$NORM_TARGET" in
+    *pubspec.yaml|*/lib/*|lib/*)
+      MARKER_DIR="${PROJECT_ROOT}/.flutter-forge/runtime"
+      mkdir -p "$MARKER_DIR" 2>/dev/null || true
+      date +%s > "${MARKER_DIR}/refresh_needed" 2>/dev/null || true
+      ;;
+  esac
+fi
+
 if [ "$IS_WRITE" = "true" ] && [ -x "$GATE_SCRIPT" ] && [ -n "$TARGET_PATH" ]; then
   GATE_OUTPUT="$(python3 "$GATE_SCRIPT" --project-root "$PROJECT_ROOT" --target-path "$TARGET_PATH" --mode "$GATE_MODE" 2>/dev/null || true)"
   if [ -n "$GATE_OUTPUT" ]; then

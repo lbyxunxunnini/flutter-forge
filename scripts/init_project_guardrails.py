@@ -8,8 +8,23 @@ and generates a full guardrails file with evidence and confidence scores.
 from __future__ import annotations
 
 import argparse
+import hashlib
 import importlib.util
 from pathlib import Path
+
+
+def compute_pubspec_hash(project_root: Path) -> str:
+    pubspec = project_root / "pubspec.yaml"
+    if not pubspec.exists():
+        return "-"
+    return hashlib.sha256(pubspec.read_bytes()).hexdigest()[:16]
+
+
+def compute_lib_top_dirs_snapshot(project_root: Path) -> list[str]:
+    lib = project_root / "lib"
+    if not lib.is_dir():
+        return []
+    return sorted(d.name for d in lib.iterdir() if d.is_dir() and not d.name.startswith("."))
 
 
 PROFILE_NAMES = {
@@ -116,7 +131,7 @@ def evidence_lines(info: dict[str, object], indent: str = "      ") -> str:
     return "\n".join(lines)
 
 
-def render_guardrails(project_root: Path, data: dict[str, object], profile_name: str, profile_reason: str) -> str:
+def render_guardrails(project_root: Path, data: dict[str, object], profile_name: str, profile_reason: str, pubspec_hash: str = "-", lib_dirs_snapshot: list[str] | None = None) -> str:
     signals = data["stack_signals"]
     state = best_signal(signals, "state_management")
     routing = best_signal(signals, "routing")
@@ -214,7 +229,7 @@ def render_guardrails(project_root: Path, data: dict[str, object], profile_name:
       confidence: "low"
 
   quick_context:
-    snapshot_generated_by: "scripts/init_project_guardrails_legacy.py"
+    snapshot_generated_by: "scripts/init_project_guardrails.py"
     recommended_profile: "{profile_name}"
     profile_reason: "{profile_reason}"
     lib_top_dirs: {data['lib_top_dirs']}
@@ -222,6 +237,8 @@ def render_guardrails(project_root: Path, data: dict[str, object], profile_name:
     state_entries: {data['state_entries']}
     network_entries: {data['network_entries']}
     test_entries: {data['test_entries']}
+    pubspec_hash: "{pubspec_hash}"
+    lib_top_dirs_snapshot: {lib_dirs_snapshot if lib_dirs_snapshot is not None else data['lib_top_dirs']}
     confirmation_checklist:
       - "Confirm directory_structure.rule"
       - "Confirm state_management.primary_pattern"
@@ -290,10 +307,12 @@ def main() -> int:
         return 1
 
     profile_name, profile_reason = choose_profile(data["stack_signals"], args.profile)
+    pubspec_hash = compute_pubspec_hash(project_root)
+    lib_dirs_snapshot = compute_lib_top_dirs_snapshot(project_root)
 
     output = args.output or project_root / ".flutter-forge" / "projects" / f"{project_root.name}.project_guardrails.yaml"
     output.parent.mkdir(parents=True, exist_ok=True)
-    output.write_text(render_guardrails(project_root, data, profile_name, profile_reason), encoding="utf-8")
+    output.write_text(render_guardrails(project_root, data, profile_name, profile_reason, pubspec_hash, lib_dirs_snapshot), encoding="utf-8")
     if args.interactive:
         print_wizard_summary(project_root, data, profile_name, profile_reason, output)
     print(f"PASS project-guardrails written: {output}")

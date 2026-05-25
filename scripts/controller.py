@@ -115,7 +115,18 @@ def build_agent_prompt(
     sections.append(f"- 阶段：{phase}")
     sections.append(f"- 模式：{mode}")
     sections.append(f"- 确认状态：{session.get('确认状态', '-')}")
+    sections.append(f"- 目标状态：{session.get('目标状态', '-')}")
+    sections.append(f"- 范围状态：{session.get('范围状态', '-')}")
+    sections.append(f"- 验收状态：{session.get('验收状态', '-')}")
+    sections.append(f"- 约束状态：{session.get('约束状态', '-')}")
     sections.append(f"- 改动契约：{session.get('改动契约', '-')}")
+    sections.append(f"- 当前子单元：{session.get('当前子单元', '-')}")
+    sections.append(f"- 子单元状态：{session.get('子单元状态', '-')}")
+    sections.append(f"- 验证状态：{session.get('验证状态', '-')}")
+    sections.append(f"- 超范围风险：{session.get('超范围风险', '-')}")
+    sections.append(f"- 计划冲突状态：{session.get('计划冲突状态', '-')}")
+    sections.append(f"- 工作模式锁：{session.get('工作模式锁', '-')}")
+    sections.append(f"- 退出许可：{session.get('退出许可', '-')}")
     sections.append(f"- 任务对象：{session.get('任务对象', '-')}")
     sections.append(f"- 工作包：{session.get('工作包', '无')}")
     sections.append("")
@@ -213,10 +224,15 @@ def cmd_run(args: argparse.Namespace) -> int:
 
     if resume.get("status") == "resume_match":
         result["next_action"] = "resume_current_phase"
+    elif session.get("工作模式锁", "激活") == "激活" and session.get("退出许可", "禁止") != "允许" and phase == "S6":
+        result["next_action"] = "reject_premature_exit"
     elif phase == "S4":
         result["next_action"] = "implement_current_package"
     elif phase == "S5":
-        result["next_action"] = "validate_current_change"
+        if session.get("验证状态", "未验证") == "已通过" and session.get("退出许可", "禁止") == "允许":
+            result["next_action"] = "complete_current_task"
+        else:
+            result["next_action"] = "validate_current_change"
     else:
         result["next_action"] = "continue_phase_protocol"
 

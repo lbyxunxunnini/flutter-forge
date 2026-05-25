@@ -47,6 +47,18 @@ session 路径与 `project_guardrails` 路径采用**同一套宿主优先级**�
 - 恢复键：用于判断用户补充输入是否属于同一任务的关键词；无则 `-`
 - 改动契约：最近一次待确认或已确认的改动契约摘要；无则 `-`
 - 确认状态：不需要 / 未确认 / 用户已确认
+- 目标状态：未确认 / 已确认
+- 范围状态：未确认 / 已确认
+- 验收状态：未确认 / 已确认
+- 约束状态：未确认 / 已确认
+- 当前子单元：当前唯一允许推进的子目标；无则 `-`
+- 子单元状态：未冻结 / 已冻结 / 实现中 / 待验证 / 已通过 / 未通过
+- 验证状态：未验证 / 验证中 / 已通过 / 未通过
+- 超范围风险：无 / 已发现
+- 计划冲突状态：无 / 已发现待回退
+- 任务结束条件：本轮完成定义；无则 `-`
+- 工作模式锁：激活 / 可退出
+- 退出许可：禁止 / 允许
 - 摘要包：当前阶段摘要包路径或摘要标识；无则 `-`
 - 最后用户输入摘要：最近一次用户补充输入摘要；无则 `-`
 - 更新时间：YYYY-MM-DD HH:mm
@@ -117,6 +129,10 @@ scripts/ff_session.sh validate                                # 校验字段完�
 8. 生成长文档 / 长 UI 文档摘要包后 → `update --summary_package --recent_action`
 9. 用户补充材料被消费后 → `consume-resume --user-input "<摘要>"`
 10. 整个任务完成时 → `reset`
+11. 目标/范围/验收/约束收口时 → `update --goal_status/--scope_status/--acceptance_status/--constraint_status`
+12. 当前子单元冻结、切换、验证时 → `update --current_work_unit/--work_unit_status/--verification_status`
+13. 发现超范围或计划冲突时 → `update --scope_risk 已发现` 或 `--plan_conflict 已发现待回退`
+14. 允许收口退出前 → `update --mode_lock 可退出 --exit_permission 允许 --task_exit_criteria "<完成定义>"`
 
 ### 不必写
 
@@ -215,6 +231,7 @@ scripts/ff_session.sh validate                                # 校验字段完�
 - 中等及以上任务创建和维护 session
 - 任何模式只要主动等待用户补截图、文稿、文本或确认，都必须临时写等待态 session；恢复并消费后可清空等待态
 - 用户在同一轮对话中提出新任务时，如果旧任务已完成，重置 session 后按新任务处理
+- 只要 `工作模式锁=激活` 且 `退出许可=禁止`，即使用户补一句“继续/确认”，也必须优先恢复当前任务，而不是默认为新任务
 
 ## 与 project_guardrails 的关系
 

@@ -29,6 +29,18 @@
 #   --resume_keys <恢复关键词>
 #   --change_contract <改动契约摘要>
 #   --confirmation_status <不需要|未确认|用户已确认>
+#   --goal_status <未确认|已确认>
+#   --scope_status <未确认|已确认>
+#   --acceptance_status <未确认|已确认>
+#   --constraint_status <未确认|已确认>
+#   --current_work_unit <当前子单元>
+#   --work_unit_status <未冻结|已冻结|实现中|待验证|已通过|未通过>
+#   --verification_status <未验证|验证中|已通过|未通过>
+#   --scope_risk <无|已发现>
+#   --plan_conflict <无|已发现待回退>
+#   --task_exit_criteria <完成定义>
+#   --mode_lock <激活|可退出>
+#   --exit_permission <禁止|允许>
 #   --summary_package <摘要包路径或摘要标识>
 #   --last_user_input <最后用户输入摘要>
 #
@@ -167,9 +179,23 @@ write_session_template() {
 - 恢复键：-
 - 改动契约：-
 - 确认状态：不需要
+- 目标状态：未确认
+- 范围状态：未确认
+- 验收状态：未确认
+- 约束状态：未确认
+- 当前子单元：-
+- 子单元状态：未冻结
+- 验证状态：未验证
+- 超范围风险：无
+- 计划冲突状态：无
+- 任务结束条件：-
+- 工作模式锁：激活
+- 退出许可：禁止
 - 摘要包：-
 - 最后用户输入摘要：-
 - 最近操作：初始化
+- 输出校验：未校验
+- 校验阶段：-
 - 更新时间：$(date +"%Y-%m-%d %H:%M")
 EOF
 }
@@ -399,9 +425,23 @@ cmd_update() {
       --resume_keys) update_field "恢复键" "$2"; shift 2 ;;
       --change_contract) update_field "改动契约" "$2"; shift 2 ;;
       --confirmation_status) update_field "确认状态" "$2"; shift 2 ;;
+      --goal_status) update_field "目标状态" "$2"; shift 2 ;;
+      --scope_status) update_field "范围状态" "$2"; shift 2 ;;
+      --acceptance_status) update_field "验收状态" "$2"; shift 2 ;;
+      --constraint_status) update_field "约束状态" "$2"; shift 2 ;;
+      --current_work_unit) update_field "当前子单元" "$2"; shift 2 ;;
+      --work_unit_status) update_field "子单元状态" "$2"; shift 2 ;;
+      --verification_status) update_field "验证状态" "$2"; shift 2 ;;
+      --scope_risk) update_field "超范围风险" "$2"; shift 2 ;;
+      --plan_conflict) update_field "计划冲突状态" "$2"; shift 2 ;;
+      --task_exit_criteria) update_field "任务结束条件" "$2"; shift 2 ;;
+      --mode_lock) update_field "工作模式锁" "$2"; shift 2 ;;
+      --exit_permission) update_field "退出许可" "$2"; shift 2 ;;
       --summary_package) update_field "摘要包" "$2"; shift 2 ;;
       --last_user_input) update_field "最后用户输入摘要" "$2"; shift 2 ;;
       --recent_action) update_field "最近操作" "$2"; shift 2 ;;
+      --output_validation) update_field "输出校验" "$2"; shift 2 ;;
+      --validation_phase) update_field "校验阶段" "$2"; shift 2 ;;
       *) shift ;;
     esac
   done
@@ -603,7 +643,7 @@ cmd_validate() {
   fi
 
   errors=0
-  required_fields=("轨道" "当前阶段" "当前模式" "决策版本" "项目护栏" "活跃代理" "工作包" "失效结果" "等待状态" "等待输入类型" "待确认问题" "任务对象" "恢复键" "改动契约" "确认状态" "摘要包" "最后用户输入摘要" "最近操作" "更新时间")
+  required_fields=("轨道" "当前阶段" "当前模式" "决策版本" "项目护栏" "活跃代理" "工作包" "失效结果" "等待状态" "等待输入类型" "待确认问题" "任务对象" "恢复键" "改动契约" "确认状态" "目标状态" "范围状态" "验收状态" "约束状态" "当前子单元" "子单元状态" "验证状态" "超范围风险" "计划冲突状态" "任务结束条件" "工作模式锁" "退出许可" "摘要包" "最后用户输入摘要" "最近操作" "输出校验" "校验阶段" "更新时间")
 
   for field in "${required_fields[@]}"; do
     if ! grep -q "^- ${field}：" "$SESSION_FILE"; then
@@ -645,6 +685,66 @@ cmd_validate() {
 
   if [ "$waiting_state" = "confirmation" ] && [ "$expected_input" != "confirmation" ]; then
     echo "FAIL confirmation waiting_state must use confirmation expected_input"
+    errors=$((errors + 1))
+  fi
+
+  for field in "目标状态" "范围状态" "验收状态" "约束状态"; do
+    value=$(grep "^- ${field}：" "$SESSION_FILE" | sed "s/^- ${field}：//" | xargs)
+    if ! echo "$value" | grep -qE '^(未确认|已确认)$'; then
+      echo "FAIL invalid ${field}: $value"
+      errors=$((errors + 1))
+    fi
+  done
+
+  work_unit_status=$(grep "^- 子单元状态：" "$SESSION_FILE" | sed 's/^- 子单元状态：//' | xargs)
+  if ! echo "$work_unit_status" | grep -qE '^(未冻结|已冻结|实现中|待验证|已通过|未通过)$'; then
+    echo "FAIL invalid work_unit_status: $work_unit_status"
+    errors=$((errors + 1))
+  fi
+
+  verification_status=$(grep "^- 验证状态：" "$SESSION_FILE" | sed 's/^- 验证状态：//' | xargs)
+  if ! echo "$verification_status" | grep -qE '^(未验证|验证中|已通过|未通过)$'; then
+    echo "FAIL invalid verification_status: $verification_status"
+    errors=$((errors + 1))
+  fi
+
+  scope_risk=$(grep "^- 超范围风险：" "$SESSION_FILE" | sed 's/^- 超范围风险：//' | xargs)
+  if ! echo "$scope_risk" | grep -qE '^(无|已发现)$'; then
+    echo "FAIL invalid scope_risk: $scope_risk"
+    errors=$((errors + 1))
+  fi
+
+  plan_conflict=$(grep "^- 计划冲突状态：" "$SESSION_FILE" | sed 's/^- 计划冲突状态：//' | xargs)
+  if ! echo "$plan_conflict" | grep -qE '^(无|已发现待回退)$'; then
+    echo "FAIL invalid plan_conflict: $plan_conflict"
+    errors=$((errors + 1))
+  fi
+
+  mode_lock=$(grep "^- 工作模式锁：" "$SESSION_FILE" | sed 's/^- 工作模式锁：//' | xargs)
+  if ! echo "$mode_lock" | grep -qE '^(激活|可退出)$'; then
+    echo "FAIL invalid mode_lock: $mode_lock"
+    errors=$((errors + 1))
+  fi
+
+  exit_permission=$(grep "^- 退出许可：" "$SESSION_FILE" | sed 's/^- 退出许可：//' | xargs)
+  if ! echo "$exit_permission" | grep -qE '^(禁止|允许)$'; then
+    echo "FAIL invalid exit_permission: $exit_permission"
+    errors=$((errors + 1))
+  fi
+
+  current_work_unit=$(grep "^- 当前子单元：" "$SESSION_FILE" | sed 's/^- 当前子单元：//' | xargs)
+  if [ "$work_unit_status" != "未冻结" ] && [ "$current_work_unit" = "-" ]; then
+    echo "FAIL active work_unit_status requires current_work_unit"
+    errors=$((errors + 1))
+  fi
+
+  if [ "$work_unit_status" = "已通过" ] && [ "$verification_status" != "已通过" ]; then
+    echo "FAIL passed work unit must have verification_status=已通过"
+    errors=$((errors + 1))
+  fi
+
+  if [ "$exit_permission" = "允许" ] && [ "$mode_lock" != "可退出" ]; then
+    echo "FAIL exit_permission=允许 requires mode_lock=可退出"
     errors=$((errors + 1))
   fi
 

@@ -34,6 +34,7 @@
 ### 需要记忆读写规则
 
 - [memory_protocol.md](memory_protocol.md)
+- [core_contracts.yaml](core_contracts.yaml)
 
 ### 需要工程判断标准或 Flutter 专项规则
 
@@ -95,6 +96,10 @@
 
 - [workflow_diagram.md](workflow_diagram.md)
 
+### 需要维护者修改导航
+
+- [maintenance_map.md](maintenance_map.md)
+
 ## 反向索引：每个参考文件被哪些上层文件引用
 
 维护时用此表检查引用完整性。新增 reference 文件时同步更新此表。
@@ -112,6 +117,7 @@
 | project_guardrails_protocol.md | SKILL.md（guardrails 检查）、load_map.md |
 | project_init_flow.md | SKILL.md（项目初始化）、load_map.md |
 | memory_protocol.md | SKILL.md（记忆机制）、load_map.md |
+| core_contracts.yaml | maintenance_map.md、load_map.md |
 | engineering_heuristics.md | load_map.md |
 | flutter_stack_detection.md | load_map.md |
 | stack_profiles.md | load_map.md |
@@ -124,3 +130,4 @@
 | roles/verify_agent.md | load_map.md |
 | trigger_words.md | SKILL.md（命中路由）、README.md、QUICKSTART.md、CHEATSHEET.md、load_map.md |
 | workflow_diagram.md | SKILL.md（按需加载）、load_map.md |
+| maintenance_map.md | load_map.md |

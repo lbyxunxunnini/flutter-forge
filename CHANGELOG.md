@@ -5,6 +5,25 @@
 - `0.2.x` 中出现的 `legacy_project_scan.md`、`~/.flutter-forge/projects/*.rule_card.yaml` 等表述保留为当时版本的历史事实
 - 当前现行入口与项目护栏路径策略以 `references/existing_project_entry.md`、`references/existing_project_scan.md`、`references/project_guardrails_protocol.md` 为准
 
+## v0.3.0
+
+强门禁闭环 + 维护面收敛。
+
+### 强门禁闭环
+
+- **Global Constitution 落地**：`SKILL.md` 新增全局宪法，明确未确认目标/范围/验收/约束不得执行、未冻结当前子单元不得实现、未验证不得宣称完成、未拿到退出许可不得离开工作模式
+- **角色合同硬化**：5 张角色卡重写为 task-driver 风格的硬合同，统一采用“仅允许 / 明确禁止 / 违规后强制动作”的结构
+- **session 状态扩展**：新增 `目标状态`、`范围状态`、`验收状态`、`约束状态`、`当前子单元`、`子单元状态`、`验证状态`、`超范围风险`、`计划冲突状态`、`工作模式锁`、`退出许可` 等字段
+- **gate 执法补齐**：`gate_check.py` 新增 `core_definition`、`current_work_unit`、`scope_expansion`、`plan_conflict`、`mode_exit`、`verification_truth` 等门禁，阻断偷跑、假完成和提前收口
+- **controller 收口增强**：`controller.py` 补充新状态注入和 premature exit 判定，确保未完成任务优先恢复而不是伪装成新任务
+
+### 维护面收敛
+
+- **发布校验拆分**：`validate_release.sh` 从单体脚本拆为 `metadata / guardrails / session / gates / output_protocol` 5 个可独立维护的检查模块
+- **维护导航新增**：新增 `references/maintenance_map.md`，明确改阶段门禁、session 字段、角色边界、策略豁免、发布校验时的最小同步文件集合
+- **核心主表新增**：新增 `references/core_contracts.yaml`，集中记录 session 核心字段、gate 名称、策略边界和维护面分组，降低规则定义分散度
+- **load_map 对齐**：`references/load_map.md` 新增 `core_contracts.yaml` 和 `maintenance_map.md` 入口，减少维护者搜索成本
+
 ## v0.2.6
 
 门禁代码化 + 角色边界硬隔离 + 语义清理（rule_card → project_guardrails）。
