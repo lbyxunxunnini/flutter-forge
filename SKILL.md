@@ -323,33 +323,7 @@ S5 验证通过后进入 S6。S6 不是一个需要执行动作的阶段，而�
 
 角色标签：`需求分析师` / `UI 设计师` / `架构设计师` / `页面工程师` / `验证工程师`
 
-**日志输出方式（P0 硬规则）**：所有 `[f-forge]` 日志必须通过 `scripts/ff_log.sh` 输出，禁止手动输出。该脚本会：
-1. 输出日志到 stdout
-2. 同时写入 `.flutter-forge/runtime/forge_log.txt`
-3. 自动更新 session 中的相关字段
-4. 可选运行 `validate_output.sh` 校验日志格式
-
-常用命令：
-```bash
-# 进入 controller
-scripts/ff_log.sh --project-root <root> --enter-controller
-
-# 输出模式日志
-scripts/ff_log.sh --project-root <root> --mode 功能开发 --reason "需求涉及跨页面状态联动"
-
-# 输出阶段日志
-scripts/ff_log.sh --project-root <root> --phase S2
-scripts/ff_log.sh --project-root <root> --phase S4 --skip-s3
-
-# 输出角色结果日志
-scripts/ff_log.sh --project-root <root> --role 页面工程师 --message "扫描完成"
-
-# 输出完成日志
-scripts/ff_log.sh --project-root <root> --complete "已完成订单导出功能"
-
-# 带校验的阶段日志
-scripts/ff_log.sh --project-root <root> --phase S2 --validate
-```
+**日志输出方式**：直接输出 `[f-forge]` 日志文本，无需调用脚本。任务开始时调用一次 `ff_session.sh init` 初始化 session，阶段切换时调用 `ff_session.sh update` 更新核心字段。
 
 日志执行清单（P0）：命中触发词后必须按 进入日志 → 模式日志 → 阶段日志 → 完成日志 顺序输出。完整模板和示例见 [skill_visibility.md](references/skill_visibility.md)。
 
@@ -372,7 +346,6 @@ P0 > P1 > P2；用户显式指令 > 任何规则（除安全红线）。
 - 10 秒测试以用户输入为准
 - 宿主能力未知时不假装并行
 - **进入日志最先输出**：命中触发词后第一行必须输出 `[f-forge] 进入 controller`，先于任何脚本调用、文件读取、判定动作；之后才输出模式日志；模式名必须使用标准名称
-- **日志必须通过 ff_log.sh 输出**：所有 `[f-forge]` 日志必须通过 `scripts/ff_log.sh` 输出，禁止手动输出。该脚本会自动写入日志文件并更新 session，确保门禁生效
 - `ff-fast` 不能绕过阶段门禁、验证或高风险确认；未升级轻量路径可豁免最强写前确认等待
 - `ff-a` 可豁免最强写前确认等待，但不得绕过高风险中断确认；中断条件以 [autonomous_mode.md](references/autonomous_mode.md) "必须中断确认的情况"节为准
 - 需求/方案未确认且无 `auto_assumption` 时禁止实现

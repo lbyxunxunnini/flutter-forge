@@ -14,7 +14,7 @@
 
 每次任务开始时，按这个顺序检查：
 
-1. **立即输出进入日志**：命中触发词后，在执行任何脚本调用、文件读取、判定动作之前，**第一行**必须调用 `scripts/ff_log.sh --project-root <project_root> --enter-controller` 输出 `[f-forge] 进入 controller`（P0 硬规则，不输出不允许进入后续步骤）。该脚本会自动初始化 session 并写入日志文件
+1. **立即输出进入日志**：命中触发词后，在执行任何脚本调用、文件读取、判定动作之前，**第一行**必须输出 `[f-forge] 进入 controller`（P0 硬规则，不输出不允许进入后续步骤）
 2. 先运行 `scripts/detect_project_root_state.py <project_root>` 获取项目根状态：`empty_new` / `flutter_existing` / `non_flutter`。`empty_new` 进入新项目共创，`flutter_existing` 允许继续 forge 流程，`non_flutter` 直接退出不介入。随后运行 `scripts/classify_task.sh "<用户输入>"` 获取任务类型预判和执行策略，LLM 消费预判结果（`confidence: low` 时做二次判定）。如果最终采用脚本预判结果，补运行 `scripts/classify_task.sh --project-root <project_root> --write-gate "<用户输入>"` 写入 `.flutter-forge/runtime/task_gate.json`；project_guardrails hook 只在该 gate 明确允许且目标文件不触碰架构边界时，才放行缺护栏的轻量/直通写操作。
 3. **按任务类型决定是否检查 project_guardrails**（按需触发，不再每次启动强制）：
 
