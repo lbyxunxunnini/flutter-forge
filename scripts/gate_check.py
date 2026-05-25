@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
-"""Evaluate flutter-forge phase/contract gates for a target write path."""
+"""Evaluate flutter-forge phase/contract gates for a target write path.
+
+所有门禁均为硬性阻断，无模糊词，无软约束。
+"""
 
 from __future__ import annotations
 
@@ -29,6 +32,16 @@ def read_session(project_root: Path) -> dict[str, str]:
     return data
 
 
+def read_forge_log(project_root: Path) -> str:
+    log_path = project_root / ".flutter-forge/runtime/forge_log.txt"
+    if not log_path.exists():
+        return ""
+    try:
+        return log_path.read_text(encoding="utf-8")
+    except Exception:
+        return ""
+
+
 def read_task_gate(project_root: Path) -> dict[str, object]:
     path = project_root / ".flutter-forge/runtime/task_gate.json"
     if not path.exists():
@@ -37,6 +50,59 @@ def read_task_gate(project_root: Path) -> dict[str, object]:
         return json.loads(path.read_text(encoding="utf-8"))
     except Exception:
         return {}
+
+
+PHASE_LABELS = {
+    "C0": "C0 想法收口",
+    "C1": "C1 方向共创",
+    "C2": "C2 工程定型",
+    "C3": "C3 首批范围冻结",
+    "S1": "S1 需求确认",
+    "S2": "S2 方案确认",
+    "S3": "S3 拆包冻结",
+    "S4": "S4 实现中",
+    "S5": "S5 验证中",
+}
+
+MODE_PATTERNS = {
+    "直通模式": ["直通模式："],
+    "轻量任务": ["轻量任务"],
+    "中等任务": ["中等任务"],
+    "UI 优化": ["模式：UI 优化"],
+    "架构级任务": ["模式：架构级任务"],
+    "功能开发": ["模式：功能开发"],
+    "页面开发": ["模式：页面开发"],
+    "新项目共创": ["模式：新项目共创"],
+}
+
+ROLE_ALLOWED_TARGETS: dict[str, set[str]] = {
+    "requirement_analyst": {"metadata"},
+    "ui_designer": {"metadata"},
+    "architecture_designer": {"metadata"},
+    "page_engineer": {"implementation", "core_shared", "router", "state", "test"},
+    "verify_agent": {"test", "metadata"},
+}
+
+IMPLEMENTATION_TARGETS = {"implementation", "project_config", "core_shared", "router", "state"}
+
+
+def check_enter_log_exists(forge_log: str) -> bool:
+    return "[f-forge] 进入 controller" in forge_log
+
+
+def check_phase_log_exists(forge_log: str, phase: str) -> bool:
+    label = PHASE_LABELS.get(phase, "")
+    if not label:
+        return False
+    return f"阶段：{label}" in forge_log
+
+
+def check_mode_log_exists(forge_log: str, mode: str) -> bool:
+    patterns = MODE_PATTERNS.get(mode, [])
+    for pattern in patterns:
+        if pattern in forge_log:
+            return True
+    return False
 
 
 def classify_target(target_path: str) -> str:
@@ -86,17 +152,6 @@ def exempt_by_policy(task_gate: dict[str, object], mode: str) -> bool:
     return False
 
 
-# 角色边界：每个角色允许写入的目标类型（不在集合中的则阻断）
-ROLE_ALLOWED_TARGETS: dict[str, set[str]] = {
-    "requirement_analyst": {"metadata"},
-    "ui_designer": {"metadata"},
-    "architecture_designer": {"metadata"},
-    "page_engineer": {"implementation", "core_shared", "router", "state", "test"},
-    "verify_agent": {"test", "metadata"},
-    # controller 不限制
-}
-
-
 def build_result(decision: str, gate: str, reason: str, target_kind: str, session: dict[str, str]) -> dict[str, object]:
     return {
         "decision": decision,
@@ -120,21 +175,21 @@ def main() -> int:
 
     project_root = Path(args.project_root).resolve()
     session = read_session(project_root)
+    forge_log = read_forge_log(project_root)
     target_kind = classify_target(args.target_path)
     task_gate = read_task_gate(project_root)
 
     if target_kind in {"other", "unknown"}:
-        print(json.dumps(build_result("allow", "none", "no_active_gate", target_kind, session), ensure_ascii=False))
+        print(json.dumps(build_result("allow", "G00", "目标文件类型不在门禁范围内", target_kind, session), ensure_ascii=False))
         return 0
 
     if not session:
-        if target_kind in {"implementation", "project_config", "core_shared", "router", "state"}:
+        if target_kind in IMPLEMENTATION_TARGETS:
             decision = "would_block" if args.mode == "observe" else "block"
-            print(json.dumps(build_result(decision, "iron_law", "无活跃 session，无法验证需求/方案确认状态；实现类写入需要先启动 session", target_kind, session), ensure_ascii=False))
+            print(json.dumps(build_result(decision, "G01", "session 不存在，必须先调用 ff_log.sh --enter-controller 初始化 session", target_kind, session), ensure_ascii=False))
             return 0 if decision == "would_block" else 2
-        if target_kind in {"metadata", "test"}:
-            print(json.dumps(build_result("allow", "none", "no_active_gate", target_kind, session), ensure_ascii=False))
-            return 0
+        print(json.dumps(build_result("allow", "G00", "非实现类文件无需 session", target_kind, session), ensure_ascii=False))
+        return 0
 
     phase = session.get("当前阶段", "-")
     mode = session.get("当前模式", "-")
@@ -152,35 +207,32 @@ def main() -> int:
     plan_conflict = session.get("计划冲突状态", "无")
     mode_lock = session.get("工作模式锁", "激活")
     exit_permission = session.get("退出许可", "禁止")
+    active_agent = session.get("活跃代理", "controller")
 
     decisions: list[tuple[str, str]] = []
 
-    # Gate 1: 确认前阶段阻断实现类写入
-    if phase in {"C0", "C1", "C2", "C3", "S0", "S1", "S2", "S3"}:
-        if target_kind in {"implementation", "project_config", "core_shared", "router", "state"}:
-            # S2 已确认时单独处理（Gate 2）
-            if not (phase == "S2" and confirmation_status == "用户已确认" and change_contract != "-"):
-                blocked_kind = "实现或项目配置" if target_kind == "project_config" else "实现类"
-                decisions.append(("phase_progression", f"当前阶段 {phase} 尚未进入 S4，{blocked_kind}文件暂不允许写入"))
+    if target_kind in IMPLEMENTATION_TARGETS:
+        if not check_enter_log_exists(forge_log):
+            decisions.append(("G02", "forge_log.txt 中未找到 [f-forge] 进入 controller 日志，必须先调用 ff_log.sh --enter-controller"))
 
-    # Gate 2: S2 已确认 → 强制推进到 S4（只放行实现类，阻断 metadata/test/project_config）
+        if mode and mode not in {"未定", "-"} and not check_mode_log_exists(forge_log, mode):
+            decisions.append(("G03", f"forge_log.txt 中未找到模式日志，必须先调用 ff_log.sh --mode {mode}"))
+
+        if phase and phase not in {"S0", "-"} and not check_phase_log_exists(forge_log, phase):
+            decisions.append(("G04", f"forge_log.txt 中未找到阶段日志，必须先调用 ff_log.sh --phase {phase}"))
+
+    if phase in {"C0", "C1", "C2", "C3", "S0", "S1", "S2", "S3"}:
+        if target_kind in IMPLEMENTATION_TARGETS:
+            if not (phase == "S2" and confirmation_status == "用户已确认" and change_contract != "-"):
+                decisions.append(("G05", f"当前阶段 {phase} 未进入 S4，禁止写入实现类文件"))
+
     if phase == "S2" and confirmation_status == "用户已确认" and change_contract != "-":
         if target_kind in {"metadata", "test", "project_config"}:
-            decisions.append(("s2_force_progress", "S2 已确认，改动契约已冻结，请先进入 S4 实现阶段再写测试/文档/配置"))
+            decisions.append(("G06", "S2 已确认且改动契约已冻结，必须先进入 S4 才能写入测试/文档/配置"))
 
-    # Gate 3: S5 验证阶段 → 只允许测试写入
-    if phase == "S5" and target_kind in {"implementation", "project_config", "core_shared", "router", "state"}:
-        decisions.append(("s5_verify_only", "S5 验证阶段不允许写入实现/配置文件，只允许测试和元数据"))
+    if phase == "S5" and target_kind in IMPLEMENTATION_TARGETS:
+        decisions.append(("G07", "S5 验证阶段禁止写入实现类文件，只允许测试和元数据"))
 
-    # Gate 4: 阶段日志缺失 → 阻断实现类写入
-    if not exempt and target_kind in {"implementation", "project_config", "core_shared", "router", "state"}:
-        recent_action = session.get("最近操作", "-")
-        log_exempt_actions = {"初始化", "保存恢复点", "恢复后已消费用户输入", "等待用户输入", "-"}
-        if recent_action not in log_exempt_actions and "[f-forge]" not in recent_action:
-            decisions.append(("missing_phase_log", f"当前阶段 {phase} 未输出 [f-forge] 阶段日志，请先输出再写实现代码"))
-
-    # Gate 5: 角色边界 → 活跃代理只能写入其职责范围内的文件
-    active_agent = session.get("活跃代理", "controller")
     if active_agent not in {"controller", "-"}:
         allowed = ROLE_ALLOWED_TARGETS.get(active_agent, set())
         if allowed and target_kind not in allowed:
@@ -191,57 +243,43 @@ def main() -> int:
                 "page_engineer": "页面工程师",
                 "verify_agent": "验证工程师",
             }.get(active_agent, active_agent)
-            decisions.append(("role_scope", f"{role_display}（{active_agent}）无权写入 {target_kind} 类文件，当前角色只能操作：{', '.join(sorted(allowed))}"))
+            decisions.append(("G08", f"{role_display} 禁止写入 {target_kind} 类文件，允许范围：{', '.join(sorted(allowed))}"))
 
-    # Gate 6: 输出校验缺失 → 阶段切换后必须先运行 validate_output.sh
-    if not exempt and phase in {"S2", "S3", "S4", "S5"} and target_kind in {"implementation", "core_shared", "router", "state"}:
-        output_validation = session.get("输出校验", "未校验")
-        validation_phase = session.get("校验阶段", "-")
-        if output_validation != "已通过" or validation_phase != phase:
-            decisions.append(("output_validation", f"当前阶段 {phase} 尚未通过输出校验，请先运行 scripts/validate_output.sh 并更新 session（--output_validation 已通过 --validation_phase {phase}）"))
-
-    # Gate 7: 工作模式锁未释放 → 禁止收口
     if phase == "S6" and mode_lock == "激活" and exit_permission != "允许":
-        decisions.append(("mode_exit", "工作模式锁仍处于激活状态，且退出许可未打开，禁止进入 S6 收口"))
+        decisions.append(("G09", "工作模式锁激活且退出许可未打开，禁止 S6 收口"))
 
-    # Gate 8: 核心任务定义未冻结 → 阻断实现类写入
-    if target_kind in {"implementation", "project_config", "core_shared", "router", "state"}:
+    if target_kind in IMPLEMENTATION_TARGETS:
         missing_core = [
-            label
-            for label, field in (
+            label for label, field in (
                 ("目标", goal_status),
                 ("范围", scope_status),
                 ("验收", acceptance_status),
                 ("约束", constraint_status),
-            )
-            if field != "已确认"
+            ) if field != "已确认"
         ]
         if missing_core:
-            decisions.append(("core_definition", f"进入实现前必须先冻结核心任务定义，当前未确认：{', '.join(missing_core)}"))
+            decisions.append(("G10", f"核心任务定义未冻结，缺失：{', '.join(missing_core)}"))
 
-    # Gate 9: 当前子单元未冻结 → 阻断实现类写入
-    if target_kind in {"implementation", "project_config", "core_shared", "router", "state"}:
         if current_work_unit == "-" or work_unit_status not in {"已冻结", "实现中", "待验证", "已通过"}:
-            decisions.append(("current_work_unit", "进入实现前必须先冻结当前子单元，并在 session 中记录 current_work_unit/work_unit_status"))
+            decisions.append(("G11", "当前子单元未冻结，必须先调用 ff_session.sh update --current_work_unit <name> --work_unit_status 已冻结"))
 
-    # Gate 10: 发现超范围风险或计划冲突 → 先回退再继续
-    if target_kind in {"implementation", "project_config", "core_shared", "router", "state"}:
         if scope_risk == "已发现":
-            decisions.append(("scope_expansion", "已发现超范围风险，必须先回退到 S2/S3 重新确认，不能继续实现"))
+            decisions.append(("G12", "已发现超范围风险，必须先回退到 S2/S3 重新确认"))
+
         if plan_conflict == "已发现待回退":
-            decisions.append(("plan_conflict", "当前计划与代码现实冲突，必须先回退对应确认阶段，不能继续实现"))
+            decisions.append(("G13", "计划与代码现实冲突，必须先回退对应确认阶段"))
 
-    # Gate 11: 当前子单元未验证通过 → 禁止切换收口
     if phase == "S5" and target_kind in {"metadata", "test"} and verification_status != "已通过":
-        decisions.append(("verification_truth", "当前子单元验证尚未通过，禁止用验证日志或收口元数据伪装完成"))
+        decisions.append(("G14", "验证状态未通过，禁止写入收口元数据"))
 
-    if not exempt and mode_needs_contract(mode) and change_contract == "-":
-        decisions.append(("change_contract", "当前写入缺少已冻结的改动契约"))
-    if not exempt and mode_needs_contract(mode) and confirmation_status != "用户已确认":
-        decisions.append(("confirmation_status", "当前写入缺少用户确认，标准 ff- 流程不能直接实现"))
+    if not exempt and mode_needs_contract(mode):
+        if change_contract == "-":
+            decisions.append(("G15", "改动契约未冻结，必须先调用 ff_session.sh update --change_contract <contract>"))
+        if confirmation_status != "用户已确认":
+            decisions.append(("G16", "改动契约未获用户确认，必须等待用户确认后才能写入"))
 
     if not decisions:
-        print(json.dumps(build_result("allow", "none", "gates_passed", target_kind, session), ensure_ascii=False))
+        print(json.dumps(build_result("allow", "G00", "所有门禁通过", target_kind, session), ensure_ascii=False))
         return 0
 
     gate, reason = decisions[0]

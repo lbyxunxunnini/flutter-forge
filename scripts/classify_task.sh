@@ -107,8 +107,8 @@ elif echo "$INPUT" | grep -qE '迭代中.*Flutter 项目|已有.*Flutter 项目|
   mode="启动握手"
   confidence="high"
   matched_by="startup_handshake_keywords"
-# 2. 直通模式：文档/环境/打包/CI/CD/闲聊
-elif echo "$INPUT" | grep -qE 'README|文档|安装说明|CHANGELOG|LICENSE|贡献指南|环境|打包|CI|CD|lint|格式化|git'; then
+# 2. 直通模式：环境/打包/CI/CD/闲聊（文档类需求走功能开发）
+elif echo "$INPUT" | grep -qE '安装说明|CHANGELOG|LICENSE|贡献指南|环境|打包|CI|CD|lint|格式化|git'; then
   mode="直通模式"
   confidence="high"
   matched_by="doc_keywords"
