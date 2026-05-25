@@ -45,6 +45,104 @@ NO IMPLEMENTATION WITHOUT REQUIREMENT AND DESIGN CONFIRMATION FIRST
 12. `ff-a` 是全自动执行策略：缺口采用推荐方案继续推进，豁免最强写前确认等待；但不得自动补目标、范围、验收、约束或高风险方案选择，仅安全、不可逆、生产环境、全项目级架构切换等高风险事项按 [autonomous_mode.md](references/autonomous_mode.md) "必须中断确认的情况"节中断
 13. 本文档中所有 `scripts/` 引用均相对于 flutter-forge skill 安装目录（如 `~/.claude/skills/flutter-forge/scripts/`），非用户 Flutter 项目目录。脚本不存在或执行失败时按对应 reference 文档的降级路径处理，不因脚本缺失阻塞流程
 
+## 多智能体架构
+
+Flutter Forge 支持多智能体协作模式，通过**独立上下文窗口**和**工具权限硬隔离**，从根本上杜绝上下文爆炸和上下文污染问题。
+
+### 智能体清单
+
+| 智能体 | 职责 | 工具权限 | 上下文隔离 |
+|--------|------|---------|----------|
+| `flutter-forge-controller` | 任务路由、阶段门禁、角色协调 | Read/Write/Edit/Bash/Grep/Glob | 主控上下文 |
+| `flutter-requirement-analyst` | 冻结目标、范围、验收、约束 | Read/Grep/Glob | 独立上下文 |
+| `flutter-ui-designer` | 视觉方案、交互设计、组件样式 | Read/Write/Edit/Grep/Glob | 独立上下文 |
+| `flutter-architecture-designer` | 结构决策、模块边界、状态归属 | Read/Write/Edit/Grep/Glob | 独立上下文 |
+| `flutter-page-engineer` | 实现代码、完成验证 | Read/Write/Edit/Bash/Grep/Glob | 独立上下文 |
+| `flutter-verify-agent` | 代码审查、测试验证、规范检查 | Read/Bash/Grep/Glob | 独立上下文 |
+
+### 触发机制
+
+**支持两种触发方式：**
+
+1. **触发词触发**（传统方式）
+   - `ff-` / `ff-fast` / `ff-a` / `ff a` / `/flutter-forge`
+   - 由主控智能体（controller）接管
+
+2. **语义触发**（智能体模式）
+   - 用户描述任务（如"帮我做一个订单列表页"）
+   - Qoder 根据 description 自动识别意图
+   - 自动触发对应的专业智能体
+
+### 智能体委托规则
+
+| 阶段 | 委托智能体 | 委托 Skills |
+|------|-----------|------------|
+| 需求理解 | `flutter-requirement-analyst` | 无（业务语义层） |
+| UI 解析 | `flutter-ui-designer` | `flutter-build-responsive-layout`<br>`flutter-fix-layout-issues`<br>`flutter-add-widget-preview` |
+| 架构设计 | `flutter-architecture-designer` | `flutter-apply-architecture-best-practices`<br>`flutter-setup-declarative-routing`<br>`flutter-implement-json-serialization`<br>`flutter-use-http-package`<br>`flutter-setup-localization` |
+| 页面开发 | `flutter-page-engineer` | `flutter-add-widget-test`<br>`flutter-add-widget-preview`<br>`flutter-build-responsive-layout`<br>`flutter-fix-layout-issues` |
+| 质量验证 | `flutter-verify-agent` | `flutter-add-widget-test`<br>`flutter-add-integration-test` |
+
+### 上下文隔离机制
+
+**摘要包传递：**
+- 需求分析师 → 输出**需求冻结摘要包**
+- UI 设计师 → 输出**UI 冻结摘要包**
+- 架构设计师 → 输出**架构冻结摘要包**
+- 页面工程师 → 输出**实现完成报告**
+- 验证工程师 → 输出**验证报告**
+
+**优势：**
+- ✅ 每个智能体上下文 < 50 条消息
+- ✅ 关键信息不丢失（结构化摘要）
+- ✅ 角色独立判断（不受前面影响）
+- ✅ 验证是第三方视角（更客观）
+
+### 工具权限隔离
+
+```yaml
+flutter-requirement-analyst:
+  tools: [Read, Grep, Glob]
+  permissions: [write_metadata]
+  
+flutter-ui-designer:
+  tools: [Read, Write, Edit, Grep, Glob]
+  permissions: [write_metadata, write_ui_specs]
+  
+flutter-architecture-designer:
+  tools: [Read, Write, Edit, Grep, Glob]
+  permissions: [write_metadata, write_architecture]
+  
+flutter-page-engineer:
+  tools: [Read, Write, Edit, Bash, Grep, Glob]
+  permissions: [write_implementation, write_tests]
+  
+flutter-verify-agent:
+  tools: [Read, Bash, Grep, Glob]
+  permissions: [write_test_results]
+```
+
+### 使用方式
+
+**方式 1：触发词触发（推荐用于复杂任务）**
+```bash
+ff- 帮我做一个订单列表页，支持筛选和分页
+```
+
+**方式 2：语义触发（推荐用于日常对话）**
+```bash
+帮我做一个订单列表页
+# → 自动触发 flutter-forge-controller
+```
+
+**方式 3：手动触发专业智能体**
+```bash
+/flutter-requirement-analyst 帮我梳理这个 PRD 的需求
+/flutter-architecture-designer 这个模块应该怎么划分？
+/flutter-page-engineer 按冻结方案实现这个页面
+/flutter-verify-agent 帮我检查这个页面的代码质量
+```
+
 ## 命中路由
 
 ### 进入条件
