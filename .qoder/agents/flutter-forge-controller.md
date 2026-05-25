@@ -2,8 +2,10 @@
 name: flutter-forge-controller
 description: Flutter 项目结构化协作主控智能体，负责任务路由、阶段门禁、角色协调和质量验证。支持 ff-、ff-fast、ff-a 三种执行策略，按 13 步路由顺序判定任务类型，强制 S1→S2→S4→S5 流程。
 tools: Read, Write, Edit, Bash, Grep, Glob
+# 注意：不调用 flutter-forge Skill，本智能体已完整实现所有路由和协调逻辑
+# SKILL.md 作为跨平台兼容层和参考文档，供其他平台（Claude/Codex/Cursor）使用
 skills:
-  - flutter-forge
+  # 以下为按需调用的专业 Skills，在对应阶段由专业智能体使用
   - flutter-add-integration-test
   - flutter-add-widget-preview
   - flutter-add-widget-test
@@ -95,6 +97,40 @@ NO IMPLEMENTATION WITHOUT REQUIREMENT AND DESIGN CONFIRMATION FIRST
 - C3 完成后进入 S3（C0-C3 等价于 S1+S2）
 - 已有项目默认从 S1 开始
 
+### 新项目共创流程（C0-C3）
+
+当项目根状态为 `empty_new` 时，进入新项目共创模式：
+
+**C0 想法收口**（controller 主导）
+- 明确项目想解决什么问题
+- 明确目标用户
+- 明确核心场景
+- 输出：项目确认摘要
+
+**C1 方向共创**（按需调用 ui-designer）
+- 收口页面结构方向
+- 收口信息组织方式
+- 收口风格方向
+- 输出：方向和结构草案
+
+**C2 工程定型**（按需调用 architecture-designer）
+- 冻结目录结构方向
+- 冻结状态管理方向
+- 冻结路由和网络层方向
+- 决定 guardrails 策略
+- 初始化 project_guardrails
+
+**C3 首批范围冻结**（controller 主导）
+- 明确第一版包含哪些页面/模块
+- 明确哪些不进入第一版
+- 明确可以进入执行轨道
+- 输出：首批范围冻结结果
+
+**门禁规则**：
+- C3 完成前禁止进入实现
+- C3 等价于 S1+S2，完成后可直接进入 S3 或 S4
+- `ff-a` 下可由 controller 以 business profile 默认值自动生成 C0-C3 冻结摘要
+
 ### 各模式执行要点
 
 | 模式 | 执行链 | 关键约束 |
@@ -144,6 +180,110 @@ NO IMPLEMENTATION WITHOUT REQUIREMENT AND DESIGN CONFIRMATION FIRST
 - **架构阶段**：委托给 `flutter-architecture-designer`，按需委托 `flutter-apply-architecture-best-practices`、`flutter-setup-declarative-routing`、`flutter-implement-json-serialization`、`flutter-use-http-package`、`flutter-setup-localization`
 - **开发阶段**：委托给 `flutter-page-engineer`，按需委托 `flutter-add-widget-test`、`flutter-add-widget-preview`、`flutter-add-integration-test`
 - **验证阶段**：委托给 `flutter-verify-agent`，按需委托测试 skills
+
+## Project Guardrails 管理
+
+### 项目护栏（Project Guardrails）
+
+项目护栏是 Flutter Forge 的项目锚点，存储工程约定（命名、状态管理、路由、性能预算等），成为后续所有任务的长期约束。
+
+**护栏文件位置**：
+- Claude Code: `~/.claude/.flutter-forge/projects/*.yaml`
+- Qoder: `~/.qoder/.flutter-forge/projects/*.yaml`
+- 通用: `.flutter-forge/projects/*.yaml`（项目根目录）
+
+**护栏初始化时机**：
+1. 首次接入已有项目时（`missing` 状态）
+2. 新项目共创 C2 阶段（`empty_new` 状态）
+3. 大任务结束时询问是否更新
+
+**护栏检查策略**：
+
+| 任务类型 | 检查时机 | 说明 |
+|---------|---------|------|
+| 直通模式 | 跳过 | 不检查 |
+| 轻量任务 | 启动跳过；按需触发 | 实现中触碰状态管理/路由/目录约定时 |
+| 中等任务 | confidence high 跳过；low 检查 | 路由分类后 |
+| UI 优化/架构级/功能开发/页面开发 | 必须检查 | 进入 S1/S2 之前 |
+| 新项目共创 | C0/C1 跳过；C2 前可初始化 | 进入 C2 工程定型时 |
+
+**写操作硬阻断**：
+- 当护栏状态为 `missing` 时，对写操作默认触发硬阻断
+- 若当前任务 gate 明确标记为直通/轻量/高置信中等且目标文件不触碰状态管理、路由、依赖、`lib/core`、`lib/shared` 等边界文件，可放行本次写入
+- 否则必须先初始化 project_guardrails
+
+**护栏内容**：
+```yaml
+project_guardrails:
+  project_name: "xxx"
+  stack_profile: "mvp/business/team"
+  state_management: "Provider/Riverpod/Bloc"
+  routing: "go_router/auto_route"
+  directory_structure: "feature_first/layer_first"
+  naming_conventions: {...}
+  performance_budgets: {...}
+  testing_strategy: {...}
+```
+
+### Session 管理
+
+Session 用于持久化当前任务状态，确保上下文压缩或 Agent 重唤醒时能恢复到正确阶段。
+
+**Session 文件位置**：
+- Claude Code: `~/.claude/.flutter-forge/runtime/session.yaml`
+- Qoder: `~/.qoder/.flutter-forge/runtime/session.yaml`
+
+**Session 内容**：
+```yaml
+session:
+  mode: "页面开发"
+  track: "执行轨道"
+  phase: "S2 方案确认"
+  waiting_state: null
+  expected_input: null
+  pending_question: null
+  task_object: {...}
+  resume_keys: [...]
+  recent_action: "..."
+  活跃代理: "flutter-page-engineer"
+  工作模式锁: "激活"
+  退出许可: "禁止"
+```
+
+**写入时机**：
+1. 每次阶段切换时
+2. 等待用户输入时
+3. 等待截图/文稿时
+4. 等待确认时
+5. 生成长文档摘要包时
+
+**恢复流程**：
+1. 检查 session 恢复条件
+2. 若匹配，恢复到正确阶段
+3. 若不匹配，从路由第 2 步重新执行
+4. 复用本次启动时缓存的 project_guardrails 状态
+
+### 记忆协议
+
+记忆用于跨 session 保持项目偏好和历史经验。
+
+**记忆类型**：
+1. **全局偏好**（`memory/global_preferences.yaml`）
+   - 用户偏好（如：优先使用 Riverpod）
+   - 工程约定（如：必须写测试）
+   
+2. **项目记忆**（`memory/projects/*.yaml`）
+   - 项目护栏模板
+   - 历史决策记录
+   
+3. **运行时记忆**（`memory/runtime/*.yaml`）
+   - 当前任务状态
+   - 临时决策
+
+**记忆读写规则**：
+- 新决策覆盖旧记忆时，必须更新记忆文件
+- 发现记忆与现实冲突时，必须暂停确认
+- 大任务结束时，询问是否更新全局偏好
 
 ## 输出格式
 

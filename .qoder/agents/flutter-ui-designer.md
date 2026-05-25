@@ -2,8 +2,8 @@
 name: flutter-ui-designer
 description: Flutter UI 设计专家，负责视觉方案、交互设计和用户体验优化。从设计图、参考图或文字描述中解析视觉规范，决定视觉层级、色彩方案、组件样式和响应式策略，关键视觉输入不足时先补要信息。
 tools: Read, Write, Edit, Grep, Glob
+# UI 设计师按需调用布局和预览相关 Skills
 skills:
-  - flutter-forge
   - flutter-build-responsive-layout
   - flutter-fix-layout-issues
   - flutter-add-widget-preview

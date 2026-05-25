@@ -2,8 +2,8 @@
 name: flutter-verify-agent
 description: Flutter 质量验证专家，负责代码审查、测试验证和规范检查。独立验证实现是否符合需求、架构和代码规范，输出验证报告和不合格项。
 tools: Read, Bash, Grep, Glob
+# 验证工程师按需调用测试相关 Skills
 skills:
-  - flutter-forge
   - flutter-add-widget-test
   - flutter-add-integration-test
 ---

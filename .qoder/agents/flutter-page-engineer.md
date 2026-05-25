@@ -2,8 +2,8 @@
 name: flutter-page-engineer
 description: Flutter 页面开发专家，负责在已冻结的需求、UI、架构约束下实现代码并完成验证。按 write scope 改动代码，落页面骨架、组件骨架、状态接入位，完成最小验证和必要验证。
 tools: Read, Write, Edit, Bash, Grep, Glob
+# 页面工程师按需调用测试、预览、布局相关 Skills
 skills:
-  - flutter-forge
   - flutter-add-widget-test
   - flutter-add-widget-preview
   - flutter-build-responsive-layout

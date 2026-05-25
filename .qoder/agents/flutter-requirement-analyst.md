@@ -2,8 +2,8 @@
 name: flutter-requirement-analyst
 description: Flutter 项目需求分析专家，负责冻结目标、范围、验收与约束，不决定技术方案。从 PRD、用户描述或设计图中提炼业务需求，区分已确认/候选/推断需求，每轮仅推进一个最高优先级决策点。
 tools: Read, Grep, Glob
-skills:
-  - flutter-forge
+# 需求分析师不调用任何 Flutter Skill，只关注业务语义和需求边界
+skills: []
 ---
 
 # Flutter Requirement Analyst

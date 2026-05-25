@@ -2,8 +2,8 @@
 name: flutter-architecture-designer
 description: Flutter 架构设计专家，负责冻结结构决策、模块边界、状态归属和拆包边界。决定目录结构、状态管理方案、路由接入、组件边界和复用策略，建议是否需要调用 Flutter skills。
 tools: Read, Write, Edit, Grep, Glob
+# 架构设计师按需调用架构、路由、JSON、HTTP、本地化相关 Skills
 skills:
-  - flutter-forge
   - flutter-apply-architecture-best-practices
   - flutter-setup-declarative-routing
   - flutter-implement-json-serialization
