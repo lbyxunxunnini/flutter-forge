@@ -14,9 +14,10 @@
 
 每次任务开始时，按这个顺序检查：
 
-1. **立即输出进入日志**：命中触发词后，在执行任何脚本调用、文件读取、判定动作之前，**第一行**必须输出 `[f-forge] 进入 controller`（P0 硬规则，不输出不允许进入后续步骤）
+1. **立即输出进入日志（P0）**：命中触发词后，在执行任何脚本调用、文件读取、判定动作之前，**第一行**必须输出 `[f-forge] 进入 controller`。不输出不允许进入后续步骤
 2. 先运行 `scripts/detect_project_root_state.py <project_root>` 获取项目根状态：`empty_new` / `flutter_existing` / `non_flutter`。`empty_new` 进入新项目共创，`flutter_existing` 允许继续 forge 流程，`non_flutter` 直接退出不介入。随后运行 `scripts/classify_task.sh "<用户输入>"` 获取任务类型预判和执行策略，LLM 消费预判结果（`confidence: low` 时做二次判定）。如果最终采用脚本预判结果，补运行 `scripts/classify_task.sh --project-root <project_root> --write-gate "<用户输入>"` 写入 `.flutter-forge/runtime/task_gate.json`；project_guardrails hook 只在该 gate 明确允许且目标文件不触碰架构边界时，才放行缺护栏的轻量/直通写操作。
-3. **按任务类型决定是否检查 project_guardrails**（按需触发，不再每次启动强制）：
+3. **立即输出模式日志（P0）**：路由判定完成后、开始执行前，必须立即输出模式日志。格式见下方"模式日志格式"。不输出不允许继续执行
+4. **按任务类型决定是否检查 project_guardrails**（按需触发，不再每次启动强制）：
 
    | 任务类型 | 项目护栏检查 |
    |---------|------------|
@@ -43,8 +44,7 @@
 13. 如果任务规模为大且可能进入并行，当前宿主是否支持真实子代理（见 [host_subagent_support.md](host_subagent_support.md)）
 14. 是否需要执行验证
 15. 当前是否明确在继续同一未完成大任务
-16. 输出模式日志：路由判定完成后、开始执行前，必须输出 `[f-forge]` 模式日志（格式见 [skill_visibility.md](skill_visibility.md)）。这是 P0 硬规则，不输出不允许继续执行
-17. 输出格式校验：阶段切换或任务收口时一次性 batch 校验当前会话累积的 `[f-forge]` 输出；阶段切换运行 `scripts/validate_output.sh`，任务收口运行 `scripts/validate_output.sh --require-complete`（详见 [skill_visibility.md](skill_visibility.md) "输出校验脚本"节）。校验失败时必须立即修正并重新输出。轻量任务在完成日志后校验一次即可
+16. 输出格式校验：阶段切换或任务收口时一次性 batch 校验当前会话累积的 `[f-forge]` 输出；阶段切换运行 `scripts/validate_output.sh`，任务收口运行 `scripts/validate_output.sh --require-complete`（详见 [skill_visibility.md](skill_visibility.md) "输出校验脚本"节）。校验失败时必须立即修正并重新输出。轻量任务在完成日志后校验一次即可
 
 project_guardrails 检查硬约束（**仅在按上方表格判定为"必须检查"或"按需触发"实际命中时生效**）：
 
@@ -59,6 +59,28 @@ project_guardrails 检查硬约束（**仅在按上方表格判定为"必须检�
 - 中等任务的 `confidence: low` 或范围模糊判定，由 controller 在路由后、进入实现前判断
 - 中等任务即便初始判定跳过，若任务被升级到 UI 优化 / 架构级 / 功能开发 / 页面开发，升级时必须补做项目护栏检查
 - 写操作（Edit/Write/创建文件）由 preToolCall hook 兜底：Flutter 老项目缺少 `project_guardrails` 时，重流程写操作硬阻断，强制先初始化项目锚点；进入项目护栏已加载阶段后，再由 `scripts/gate_check.py` 基于 `session + task_gate + target_path` 判断 phase / 改动契约 / 用户确认是否满足写入条件；`lib/**/*.dart` 之外的高风险项目配置（如 `pubspec.yaml`、Podfile、Gradle 配置）同样受 gate 约束
+
+## 模式日志格式 [Rigid]
+
+路由判定完成后，必须立即输出模式日志。格式如下：
+
+| 模式 | 日志格式 |
+|------|---------|
+| 直通模式 | `[f-forge] 直通模式：快速处理` |
+| 轻量任务 | `[f-forge] 页面工程师：轻量任务，直接执行` |
+| 中等任务 | `[f-forge] 页面工程师：中等任务，先扫描后执行` |
+| 功能开发 | `[f-forge] 模式：功能开发` |
+| 页面开发 | `[f-forge] 模式：页面开发` |
+| UI 优化 | `[f-forge] 模式：UI 优化` |
+| 架构级任务 | `[f-forge] 模式：架构级任务` |
+| 新项目共创 | `[f-forge] 模式：新项目共创` |
+
+**升级时必须输出升级原因**：
+
+```
+[f-forge] 模式：功能开发
+- 升级原因：需求涉及跨页面状态联动
+```
 
 ## 先判定，再执行 [Rigid]
 
