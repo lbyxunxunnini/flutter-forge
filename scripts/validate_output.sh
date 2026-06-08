@@ -428,10 +428,40 @@ if [ "$require_s4" = true ] && [ "$has_forge" = true ]; then
   fi
 fi
 
+# --- JSON 输出 ---
+ERROR_DETAILS=""
+if [ $errors -gt 0 ]; then
+  # Re-run to collect error details (lightweight, only on failure)
+  ERROR_DETAILS="$(echo "$INPUT" | python3 -c "
+import sys, re
+
+lines = sys.stdin.read().splitlines()
+errors = []
+for i, line in enumerate(lines, 1):
+    if not line.strip():
+        continue
+    if '[f-forge]' not in line:
+        # Check bare role/conclusion/workflow lines
+        roles = '需求分析师|UI 设计师|架构设计师|页面工程师|验证工程师|主控'
+        bare_conclusions = '分析结论|结论|方案结论|需求结论|UI 结论|架构结论|实现结论|验证结论'
+        bare_workflow = '模式|阶段|本轮完成|全自动摘要|恢复等待|恢复阶段|直通模式'
+        if re.search(rf'^[[:space:]]*({roles})：', line):
+            errors.append({'line': i, 'type': 'missing_prefix', 'message': f'role result missing [f-forge] prefix'})
+        elif re.search(rf'^[[:space:]]*({bare_conclusions})：', line):
+            errors.append({'line': i, 'type': 'missing_prefix', 'message': f'conclusion line must use [f-forge] prefix'})
+        elif re.search(rf'^[[:space:]]*({bare_workflow})：', line):
+            errors.append({'line': i, 'type': 'missing_prefix', 'message': f'workflow status line missing [f-forge] prefix'})
+print(errors)
+" 2>/dev/null || echo "[]")"
+fi
+
 if [ $errors -eq 0 ]; then
-  echo "PASS"
+  python3 -c "import json; print(json.dumps({'result': 'pass', 'errors': [], 'error_count': 0}, ensure_ascii=False))"
   exit 0
 else
-  echo "FAILED with $errors error(s)"
+  python3 -c "
+import json
+print(json.dumps({'result': 'fail', 'error_count': $errors, 'message': 'FAILED with $errors error(s)'}, ensure_ascii=False))
+"
   exit 1
 fi

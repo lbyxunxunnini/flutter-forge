@@ -33,8 +33,9 @@ scripts/ff_session.sh --project-root "$tmp_resume_project" save-resume \
   --task_object "订单详情页" \
   --resume_keys "订单详情页,方案A,方案B" >/dev/null
 resume_check_output="$(scripts/ff_session.sh --project-root "$tmp_resume_project" check-resume --user-input "方案A")"
-printf '%s\n' "$resume_check_output" | grep -q 'status: resume_match' || fail "ff_session did not detect resume match"
-printf '%s\n' "$resume_check_output" | grep -q 'phase: S2' || fail "ff_session resume did not keep phase"
+# Parse JSON output
+printf '%s\n' "$resume_check_output" | python3 -c "import json,sys; d=json.load(sys.stdin); assert d.get('status')=='resume_match', f'expected resume_match, got {d}'" || fail "ff_session did not detect resume match"
+printf '%s\n' "$resume_check_output" | python3 -c "import json,sys; d=json.load(sys.stdin); assert d.get('phase')=='S2', f'expected S2, got {d.get(\"phase\")}'" || fail "ff_session resume did not keep phase"
 scripts/ff_session.sh --project-root "$tmp_resume_project" save-resume \
   --waiting_state artifact \
   --expected_input screenshot \
@@ -42,8 +43,8 @@ scripts/ff_session.sh --project-root "$tmp_resume_project" save-resume \
   --task_object "订单详情页" \
   --resume_keys "订单详情页,截图" >/dev/null
 artifact_resume_output="$(scripts/ff_session.sh --project-root "$tmp_resume_project" check-resume --user-input "" --has-attachment true)"
-printf '%s\n' "$artifact_resume_output" | grep -q 'status: resume_match' || fail "ff_session did not detect attachment-only resume"
-printf '%s\n' "$artifact_resume_output" | grep -q 'reason: artifact_reply' || fail "ff_session attachment resume reason mismatch"
+printf '%s\n' "$artifact_resume_output" | python3 -c "import json,sys; d=json.load(sys.stdin); assert d.get('status')=='resume_match', f'expected resume_match, got {d}'" || fail "ff_session did not detect attachment-only resume"
+printf '%s\n' "$artifact_resume_output" | python3 -c "import json,sys; d=json.load(sys.stdin); assert d.get('reason')=='artifact_reply', f'expected artifact_reply, got {d.get(\"reason\")}'" || fail "ff_session attachment resume reason mismatch"
 scripts/ff_session.sh --project-root "$tmp_resume_project" consume-resume --user-input "方案A" >/dev/null
 grep -q '^- 等待状态：none' "$tmp_resume_project/.claude/.flutter-forge/session.md" || fail "ff_session did not clear waiting_state after consume-resume"
 grep -q '\[f-forge\] 等待：等待用户确认改动契约' "$tmp_resume_project/.flutter-forge/runtime/session_events.log" || fail "ff_session did not append waiting event"

@@ -182,19 +182,32 @@ def cmd_run(args: argparse.Namespace) -> int:
         project_root,
     )
     del code
-    resume = parse_kv_output(resume_out)
+    try:
+        resume = json.loads(resume_out)
+    except (json.JSONDecodeError, ValueError):
+        resume = parse_kv_output(resume_out)
     result["resume"] = resume
 
     code, session_out = run_script(["bash", str(session_script), "--project-root", str(project_root), "read"], project_root)
     del code
     session = {"status": "no_session"}
-    if "---" in session_out:
-        _, body = session_out.split("---", 1)
-        session = {}
-        for line in body.splitlines():
-            if line.startswith("- ") and "：" in line:
-                key, value = line[2:].split("：", 1)
-                session[key.strip()] = value.strip()
+    try:
+        session_data = json.loads(session_out)
+        if "fields" in session_data:
+            session = session_data["fields"]
+            session["_path"] = session_data.get("path", "-")
+            session["status"] = session_data.get("status", "no_session")
+        elif session_data.get("status") == "no_session":
+            session = session_data
+    except (json.JSONDecodeError, ValueError):
+        # Fallback: old key-value format
+        if "---" in session_out:
+            _, body = session_out.split("---", 1)
+            session = {}
+            for line in body.splitlines():
+                if line.startswith("- ") and "：" in line:
+                    key, value = line[2:].split("：", 1)
+                    session[key.strip()] = value.strip()
     result["session"] = session
 
     phase = session.get("当前阶段", resume.get("phase", "-"))
@@ -247,12 +260,18 @@ def cmd_generate_agent_prompt(args: argparse.Namespace) -> int:
     code, session_out = run_script(["bash", str(session_script), "--project-root", str(project_root), "read"], project_root)
     del code
     session: dict[str, str] = {}
-    if "---" in session_out:
-        _, body = session_out.split("---", 1)
-        for line in body.splitlines():
-            if line.startswith("- ") and "：" in line:
-                key, value = line[2:].split("：", 1)
-                session[key.strip()] = value.strip()
+    try:
+        session_data = json.loads(session_out)
+        if "fields" in session_data:
+            session = session_data["fields"]
+            session["_path"] = session_data.get("path", "-")
+    except (json.JSONDecodeError, ValueError):
+        if "---" in session_out:
+            _, body = session_out.split("---", 1)
+            for line in body.splitlines():
+                if line.startswith("- ") and "：" in line:
+                    key, value = line[2:].split("：", 1)
+                    session[key.strip()] = value.strip()
 
     role = args.role
     if not role:

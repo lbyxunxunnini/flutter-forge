@@ -4,13 +4,19 @@
 # 用法: scripts/classify_task.sh "用户输入文本"
 #   或: echo "用户输入文本" | scripts/classify_task.sh
 #
-# 输出结构化 key-value，LLM 消费预判结果，仅在低置信度时二次判定。
+# 输出 JSON，LLM 消费预判结果，仅在低置信度时二次判定。
 #
-# 输出字段:
-#   mode       : 等待态 | 启动握手 | 直通模式 | 轻量任务 | 中等任务 | UI 优化 | 架构级任务 | 功能开发 | 页面开发 | 新项目共创
-#   confidence : high | medium | low
-#   policy     : 标准 | 快速 | 全自动
-#   matched_by : 命中的关键词类别（调试用）
+# 输出字段 (JSON):
+#   mode                  : 等待态 | 启动握手 | 直通模式 | 轻量任务 | 中等任务 | UI 优化 | 架构级任务 | 功能开发 | 页面开发 | 新项目共创
+#   confidence            : high | medium | low
+#   policy                : 标准 | 快速 | 全自动
+#   matched_by            : 命中的关键词类别（调试用）
+#   project_root_state    : empty_new | flutter_existing | non_flutter | unknown
+#   forge_enabled         : true | false
+#   should_load_guardrails: bool
+#   guardrails_check      : required | skip | on_demand | before_impl | skip_unless_upgraded | wait_for_task
+#   required_phases       : 预期阶段列表
+#   upgrade_signals       : 预判升级信号
 
 set -euo pipefail
 
@@ -173,19 +179,8 @@ else
   matched_by="fallback"
 fi
 
-# --- 输出 ---
-echo "mode: $mode"
-echo "confidence: $confidence"
-echo "policy: $policy"
-echo "matched_by: $matched_by"
+# --- 计算扩展字段 ---
 
-# --- 扩展字段：路由辅助 ---
-
-echo "project_root_state: $PROJECT_ROOT_STATE"
-echo "forge_enabled: $FORGE_ENABLED"
-
-# should_load_guardrails: 与运行时项目护栏分级表保持一致。
-# 直通、轻量启动、高置信中等任务跳过启动检查；重流程必须检查。
 should_load_guardrails="true"
 guardrails_check="required"
 case "$mode" in
@@ -215,25 +210,21 @@ case "$mode" in
     guardrails_check="required"
     ;;
 esac
-echo "should_load_guardrails: $should_load_guardrails"
-echo "guardrails_check: $guardrails_check"
 
-# required_phases: 根据模式给出预期阶段
 case "$mode" in
-  "直通模式")       echo "required_phases: none" ;;
-  "等待态")         echo "required_phases: ask" ;;
-  "启动握手")       echo "required_phases: handshake,init_project_guardrails" ;;
-  "轻量任务")       echo "required_phases: impl,verify_minimal" ;;
-  "中等任务")       echo "required_phases: scan,impl,verify_necessary" ;;
-  "UI 优化")        echo "required_phases: S2,S4,S5" ;;
-  "架构级任务")     echo "required_phases: S2,S4,S5" ;;
-  "功能开发")       echo "required_phases: S1,S2,S4,S5" ;;
-  "页面开发")       echo "required_phases: S1,S2,S4,S5" ;;
-  "新项目共创")     echo "required_phases: C0,C1,C2,C3,S3,S4,S5" ;;
-  *)                echo "required_phases: S1,S2,S4,S5" ;;
+  "直通模式")       required_phases="none" ;;
+  "等待态")         required_phases="ask" ;;
+  "启动握手")       required_phases="handshake,init_project_guardrails" ;;
+  "轻量任务")       required_phases="impl,verify_minimal" ;;
+  "中等任务")       required_phases="scan,impl,verify_necessary" ;;
+  "UI 优化")        required_phases="S2,S4,S5" ;;
+  "架构级任务")     required_phases="S2,S4,S5" ;;
+  "功能开发")       required_phases="S1,S2,S4,S5" ;;
+  "页面开发")       required_phases="S1,S2,S4,S5" ;;
+  "新项目共创")     required_phases="C0,C1,C2,C3,S3,S4,S5" ;;
+  *)                required_phases="S1,S2,S4,S5" ;;
 esac
 
-# upgrade_signals: 预判可能的升级信号
 upgrade_signals=""
 if echo "$INPUT" | grep -qE '路由|状态管理|Provider|Bloc|Riverpod|GetX'; then
   upgrade_signals="${upgrade_signals}architecture_boundary,"
@@ -247,9 +238,28 @@ fi
 if echo "$INPUT" | grep -qE '需求|PRD|产品|业务.*目标|用户.*路径'; then
   upgrade_signals="${upgrade_signals}requirement_gap,"
 fi
-# 去掉末尾逗号
 upgrade_signals="${upgrade_signals%,}"
-echo "upgrade_signals: ${upgrade_signals:-none}"
+
+# --- JSON 输出 ---
+MODE="$mode" CONFIDENCE="$confidence" POLICY="$policy" MATCHED_BY="$matched_by" \
+PROJECT_ROOT_STATE="$PROJECT_ROOT_STATE" FORGE_ENABLED="$FORGE_ENABLED" \
+SHOULD_LOAD="$should_load_guardrails" GUARDRAILS_CHECK="$guardrails_check" \
+REQUIRED_PHASES="$required_phases" UPGRADE_SIGNALS="${upgrade_signals:-none}" \
+python3 -c "
+import json, os
+print(json.dumps({
+    'mode': os.environ['MODE'],
+    'confidence': os.environ['CONFIDENCE'],
+    'policy': os.environ['POLICY'],
+    'matched_by': os.environ['MATCHED_BY'],
+    'project_root_state': os.environ['PROJECT_ROOT_STATE'],
+    'forge_enabled': os.environ['FORGE_ENABLED'],
+    'should_load_guardrails': os.environ['SHOULD_LOAD'] == 'true',
+    'guardrails_check': os.environ['GUARDRAILS_CHECK'],
+    'required_phases': os.environ['REQUIRED_PHASES'],
+    'upgrade_signals': os.environ['UPGRADE_SIGNALS'],
+}, ensure_ascii=False))
+"
 
 if [ "$WRITE_GATE" = "true" ]; then
   if [ -z "$PROJECT_ROOT" ]; then

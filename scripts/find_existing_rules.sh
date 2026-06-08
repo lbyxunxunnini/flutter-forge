@@ -3,19 +3,12 @@
 #
 # 用法: scripts/find_existing_rules.sh <project_root>
 #
-# 扫描以下位置的规则文件：
-#   1. .claude/rules/ 和 .claude/*.md
-#   2. .trae/rules/
-#   3. .agents/rules/
-#   4. 项目根目录的 rules.md、analysis_rules.md、CONVENTIONS.md
-#   5. analysis/ 目录下的文档
-#
-# 输出结构化结果：文件路径、大小、最后修改时间
+# 输出 JSON: {"files": [...], "total": N, "status": "found"|"no_existing_rules"}
 
 set -euo pipefail
 
 PROJECT_ROOT="${1:-.}"
-found=0
+FOUND_FILES="[]"
 
 # 扫描函数：检查路径是否存在且有文件
 scan_dir() {
@@ -28,8 +21,12 @@ scan_dir() {
       size=$(wc -c < "$file" | xargs)
       local mtime
       mtime=$(stat -f "%Sm" -t "%Y-%m-%d %H:%M" "$file" 2>/dev/null || echo "unknown")
-      echo "path: $rel | size: ${size}B | modified: $mtime | source: $label"
-      found=$((found + 1))
+      FOUND_FILES="$(python3 -c "
+import json, sys
+files = json.loads(sys.argv[1])
+files.append({'path': sys.argv[2], 'size': int(sys.argv[3]), 'modified': sys.argv[4], 'source': sys.argv[5]})
+print(json.dumps(files, ensure_ascii=False))
+" "$FOUND_FILES" "$rel" "$size" "$mtime" "$label")"
     done < <(find "${PROJECT_ROOT}/${dir}" -type f -print0 2>/dev/null)
   fi
 }
@@ -43,15 +40,15 @@ scan_file() {
     size=$(wc -c < "${PROJECT_ROOT}/${file}" | xargs)
     local mtime
     mtime=$(stat -f "%Sm" -t "%Y-%m-%d %H:%M" "${PROJECT_ROOT}/${file}" 2>/dev/null || echo "unknown")
-    echo "path: $file | size: ${size}B | modified: $mtime | source: $label"
-    found=$((found + 1))
+    FOUND_FILES="$(python3 -c "
+import json, sys
+files = json.loads(sys.argv[1])
+files.append({'path': sys.argv[2], 'size': int(sys.argv[3]), 'modified': sys.argv[4], 'source': sys.argv[5]})
+print(json.dumps(files, ensure_ascii=False))
+" "$FOUND_FILES" "$file" "$size" "$mtime" "$label")"
   fi
 }
 
-# 1. Claude Code 规则
-scan_dir ".claude/rules" "claude_rules"
-
-# .claude/*.md（仅 markdown 文件，不递归）
 scan_md_dir() {
   local dir="$1"
   local label="$2"
@@ -62,11 +59,18 @@ scan_md_dir() {
       size=$(wc -c < "$file" | xargs)
       local mtime
       mtime=$(stat -f "%Sm" -t "%Y-%m-%d %H:%M" "$file" 2>/dev/null || echo "unknown")
-      echo "path: $rel | size: ${size}B | modified: $mtime | source: $label"
-      found=$((found + 1))
+      FOUND_FILES="$(python3 -c "
+import json, sys
+files = json.loads(sys.argv[1])
+files.append({'path': sys.argv[2], 'size': int(sys.argv[3]), 'modified': sys.argv[4], 'source': sys.argv[5]})
+print(json.dumps(files, ensure_ascii=False))
+" "$FOUND_FILES" "$rel" "$size" "$mtime" "$label")"
     done < <(find "${PROJECT_ROOT}/${dir}" -maxdepth 1 -name "*.md" -type f -print0 2>/dev/null)
   fi
 }
+
+# 1. Claude Code 规则
+scan_dir ".claude/rules" "claude_rules"
 scan_md_dir ".claude" "claude_md"
 
 # 2. Trae 规则
@@ -85,11 +89,16 @@ scan_file "AGENTS.md" "root_agents"
 # 5. analysis 目录
 scan_dir "analysis" "analysis_dir"
 
-# 输出汇总
-echo "---"
-echo "total: $found file(s)"
-if [ $found -eq 0 ]; then
-  echo "status: no_existing_rules"
+# 输出 JSON
+TOTAL="$(python3 -c "import json,sys; print(len(json.loads(sys.argv[1])))" "$FOUND_FILES")"
+if [ "$TOTAL" -eq 0 ]; then
+  STATUS="no_existing_rules"
 else
-  echo "status: found"
+  STATUS="found"
 fi
+
+python3 -c "
+import json, sys
+files = json.loads(sys.argv[1])
+print(json.dumps({'files': files, 'total': len(files), 'status': sys.argv[2]}, ensure_ascii=False))
+" "$FOUND_FILES" "$STATUS"

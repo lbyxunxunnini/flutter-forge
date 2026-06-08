@@ -143,16 +143,25 @@ def main() -> int:
     )
     args = parser.parse_args()
 
+    import json
+    results = []
     failed = False
     for path in args.files:
         errors = validate_file(path, args.allow_placeholders)
+        entry = {"path": str(path), "errors": errors}
         if errors:
             failed = True
-            print(f"FAIL {path}")
-            for error in errors:
-                print(f"  - {error}")
+            entry["result"] = "fail"
         else:
-            print(f"PASS {path}")
+            entry["result"] = "pass"
+        results.append(entry)
+
+    print(json.dumps({
+        "result": "fail" if failed else "pass",
+        "files": results,
+        "file_count": len(results),
+        "failed_count": sum(1 for r in results if r["result"] == "fail"),
+    }, ensure_ascii=False, indent=2))
 
     return 1 if failed else 0
 
