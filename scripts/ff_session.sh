@@ -10,6 +10,7 @@
 #   scripts/ff_session.sh save-resume --pending_question "请确认方案A" --task_object "订单页"
 #   scripts/ff_session.sh check-resume --user-input "按方案A"
 #   scripts/ff_session.sh consume-resume --user-input "按方案A"
+#   scripts/ff_session.sh iteration-update --round-score 3.85 --essential-pass-rate 0.85 --pitfall-violations 2
 #
 # 支持的 update 字段:
 #   --track <cocreation|execution>
@@ -43,6 +44,12 @@
 #   --exit_permission <禁止|允许>
 #   --summary_package <摘要包路径或摘要标识>
 #   --last_user_input <最后用户输入摘要>
+#   --iteration_current_round <轮次>
+#   --iteration_max_rounds <最大轮次>
+#   --iteration_score_threshold <目标评分>
+#   --iteration_score_history <评分历史>
+#   --iteration_marginal_improvement <边际改善>
+#   --iteration_exit_reason <退出原因>
 #
 # session 路径: 与 project_guardrails 宿主目录一致；无 project_guardrails 时回退 .flutter-forge/session.md
 
@@ -196,6 +203,12 @@ write_session_template() {
 - 最近操作：初始化
 - 输出校验：未校验
 - 校验阶段：-
+- 迭代当前轮次：0
+- 迭代最大轮次：5
+- 迭代目标评分：4.0
+- 迭代评分历史：-
+- 迭代边际改善：-
+- 迭代退出原因：-
 - 更新时间：$(date +"%Y-%m-%d %H:%M")
 EOF
 }
@@ -442,6 +455,12 @@ cmd_update() {
       --recent_action) update_field "最近操作" "$2"; shift 2 ;;
       --output_validation) update_field "输出校验" "$2"; shift 2 ;;
       --validation_phase) update_field "校验阶段" "$2"; shift 2 ;;
+      --iteration_current_round) update_field "迭代当前轮次" "$2"; shift 2 ;;
+      --iteration_max_rounds) update_field "迭代最大轮次" "$2"; shift 2 ;;
+      --iteration_score_threshold) update_field "迭代目标评分" "$2"; shift 2 ;;
+      --iteration_score_history) update_field "迭代评分历史" "$2"; shift 2 ;;
+      --iteration_marginal_improvement) update_field "迭代边际改善" "$2"; shift 2 ;;
+      --iteration_exit_reason) update_field "迭代退出原因" "$2"; shift 2 ;;
       *) shift ;;
     esac
   done
@@ -624,6 +643,96 @@ cmd_consume_resume() {
   echo "path: $SESSION_FILE"
 }
 
+# --- iteration-update ---
+cmd_iteration_update() {
+  if [ ! -f "$SESSION_FILE" ]; then
+    echo "FAIL: no session to update iteration"
+    exit 1
+  fi
+
+  local round_score=""
+  local essential_pass_rate=""
+  local pitfall_violations=""
+  local max_rounds=""
+  local score_threshold=""
+
+  while [ $# -gt 0 ]; do
+    case "$1" in
+      --round-score) round_score="$2"; shift 2 ;;
+      --essential-pass-rate) essential_pass_rate="$2"; shift 2 ;;
+      --pitfall-violations) pitfall_violations="$2"; shift 2 ;;
+      --max-rounds) max_rounds="$2"; shift 2 ;;
+      --score-threshold) score_threshold="$2"; shift 2 ;;
+      *) shift ;;
+    esac
+  done
+
+  # 更新最大轮次和目标评分（如果提供）
+  if [ -n "$max_rounds" ]; then
+    update_field "迭代最大轮次" "$max_rounds"
+  fi
+  if [ -n "$score_threshold" ]; then
+    update_field "迭代目标评分" "$score_threshold"
+  fi
+
+  # 递增当前轮次
+  local current_round
+  current_round="$(get_field "迭代当前轮次")"
+  current_round="${current_round:-0}"
+  current_round=$((current_round + 1))
+  update_field "迭代当前轮次" "$current_round"
+
+  # 追加评分历史
+  if [ -n "$round_score" ]; then
+    local history
+    history="$(get_field "迭代评分历史")"
+    history="${history:--}"
+    if [ "$history" = "-" ]; then
+      update_field "迭代评分历史" "$round_score"
+    else
+      update_field "迭代评分历史" "${history}, ${round_score}"
+    fi
+
+    # 计算边际改善
+    if [ "$history" != "-" ]; then
+      local prev_score
+      prev_score="$(echo "$history" | awk -F', ' '{print $NF}')"
+      local marginal
+      marginal=$(python3 -c "print(round(float('${round_score}') - float('${prev_score}'), 2))" 2>/dev/null || echo "-")
+      update_field "迭代边际改善" "$marginal"
+    else
+      update_field "迭代边际改善" "-"
+    fi
+  fi
+
+  update_field "更新时间" "$(date +"%Y-%m-%d %H:%M")"
+
+  # 输出迭代状态摘要
+  echo "status: iteration_updated"
+  echo "path: $SESSION_FILE"
+  echo "round: $current_round"
+  echo "score: ${round_score:-N/A}"
+  echo "essential_pass_rate: ${essential_pass_rate:-N/A}"
+  echo "pitfall_violations: ${pitfall_violations:-N/A}"
+
+  # 输出迭代决策建议
+  if [ -n "$essential_pass_rate" ] && [ -n "$pitfall_violations" ]; then
+    local force_back="false"
+    if [ "$pitfall_violations" -gt 0 ] 2>/dev/null; then
+      force_back="true"
+    fi
+    # essential_pass_rate < 1.0 check
+    local epr_int
+    epr_int=$(python3 -c "print(1 if float('${essential_pass_rate}') < 1.0 else 0)" 2>/dev/null || echo "0")
+    if [ "$epr_int" = "1" ]; then
+      force_back="true"
+    fi
+    if [ "$force_back" = "true" ]; then
+      echo "decision_hint: force_back_to_implementation"
+    fi
+  fi
+}
+
 # --- reset ---
 cmd_reset() {
   if [ -f "$SESSION_FILE" ]; then
@@ -643,7 +752,7 @@ cmd_validate() {
   fi
 
   errors=0
-  required_fields=("轨道" "当前阶段" "当前模式" "决策版本" "项目护栏" "活跃代理" "工作包" "失效结果" "等待状态" "等待输入类型" "待确认问题" "任务对象" "恢复键" "改动契约" "确认状态" "目标状态" "范围状态" "验收状态" "约束状态" "当前子单元" "子单元状态" "验证状态" "超范围风险" "计划冲突状态" "任务结束条件" "工作模式锁" "退出许可" "摘要包" "最后用户输入摘要" "最近操作" "输出校验" "校验阶段" "更新时间")
+  required_fields=("轨道" "当前阶段" "当前模式" "决策版本" "项目护栏" "活跃代理" "工作包" "失效结果" "等待状态" "等待输入类型" "待确认问题" "任务对象" "恢复键" "改动契约" "确认状态" "目标状态" "范围状态" "验收状态" "约束状态" "当前子单元" "子单元状态" "验证状态" "超范围风险" "计划冲突状态" "任务结束条件" "工作模式锁" "退出许可" "摘要包" "最后用户输入摘要" "最近操作" "输出校验" "校验阶段" "迭代当前轮次" "迭代最大轮次" "迭代目标评分" "迭代评分历史" "迭代边际改善" "迭代退出原因" "更新时间")
 
   for field in "${required_fields[@]}"; do
     if ! grep -q "^- ${field}：" "$SESSION_FILE"; then
@@ -765,10 +874,11 @@ case "$ACTION" in
   save-resume) cmd_save_resume "$@" ;;
   check-resume) cmd_check_resume "$@" ;;
   consume-resume) cmd_consume_resume "$@" ;;
+  iteration-update) cmd_iteration_update "$@" ;;
   reset) cmd_reset ;;
   validate) cmd_validate ;;
   *)
-    echo "Usage: ff_session.sh {read|init|update|wait|save-resume|check-resume|consume-resume|reset|validate} [options]"
+    echo "Usage: ff_session.sh {read|init|update|wait|save-resume|check-resume|consume-resume|iteration-update|reset|validate} [options]"
     exit 1
     ;;
 esac

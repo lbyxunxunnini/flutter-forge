@@ -50,7 +50,7 @@ class FieldSpec:
     """字段规格说明。"""
     name: str
     required: bool = True
-    field_type: str = "str"   # str | list | bool | enum
+    field_type: str = "str"   # str | list | bool | enum | dict
     min_items: int = 1        # list 类型最少几项
     enum_values: tuple = ()   # enum 类型的合法值
     allow_empty_when: str | None = None  # 当某字段为某值时允许本字段空（如 not_applicable）
@@ -63,6 +63,8 @@ ROLE_SCHEMAS: dict[str, list[FieldSpec]] = {
         FieldSpec("scope_out", field_type="list", min_items=0),  # 允许空，表示无明确排除
         FieldSpec("key_branches", field_type="list", min_items=1),
         FieldSpec("non_functional", field_type="list", min_items=0),
+        FieldSpec("quality_anchor", field_type="dict"),  # 品质锚定（dict 类型）
+        FieldSpec("rubric_items", field_type="list", min_items=0),  # Rubric 条目（轻量任务可省略）
         FieldSpec("task_semantic", field_type="enum",
                   enum_values=("page", "feature", "architecture")),
         FieldSpec("decision", field_type="enum",
@@ -353,6 +355,9 @@ def validate_field(spec: FieldSpec, value: Any) -> list[ValidationError]:
                 spec.name,
                 f"应为 {list(spec.enum_values)} 之一，实际为 '{value}'",
             ))
+    elif spec.field_type == "dict":
+        if not isinstance(value, dict):
+            errors.append(ValidationError(spec.name, f"应为对象/dict，实际为 {type(value).__name__}"))
 
     return errors
 

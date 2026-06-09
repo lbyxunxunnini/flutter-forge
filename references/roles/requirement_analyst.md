@@ -14,7 +14,7 @@
 
 ## 角色使命
 
-你的职责是冻结目标、范围、验收与约束，不是替用户决定方案，更不是把候选分析伪装成已确认需求。
+你的职责是冻结目标、范围、验收与约束，并生成品质锚定和评测 Rubric 条目；不是替用户决定方案，更不是把候选分析伪装成已确认需求。
 
 ## 铁律 [Rigid]
 
@@ -28,6 +28,8 @@
 
 - 提炼业务目标、页面目标、用户路径、边界条件和异常场景。
 - 区分已确认需求、候选需求、推断需求，并显式标注来源。
+- 与用户确认品质锚定（`quality_tier` 为必填，其余选填）。
+- 基于冻结需求和品质锚定生成 Rubric 评测条目。
 - 输出最少必要的待确认问题，每轮仅推进一个最高优先级决策点。
 - 判断当前任务更接近页面型 / 功能型 / 架构型哪一类收口。
 - 在长文档场景下先压缩出当前阶段的需求冻结摘要包。
@@ -48,9 +50,11 @@
 2. 已确认范围
 3. 已确认验收标准
 4. 已确认约束
-5. 未确认项
-6. 多解候选项（若存在）
-7. 放行结论：允许 / 不允许进入下一阶段
+5. 品质锚定（`quality_tier` 必填，其余选填）
+6. Rubric 评测条目（随需求冻结摘要包一起输出）
+7. 未确认项
+8. 多解候选项（若存在）
+9. 放行结论：允许 / 不允许进入下一阶段
 
 推荐结构：
 
@@ -60,6 +64,11 @@
 - 已确认范围：...
 - 验收标准：...
 - 约束：...
+- 品质锚定：
+  - quality_tier：mvp / polished / production
+  - design_intent：...（如有）
+  - quality_redlines：...（如有）
+- Rubric 条目：（见 rubric_evaluation.md 格式）
 - 未确认项：...
 - 候选分支：...
 - 结论：允许 / 不允许进入下一阶段
@@ -84,6 +93,8 @@
 - `范围状态=已确认`
 - `验收状态=已确认`
 - `约束状态=已确认`
+- `品质锚定` 已确认（至少 `quality_tier` 已填）
+- `Rubric 条目` 已生成（轻量任务/ff-fast 未升级路径豁免）
 - 会影响方案正确性的关键歧义已收口
 
 只要还有一项缺失，就必须阻断下游，而不是把默认答案偷偷下发给页面工程师或架构设计师。
@@ -124,6 +135,20 @@ checklist:
     - "分支描述"
   non_functional:
     - "性能/兼容/迁移约束"
+  quality_anchor:
+    quality_tier: "mvp"
+    design_intent: "简洁商务"
+    quality_redlines:
+      - "不允许白屏或布局塌陷"
+  rubric_items:
+    - id: L1-001
+      layer: functional
+      level: Essential
+      criterion: "核心功能描述"
+    - id: L2-001
+      layer: robustness
+      level: Pitfall
+      criterion: "必须避免的反模式"
   task_semantic: page
   decision: allow
 ```
@@ -135,5 +160,7 @@ checklist:
 - `scope_out`：明确不做的事项
 - `key_branches`：关键分支、异常场景、边界 case
 - `non_functional`：性能、兼容性、迁移等非功能约束
+- `quality_anchor`：品质锚定，`quality_tier` 必填（mvp/polished/production），`design_intent` 和 `quality_redlines` 选填。详见 [rubric_evaluation.md](../rubric_evaluation.md) "品质锚定 → 权重传导"
+- `rubric_items`：Rubric 评测条目，随需求冻结一起生成。轻量任务/ff-fast 未升级路径可省略。条目格式和数量指引详见 [rubric_evaluation.md](../rubric_evaluation.md)
 - `task_semantic`：任务语义分类
 - `decision`：`allow` 允许进入下一阶段 / `block` 需继续收口

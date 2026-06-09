@@ -64,6 +64,32 @@ session 路径与 `project_guardrails` 路径采用**同一套宿主优先级**�
 - 更新时间：YYYY-MM-DD HH:mm
 ```
 
+### 迭代管理字段
+
+当任务进入 S5 验证阶段且存在 Rubric 评分时，session 增加迭代管理字段：
+
+```markdown
+## 迭代管理
+
+- 当前轮次：2
+- 最大轮次：5
+- 目标评分：4.0
+- 评分历史：3.35, 3.85
+- 最近边际改善：0.50
+- 退出原因：-
+```
+
+字段说明：
+
+- `当前轮次`（`iteration_current_round`）：当前迭代轮次，每次从 S5 回退 S4 时 +1
+- `最大轮次`（`iteration_max_rounds`）：S1 阶段设定，默认 5；用户可调整
+- `目标评分`（`iteration_score_threshold`）：S1 阶段设定，默认 4.0；基于 `quality_tier` 可调整
+- `评分历史`（`iteration_score_history`）：每轮 `total_score` 的逗号分隔记录
+- `最近边际改善`（`iteration_marginal_improvement`）：最近一轮相对上一轮的评分提升
+- `退出原因`（`iteration_exit_reason`）：空 / score_reached / max_rounds / marginal_stall / user_override
+
+迭代字段通过 `scripts/ff_session.sh iteration-update` 操作。轻量任务和 ff-fast 未升级路径不需要迭代字段。
+
 等待态字段是恢复链路的硬依赖：只要 controller 要等待用户输入、截图、文稿或确认，就必须写入；用户补充材料时优先用这些字段恢复原任务。
 
 ## 带工作包的结构
@@ -133,6 +159,8 @@ scripts/ff_session.sh validate                                # 校验字段完�
 12. 当前子单元冻结、切换、验证时 → `update --current_work_unit/--work_unit_status/--verification_status`
 13. 发现超范围或计划冲突时 → `update --scope_risk 已发现` 或 `--plan_conflict 已发现待回退`
 14. 允许收口退出前 → `update --mode_lock 可退出 --exit_permission 允许 --task_exit_criteria "<完成定义>"`
+15. S5 评分完成触发迭代时 → `iteration-update --round-score <score> --essential-pass-rate <rate> --pitfall-violations <n>`
+16. S1 确认品质锚定和迭代参数时 → `update --iteration_max_rounds <n> --iteration_score_threshold <score>`
 
 ### 不必写
 

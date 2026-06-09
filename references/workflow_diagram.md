@@ -35,7 +35,14 @@ digraph flutter_forge_workflow {
     s2_s4 [label="S2→S4 硬阻断\n必须继续，不允许退出\n[Rigid]" shape=diamond];
     s4 [label="S4 实现中" shape=box];
     s5 [label="S5 验证中" shape=box];
+    s5_iter [label="迭代循环判定\n[G17/G18]\nscore < threshold?" shape=diamond];
     s6 [label="S6 完成\n输出完成日志，退出\n[Rigid]" shape=doublecircle];
+
+    c0 [label="C0 想法收口" shape=box];
+    c1 [label="C1 方向共创" shape=box];
+    c2 [label="C2 工程定型" shape=box];
+    c3 [label="C3 首批范围冻结" shape=box];
+    s3_from_c [label="S3 拆分任务冻结\n（首批范围大时）" shape=box];
 
     upgrade [label="发现风险？\n升级到对应模式\n[Flexible]" shape=diamond];
     downgrade [label="复杂度低于预期？\n降级回中等\n[Flexible]" shape=diamond];
@@ -76,13 +83,24 @@ digraph flutter_forge_workflow {
     page -> s1;
     ui_opt -> s2;
     arch -> s2;
-    cocreate -> s1;
+    cocreate -> c0;
+
+    // 共创轨道
+    c0 -> c1;
+    c1 -> c2;
+    c2 -> c3;
+    c3 -> s3_from_c;
+    s3_from_c -> s4 [label="首批范围足够小\n跳过 S3"];
+    s3_from_c -> s4 [label="首批范围大\n经 S3 拆包后"];
 
     s1 -> s2;
     s2 -> s2_s4;
     s2_s4 -> s4 [label="已确认\n或 ff-a 自动放行"];
     s4 -> s5;
-    s5 -> s6;
+    s5 -> s5_iter;
+    s5_iter -> s6 [label="score >= threshold\n且 essential_pass_rate == 1.0"];
+    s5_iter -> s4 [label="score < threshold\n且 round < max\n且边际改善 > 0.1\n[G17]"];
+    s5_iter -> s2 [label="decision=back_to_design\n[G12 扩展]"];
 
     // 升级/降级
     upgrade -> feature [label="需求缺口"];
@@ -110,8 +128,10 @@ digraph phase_gates {
 
     s4_impl [label="S4 实现"];
     s4_verify [label="S5 验证"];
-    s4_pass [label="验证通过？" shape=diamond];
-    s4_fail [label="回到 S4\n修复问题" shape=box];
+    s4_pass [label="Rubric 评分\n[G17]" shape=diamond];
+    s4_fail [label="回到 S4\n附带改进建议" shape=box];
+    s_back_design [label="回到 S2\n重置设计阶段\n[G12 扩展]" shape=box];
+    s_iter_stall [label="边际效益检查\n[G18]\n连续 2 轮改善 ≤ 0.1?" shape=diamond];
 
     done [label="S6 完成\n输出完成日志" shape=doublecircle];
 
@@ -129,9 +149,13 @@ digraph phase_gates {
 
     s4_impl -> s4_verify;
     s4_verify -> s4_pass;
-    s4_pass -> done [label="是"];
-    s4_pass -> s4_fail [label="否"];
-    s4_fail -> s4_pass;
+    s4_pass -> done [label="score >= threshold\nessential_pass_rate == 1.0\n且 decision=pass"];
+    s4_pass -> s_back_design [label="decision=back_to_design"];
+    s_back_design -> s2_done;
+    s4_pass -> s_iter_stall [label="score < threshold\n且 round < max"];
+    s_iter_stall -> s4_fail [label="边际改善 > 0.1\n继续迭代"];
+    s_iter_stall -> done [label="边际改善 ≤ 0.1 连续 2 轮\n询问用户后接受"];
+    s4_fail -> s4_impl;
 }
 ```
 

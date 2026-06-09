@@ -89,13 +89,38 @@ hook 在每次写操作时自动检查，越权写入直接 block。不依赖 LL
 
 子代理之间的上下文传递通过 controller 中转：
 
-1. **需求分析师** → 产出需求冻结摘要包 → controller 传递给下游
+1. **需求分析师** → 产出需求冻结摘要包 + 品质锚定 + Rubric 条目 → controller 传递给下游
 2. **UI 设计师** → 产出 UI 冻结摘要包 → controller 传递给下游
 3. **架构设计师** → 产出架构冻结摘要包 + 工作包列表 → controller 传递给实现
 4. **页面工程师** → 产出实现结果 + 验证结果 → controller 传递给验证
-5. **验证工程师** → 产出验证结论 → controller 决定是否通过
+5. **验证工程师** → 产出验证结论 + Rubric 评分 → controller 决定是否通过
 
 摘要包格式见 `references/archive/role_handoff_formats.md`。
+
+## 信息隔离矩阵
+
+引入 Rubric 评测后，执行者和评估者之间的信息可见性隔离至关重要。以下矩阵定义 7 类信息的可见性规则：
+
+| 信息类型 | page_engineer 可见？ | verify_agent 可见？ | 说明 |
+|---------|---------------------|-------------------|------|
+| 需求冻结摘要包 | 是 | 是 | 双方均需理解需求目标 |
+| 改动契约 | 是 | 是 | 双方均需理解改动范围 |
+| 具体 Rubric 条目 | **否**（只知大致验收标准） | 是 | 防止执行者针对性优化而非真正做好功能 |
+| 品质锚定（quality_tier） | 是（知道 tier） | 是 | 执行者需知道品质期望水平 |
+| page_engineer 实现思路/注释 | 是 | **否** | 防止评估者因了解实现过程而产生正面偏见 |
+| page_engineer 自评 checklist | 是 | **否** | 自评是执行者内部产物，不传递给评估者 |
+| 前几轮评分记录 | **否** | 是 | 评估者需参考历史评分判断边际改善 |
+| guardrails 摘要 | 是 | 是 | 双方均需遵守项目级约束 |
+
+### controller 组装上下文时的过滤规则
+
+**组装 page_engineer 上下文时**：传入需求冻结摘要包（含 `quality_tier`，不含具体 Rubric 条目）+ 改动契约 + guardrails 摘要。不传入：Rubric 条目详情、前几轮评分记录、verify_agent 的评估报告。
+
+**组装 verify_agent 上下文时**：传入需求冻结摘要包 + Rubric 条目 + 代码文件路径 + 前几轮评分记录（如有）。不传入：page_engineer 的 checklist 输出、实现过程的 `[f-forge]` 日志、page_engineer 的实现思路注释。
+
+### 迭代循环中的信息传递
+
+当 S5→S4 回退时（迭代循环），controller 向 page_engineer 传递的是 verify_agent 输出的**结构化改进建议**（列出 FAIL 的 Rubric 条目 ID 和改进方向），而非完整的 Rubric 评分详情。这确保 page_engineer 知道"改什么"但不知道"怎么评分"。
 
 ## 降级路径
 

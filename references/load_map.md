@@ -63,6 +63,13 @@
 ### 需要测试与质量建议
 
 - [roles/verify_agent.md](roles/verify_agent.md)
+- [rubric_evaluation.md](rubric_evaluation.md)
+
+### 需要 Rubric 评测或品质标准
+
+- [rubric_evaluation.md](rubric_evaluation.md)
+- [roles/verify_agent.md](roles/verify_agent.md)（Rubric 评分协议）
+- [roles/requirement_analyst.md](roles/requirement_analyst.md)（Rubric 生成 + 品质锚定）
 
 ### 需要决策、提问或阶段门禁细则
 
@@ -124,10 +131,11 @@
 | official_flutter_skills.md | SKILL.md（Flutter skills）、load_map.md |
 | delegation_map.yaml | load_map.md |
 | host_subagent_support.md | SKILL.md（并行协议）、load_map.md |
-| agent_isolation_protocol.md | SKILL.md（角色隔离执行）、load_map.md |
 | network_and_api.md | load_map.md |
 | routing_and_navigation.md | load_map.md |
 | roles/verify_agent.md | load_map.md |
+| rubric_evaluation.md | SKILL.md（目标治理）、roles/verify_agent.md（评分协议）、roles/requirement_analyst.md（Rubric 生成）、agent_isolation_protocol.md（隔离对象）、load_map.md |
+| agent_isolation_protocol.md | SKILL.md（角色隔离执行 + 目标治理信息隔离）、load_map.md |
 | trigger_words.md | SKILL.md（命中路由）、README.md、QUICKSTART.md、CHEATSHEET.md、load_map.md |
 | workflow_diagram.md | SKILL.md（按需加载）、load_map.md |
 | maintenance_map.md | load_map.md |

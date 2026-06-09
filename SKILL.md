@@ -45,6 +45,18 @@ NO IMPLEMENTATION WITHOUT REQUIREMENT AND DESIGN CONFIRMATION FIRST
 12. `ff-a` 是全自动执行策略：缺口采用推荐方案继续推进，豁免最强写前确认等待；但不得自动补目标、范围、验收、约束或高风险方案选择，仅安全、不可逆、生产环境、全项目级架构切换等高风险事项按 [autonomous_mode.md](references/autonomous_mode.md) "必须中断确认的情况"节中断
 13. 本文档中所有 `scripts/` 引用均相对于 flutter-forge skill 安装目录（如 `~/.claude/skills/flutter-forge/scripts/`），非用户 Flutter 项目目录。脚本不存在或执行失败时按对应 reference 文档的降级路径处理，不因脚本缺失阻塞流程
 
+## 目标治理 [Rigid]
+
+以下规则定义"什么是好结果"，与过程控制规则互补。门禁和铁律确保 Agent 不走错路，目标治理确保 Agent 知道什么是好方向。
+
+1. **品质锚定先行**：S1 需求确认必须与用户确认 `quality_tier`（mvp/polished/production），品质锚定直接传导到 Rubric 权重和验证标准。没有品质锚定，不得放行进入 S2
+2. **Rubric 驱动评估**：S1 阶段生成 Rubric 评测条目，S5 阶段逐条量化评分（1-5 分），评估结果回答"做得有多好"而非仅"做对了吗"。完整协议见 [rubric_evaluation.md](references/rubric_evaluation.md)
+3. **迭代循环有方向**：S5 评分结果驱动迭代循环（G17/G18），循环朝"更高评分"方向修正，不是无目的重复。`essential_pass_rate` 和 `pitfall_violations` 是硬门槛，`total_score` 是方向标
+4. **迭代有退出**：迭代循环受 `max_rounds`、`score_threshold` 和边际效益（G18）三重约束。不允许无限回退，不允许无改善循环
+5. **评估者足够挑剔**：verify_agent 遵循红队铁律（铁律第 6 条），主动寻找问题。审查后没有发现任何问题本身是红旗
+6. **评估客观性**：执行者（page_engineer）不可见具体 Rubric 条目，评估者（verify_agent）不可见实现思路。信息隔离矩阵见 [agent_isolation_protocol.md](references/agent_isolation_protocol.md)
+7. **品质红线不可降级**：`quality_anchor.quality_redlines` 中的条目自动生成为 Pitfall 级 Rubric，任何模式和策略均不可豁免
+
 ## 命中路由
 
 ### 进入条件
@@ -293,11 +305,45 @@ S5 验证通过后进入 S6。S6 不是一个需要执行动作的阶段，而�
 | 验证未通过 | G14 | S5 阶段写入收口元数据但验证状态未通过 | 禁止写入收口元数据 |
 | 改动契约缺失 | G15 | 中等及以上模式但改动契约未冻结 | 必须先设置改动契约 |
 | 改动契约未确认 | G16 | 改动契约已设置但未获用户确认 | 必须等待用户确认 |
+| S5 迭代循环 | G17 | S5 验证完成，`essential_pass_rate < 1.0` 或 `pitfall_violations > 0` | 强制回退 S4，附带结构化改进建议（列出 FAIL 的 Rubric 条目）；session `iteration.current_round` +1 |
+| S5 边际效益 | G18 | S5 验证完成，`total_score < score_threshold` 且 `marginal_improvement ≤ 0.1` 连续 2 轮 | 暂停迭代，输出边际效益警告并询问用户：继续迭代 / 接受当前结果 / 重新规划 |
+| S5→S2 回退 | G12b | verify_agent `decision=back_to_design` | 回退到 S2，重置设计阶段状态，触发 G06（设计冻结检查）；session `iteration` 重置 |
 
 **豁免规则**：
 - `ff-a` 全自动策略：豁免 G15、G16
-- 直通模式/轻量任务：豁免 G05-G16
+- 直通模式/轻量任务：豁免 G05-G18
 - 非实现类文件（metadata/test/other）：豁免大部分门禁
+- `ff-fast` 未升级轻量路径：豁免 G17、G18（无 Rubric 评测则无迭代循环）
+
+**S5 评分驱动迭代循环**：
+
+verify_agent 在 S5 阶段输出 Rubric 评分后，controller 按以下逻辑决定迭代方向（详见 [rubric_evaluation.md](references/rubric_evaluation.md)）：
+
+```
+verify_agent 评分完成
+  │
+  ├── essential_pass_rate < 1.0 或 pitfall_violations > 0
+  │     → [G17] 强制回退 S4，附带结构化改进建议
+  │
+  ├── total_score < score_threshold
+  │     │
+  │     ├── current_round < max_rounds 且 marginal_improvement > 0.1
+  │     │     → 回退 S4，传递 FAIL 条目作为改进重点
+  │     │
+  │     ├── marginal_improvement ≤ 0.1（连续 2 轮）
+  │     │     → [G18] 边际效益警告，询问用户：
+  │     │       继续迭代 / 接受当前结果 / 重新规划
+  │     │
+  │     └── current_round >= max_rounds
+  │           → 最大轮次警告，询问用户：
+  │             增加轮次 / 接受当前结果
+  │
+  └── total_score >= score_threshold 且 essential_pass_rate == 1.0
+        且 pitfall_violations == 0 且 decision == pass
+        → 允许进入 S6
+```
+
+session `iteration` 字段记录迭代状态，通过 `scripts/ff_session.sh iteration-update` 操作。
 
 **硬规则补充**：
 
@@ -374,7 +420,7 @@ S5 验证通过后进入 S6。S6 不是一个需要执行动作的阶段，而�
 
 ## 按需加载
 
-30+ 参考文档按需加载，完整场景→文件映射见 [load_map.md](references/load_map.md)。主工作流可视化见 [workflow_diagram.md](references/workflow_diagram.md)。本文件不再重复列出。
+30+ 参考文档按需加载，完整场景→文件映射见 [load_map.md](references/load_map.md)。主工作流可视化见 [workflow_diagram.md](references/workflow_diagram.md)。Rubric 评测框架见 [rubric_evaluation.md](references/rubric_evaluation.md)。本文件不再重复列出。
 
 ## 规则优先级
 
@@ -409,6 +455,9 @@ P0 > P1 > P2；用户显式指令 > 任何规则（除安全红线）。
 - 结果日志结构化
 - 共创分步输出
 - 验证强度分级
+- 品质锚定与 Rubric 权重传导（详见"目标治理"节和 [rubric_evaluation.md](references/rubric_evaluation.md)）
+- 迭代改进建议结构化输出（verify_agent decision=back_to_implementation 时）
+- 评估者与执行者信息隔离（详见 [agent_isolation_protocol.md](references/agent_isolation_protocol.md) 信息隔离矩阵）
 
 ## 阶段转换自检
 

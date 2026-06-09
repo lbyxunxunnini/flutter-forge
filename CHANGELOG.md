@@ -5,6 +5,45 @@
 - `0.2.x` 中出现的 `legacy_project_scan.md`、`~/.flutter-forge/projects/*.rule_card.yaml` 等表述保留为当时版本的历史事实
 - 当前现行入口与项目护栏路径策略以 `references/existing_project_entry.md`、`references/existing_project_scan.md`、`references/project_guardrails_protocol.md` 为准
 
+## v0.3.1
+
+目标治理体系引入 + 工作流 bug 修复。
+
+基于 agent-pm 审查报告（2026-06-10）和 harness_improvement_analysis 改进分析，系统性补强目标治理层，修复两个工作流 bug。
+
+### 目标治理核心（APM-GOV-001/003/005）
+
+- **Rubric 评测框架**：新增 `references/rubric_evaluation.md`，定义四层评测框架（L1 功能正确性 0.40 / L2 健壮性 0.25 / L3 UI 呈现 0.20 / L4 交互体验 0.15），引入 Essential/Important/Optional/Pitfall 四级条目权重和 1-5 分量化评分，替代原有二元 pass/fail 判定
+- **品质锚定**：S1 需求确认阶段新增 `quality_anchor` 字段（`quality_tier` 必填 mvp/polished/production），品质定位直接传导到 Rubric 权重（mvp 偏功能 0.50，production 偏交互 0.20）
+- **评分驱动迭代循环**：SKILL.md 新增门禁 G17（S5 迭代循环，essential_pass_rate < 1.0 或 pitfall_violations > 0 强制回退 S4）和 G18（S5 边际效益，连续 2 轮改善 ≤ 0.1 暂停询问用户）；session 新增 6 个迭代管理字段；`ff_session.sh` 新增 `iteration-update` 子命令
+- **目标治理节新增**：SKILL.md 新增"目标治理"专节（7 条规则），将过程控制/目标治理比例从约 7:1 改善到约 3:1
+- **新增 `scripts/validate_rubric.py`**：校验 Rubric 条目完整性（四层覆盖、Pitfall 最少 2 条、必填字段非占位）
+
+### verify_agent 角色升级（改进四）
+
+- **使命升级**：从合规审查员升级为合规 + 品质双重评估，"像挑剔的用户一样使用功能，像严格的 QA 一样测试边界"
+- **红队铁律**：新增第 6 条铁律——审查后没发现任何问题本身是红旗，必须重新审查
+- **Rubric 评分输出**：Mandatory Checklist 之后额外输出 `rubric_evaluation` 块（total_score / layer_scores / essential_pass_rate / pitfall_violations / details）
+- **主动测试协议**：基于 Rubric 条目自动生成测试操作序列，模拟用户行为而非仅审查代码
+- **迭代建议输出**：decision=back_to_implementation 时输出结构化改进建议（FAIL 条目 + 评分 + 边际改善）
+
+### 品质锚定与信息隔离（APM-GOV-002/004）
+
+- **requirement_analyst 改造**：Mandatory Checklist 新增 `quality_anchor` 和 `rubric_items` 字段，放行条件增加品质锚定和 Rubric 检查
+- **信息隔离矩阵**：`agent_isolation_protocol.md` 新增 7 类信息可见性规则表，明确 Rubric 条目对 page_engineer 不可见、实现思路对 verify_agent 不可见；controller 组装上下文时增加过滤规则
+
+### 工作流 bug 修复（APM-WORKFLOW-005/008）
+
+- **cocreate 入口路由修复**：`workflow_diagram.md` 中 `cocreate -> s1` 改为 `cocreate -> c0`，新建 c0/c1/c2/c3 节点和完整共创轨道路径（C0→C1→C2→C3→S3）
+- **back_to_design 路径接通**：`workflow_diagram.md` 增加 S5→S2 回退边；SKILL.md 门禁表新增 G12b（decision=back_to_design 时回退 S2，重置设计阶段状态）
+
+### 其他同步更新
+
+- `validate_checklist.py`：requirement_analyst schema 新增 `quality_anchor`（dict）和 `rubric_items`（list）字段校验，新增 dict 类型支持
+- `session_management.md`：新增迭代管理字段节（当前轮次/最大轮次/目标评分/评分历史/边际改善/退出原因），写入时机新增第 15、16 条
+- `load_map.md`：新增"需要 Rubric 评测或品质标准"场景加载映射，反向索引新增 `rubric_evaluation.md`
+- P1 核心规则新增 3 条：品质锚定与 Rubric 权重传导、迭代改进建议结构化输出、评估者与执行者信息隔离
+
 ## v0.3.0
 
 强门禁闭环 + 维护面收敛。
