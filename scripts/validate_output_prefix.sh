@@ -34,7 +34,7 @@ for candidate in \
 done
 
 if [ -z "$SESSION_FILE" ]; then
-  echo "status: no_session"
+  python3 -c "import json; print(json.dumps({'status': 'no_session'}, ensure_ascii=False))"
   exit 0
 fi
 
@@ -49,8 +49,7 @@ MODE="$(get_field "当前模式")"
 
 # 轻量/直通不强制要求阶段日志
 if [ "$MODE" = "轻量任务" ] || [ "$MODE" = "直通模式" ]; then
-  echo "status: exempt"
-  echo "mode: $MODE"
+  python3 -c "import json; print(json.dumps({'status': 'exempt', 'mode': '$MODE'}, ensure_ascii=False))"
   exit 0
 fi
 
@@ -66,14 +65,17 @@ case "$RECENT_ACTION" in
 esac
 
 if [ "$HAS_LOG" = "true" ]; then
-  echo "status: pass"
-  echo "phase: $CURRENT_PHASE"
-  echo "recent_action: $RECENT_ACTION"
+  python3 -c "import json; print(json.dumps({'status': 'pass', 'phase': '$CURRENT_PHASE', 'recent_action': '$RECENT_ACTION'}, ensure_ascii=False))"
   exit 0
 else
-  echo "status: missing_log"
-  echo "phase: $CURRENT_PHASE"
-  echo "recent_action: $RECENT_ACTION"
-  echo "hint: 请先输出 [f-forge] 阶段：${CURRENT_PHASE} 或 [f-forge] 模式：${MODE}"
+  python3 -c "
+import json
+print(json.dumps({
+    'status': 'missing_log',
+    'phase': '$CURRENT_PHASE',
+    'recent_action': '$RECENT_ACTION',
+    'hint': '请先输出 [f-forge] 阶段：${CURRENT_PHASE} 或 [f-forge] 模式：${MODE}',
+}, ensure_ascii=False))
+"
   exit 1
 fi

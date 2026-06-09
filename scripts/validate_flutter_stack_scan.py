@@ -62,12 +62,20 @@ def main() -> int:
     if "sdk" in result["dependencies"]:
         errors.append("nested pubspec key was incorrectly parsed as dependency: sdk")
 
+    import json
     if errors:
-        for error in errors:
-            print(f"FAIL {error}")
+        print(json.dumps({
+            "result": "fail",
+            "errors": errors,
+            "message": "Flutter stack scanner fixture validation failed",
+        }, ensure_ascii=False, indent=2))
         return 1
 
-    print("PASS Flutter stack scanner fixture signals")
+    print(json.dumps({
+        "result": "pass",
+        "errors": [],
+        "message": "Flutter stack scanner fixture signals",
+    }, ensure_ascii=False, indent=2))
     return 0
 
 

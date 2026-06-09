@@ -70,12 +70,20 @@ def main() -> int:
         if data["project_guardrails"] != expected:
             errors.append(f"current project guardrails were not resolved exactly: {data['project_guardrails']}")
 
+    import json
     if errors:
-        for error in errors:
-            print(f"FAIL {error}")
+        print(json.dumps({
+            "result": "fail",
+            "errors": errors,
+            "message": "project_guardrails resolution validation failed",
+        }, ensure_ascii=False, indent=2))
         return 1
 
-    print("PASS project_guardrails resolution is project-local and exact")
+    print(json.dumps({
+        "result": "pass",
+        "errors": [],
+        "message": "project_guardrails resolution is project-local and exact",
+    }, ensure_ascii=False, indent=2))
     return 0
 
 

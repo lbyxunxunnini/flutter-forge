@@ -19,13 +19,23 @@ def classify_with_script(root: Path, prompt: str) -> dict[str, str]:
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
     )
-    parsed: dict[str, str] = {}
-    for line in result.stdout.splitlines():
-        if ": " not in line:
-            continue
-        key, value = line.split(": ", 1)
-        parsed[key] = value
-    return parsed
+    output = result.stdout.strip()
+    try:
+        parsed = json.loads(output)
+        # Normalize bool fields to strings for comparison
+        for key in ("should_load_guardrails", "forge_enabled"):
+            if key in parsed and isinstance(parsed[key], bool):
+                parsed[key] = str(parsed[key]).lower()
+        return parsed
+    except json.JSONDecodeError:
+        # Fallback: parse key-value format
+        parsed: dict[str, str] = {}
+        for line in output.splitlines():
+            if ": " not in line:
+                continue
+            key, value = line.split(": ", 1)
+            parsed[key] = value
+        return parsed
 
 
 def main() -> int:

@@ -44,6 +44,33 @@
 - `load_map.md`：新增"需要 Rubric 评测或品质标准"场景加载映射，反向索引新增 `rubric_evaluation.md`
 - P1 核心规则新增 3 条：品质锚定与 Rubric 权重传导、迭代改进建议结构化输出、评估者与执行者信息隔离
 
+## v0.3.1（远程 tag，已合入 v0.3.2）
+
+脚本输出 JSON 化 + 自动验证闭环。此版本与 v0.3.2 并行开发，内容已合入 v0.3.2。
+
+### 脚本输出 JSON 化
+
+所有脚本输出从纯文本/key-value 统一为 JSON 格式，提升 LLM 解析可靠性：
+
+- **核心路由**：`classify_task.sh` 输出 JSON，包含 mode、confidence、policy、guardrails_check 等完整字段
+- **session 管理**：`ff_session.sh` 的 read/init/update/wait/check-resume/consume-resume/reset/validate 全部 JSON 输出
+- **门禁检查**：`gate_check.py`、`hook_check_project_guardrails.sh` 已有 JSON 输出，保持不变
+- **验证脚本**：`validate_output.sh`、`validate_output_prefix.sh`、`validate_checklist.py`（默认 JSON，`--text-output` 回退纯文本）、`validate_project.sh`、`validate_project_guardrails.py`、`validate_project_guardrails_resolution.py`、`validate_flutter_stack_scan.py` 全部 JSON 输出
+- **辅助脚本**：`doctor.sh`（结构化 checks 数组）、`find_existing_rules.sh`（JSON 文件列表）、`init_project_guardrails.py` JSON 输出
+- **controller 适配**：`controller.py` 解析逻辑兼容 ff_session.sh JSON 输出，保留旧格式 fallback
+- **golden test 适配**：`route_golden_tests.py` 解析逻辑适配 classify_task.sh JSON 输出
+- **release check 适配**：`release_checks/session.sh` 测试断言适配 JSON 输出
+
+### 自动验证闭环
+
+- **新增 `verify_completion.sh`**：综合验证脚本，运行 Flutter 测试 + 验证 session 合法性 + 判断完成度，输出结构化 JSON
+
+### 兼容性
+
+- 所有脚本保持相同退出码语义（0=通过，1=失败，2=参数错误）
+- `validate_checklist.py` 的 `--json-output` 改为 `--text-output`（默认 JSON，旧默认纯文本）
+- `controller.py` 保留旧 key-value 格式 fallback 解析
+
 ## v0.3.0
 
 强门禁闭环 + 维护面收敛。

@@ -377,14 +377,21 @@ PY
 # --- read ---
 cmd_read() {
   if [ ! -f "$SESSION_FILE" ]; then
-    echo "status: no_session"
-    echo "path: -"
+    python3 -c "import json; print(json.dumps({'status': 'no_session', 'path': '-'}, ensure_ascii=False))"
     exit 0
   fi
-  echo "status: has_session"
-  echo "path: $SESSION_FILE"
-  echo "---"
-  cat "$SESSION_FILE"
+  # Parse session fields into JSON
+  SESSION_FILE_PATH="$SESSION_FILE" python3 -c "
+import json, sys
+from pathlib import Path
+path = Path('$SESSION_FILE')
+fields = {}
+for line in path.read_text(encoding='utf-8').splitlines():
+    if line.startswith('- ') and '：' in line:
+        key, value = line[2:].split('：', 1)
+        fields[key.strip()] = value.strip()
+print(json.dumps({'status': 'has_session', 'path': str(path), 'fields': fields}, ensure_ascii=False))
+"
 }
 
 # --- init ---
@@ -405,8 +412,7 @@ cmd_init() {
   done
 
   write_session_template "$track" "$phase" "$mode" "$project_guardrails"
-  echo "status: initialized"
-  echo "path: $SESSION_FILE"
+  python3 -c "import json; print(json.dumps({'status': 'initialized', 'path': '$SESSION_FILE'}, ensure_ascii=False))"
 }
 
 # --- update ---
@@ -472,8 +478,7 @@ cmd_update() {
     "$waiting_before" "$(get_field "等待状态")" \
     "$confirmation_before" "$(get_field "确认状态")"
 
-  echo "status: updated"
-  echo "path: $SESSION_FILE"
+  python3 -c "import json; print(json.dumps({'status': 'updated', 'path': '$SESSION_FILE'}, ensure_ascii=False))"
 }
 
 # --- wait ---
@@ -515,8 +520,7 @@ cmd_save_resume() {
   fi
   cmd_update "${update_args[@]}" >/dev/null
 
-  echo "status: resume_saved"
-  echo "path: $SESSION_FILE"
+  python3 -c "import json; print(json.dumps({'status': 'resume_saved', 'path': '$SESSION_FILE'}, ensure_ascii=False))"
 }
 
 # --- check-resume ---
@@ -532,8 +536,7 @@ cmd_check_resume() {
   done
 
   if [ ! -f "$SESSION_FILE" ]; then
-    echo "status: no_session"
-    echo "path: -"
+    python3 -c "import json; print(json.dumps({'status': 'no_session', 'path': '-'}, ensure_ascii=False))"
     exit 0
   fi
 
@@ -595,25 +598,39 @@ cmd_check_resume() {
     local guardrails_summary
     guardrails_summary="$(get_field "项目护栏摘要")"
 
-    echo "status: resume_match"
-    echo "path: $SESSION_FILE"
-    echo "phase: $phase"
-    echo "mode: $mode"
-    echo "reason: $reason"
-    echo "resume_instruction: 你刚才在 $(phase_label "$phase")，模式是${mode}。待确认问题：${pending_question:-"-"}。用户刚回复：${user_input:-"-"}。请直接继续当前阶段，不要重新分析。"
-    if [ -n "$role_contract" ] && [ "$role_contract" != "" ]; then
-      echo "role_contract: $role_contract"
-    fi
-    if [ -n "$guardrails_summary" ] && [ "$guardrails_summary" != "-" ]; then
-      echo "guardrails_summary: $guardrails_summary"
-    fi
-    echo "context_snapshot: ${context_snapshot:-"-"}"
+    MATCHED="true" SESSION_PATH="$SESSION_FILE" PHASE="$phase" MODE="$mode" \
+    REASON="$reason" PENDING_Q="${pending_question:-"-"}" USER_IN="${user_input:-"-"}" \
+    PHASE_LABEL="$(phase_label "$phase")" ROLE_CONTRACT="$role_contract" \
+    GUARDRAILS_SUMMARY="$guardrails_summary" CONTEXT="${context_snapshot:-"-"}" \
+    python3 -c "
+import json, os
+result = {
+    'status': 'resume_match',
+    'path': os.environ['SESSION_PATH'],
+    'phase': os.environ['PHASE'],
+    'mode': os.environ['MODE'],
+    'reason': os.environ['REASON'],
+    'resume_instruction': f\"你刚才在 {os.environ['PHASE_LABEL']}，模式是{os.environ['MODE']}。待确认问题：{os.environ['PENDING_Q']}。用户刚回复：{os.environ['USER_IN']}。请直接继续当前阶段，不要重新分析。\",
+}
+if os.environ['ROLE_CONTRACT']:
+    result['role_contract'] = os.environ['ROLE_CONTRACT']
+if os.environ['GUARDRAILS_SUMMARY'] and os.environ['GUARDRAILS_SUMMARY'] != '-':
+    result['guardrails_summary'] = os.environ['GUARDRAILS_SUMMARY']
+result['context_snapshot'] = os.environ['CONTEXT']
+print(json.dumps(result, ensure_ascii=False))
+"
   else
-    echo "status: no_match"
-    echo "path: $SESSION_FILE"
-    echo "phase: $phase"
-    echo "mode: $mode"
-    echo "reason: $reason"
+    MATCHED="false" SESSION_PATH="$SESSION_FILE" PHASE="$phase" MODE="$mode" REASON="$reason" \
+    python3 -c "
+import json, os
+print(json.dumps({
+    'status': 'no_match',
+    'path': os.environ['SESSION_PATH'],
+    'phase': os.environ['PHASE'],
+    'mode': os.environ['MODE'],
+    'reason': os.environ['REASON'],
+}, ensure_ascii=False))
+"
   fi
 }
 
@@ -639,8 +656,7 @@ cmd_consume_resume() {
     --last_user_input "$user_input" \
     --recent_action "恢复后已消费用户输入" >/dev/null
 
-  echo "status: resume_consumed"
-  echo "path: $SESSION_FILE"
+  python3 -c "import json; print(json.dumps({'status': 'resume_consumed', 'path': '$SESSION_FILE'}, ensure_ascii=False))"
 }
 
 # --- iteration-update ---
@@ -736,11 +752,11 @@ cmd_iteration_update() {
 # --- reset ---
 cmd_reset() {
   if [ -f "$SESSION_FILE" ]; then
-    rm "$SESSION_FILE"
-    echo "status: reset"
-    echo "path: $SESSION_FILE"
+    local path="$SESSION_FILE"
+    rm "$path"
+    python3 -c "import json; print(json.dumps({'status': 'reset', 'path': '$path'}, ensure_ascii=False))"
   else
-    echo "status: no_session_to_reset"
+    python3 -c "import json; print(json.dumps({'status': 'no_session_to_reset'}, ensure_ascii=False))"
   fi
 }
 
@@ -858,9 +874,25 @@ cmd_validate() {
   fi
 
   if [ $errors -eq 0 ]; then
-    echo "PASS session valid"
+    python3 -c "import json; print(json.dumps({'result': 'pass', 'errors': [], 'error_count': 0}, ensure_ascii=False))"
   else
-    echo "FAILED with $errors error(s)"
+    # Collect error details from the validation above
+    ERROR_LIST=()
+    for field in "轨道" "当前阶段" "当前模式" "决策版本" "项目护栏" "活跃代理" "工作包" "失效结果" "等待状态" "等待输入类型" "待确认问题" "任务对象" "恢复键" "改动契约" "确认状态" "目标状态" "范围状态" "验收状态" "约束状态" "当前子单元" "子单元状态" "验证状态" "超范围风险" "计划冲突状态" "任务结束条件" "工作模式锁" "退出许可" "摘要包" "最后用户输入摘要" "最近操作" "输出校验" "校验阶段" "更新时间"; do
+      if ! grep -q "^- ${field}：" "$SESSION_FILE"; then
+        ERROR_LIST+=("missing field: $field")
+      fi
+    done
+    ERRORS_JSON="$(printf '%s\n' "${ERROR_LIST[@]}" | python3 -c "
+import json, sys
+errors = [line.strip() for line in sys.stdin if line.strip()]
+print(json.dumps(errors, ensure_ascii=False))
+")"
+    python3 -c "
+import json, os
+errors = json.loads(os.environ['ERRORS_JSON'])
+print(json.dumps({'result': 'fail', 'errors': errors, 'error_count': len(errors)}, ensure_ascii=False))
+" ERRORS_JSON="$ERRORS_JSON"
     exit 1
   fi
 }

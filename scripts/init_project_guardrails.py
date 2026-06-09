@@ -286,6 +286,7 @@ def print_wizard_summary(project_root: Path, data: dict[str, object], profile_na
 
 
 def main() -> int:
+    import json as _json
     repo = Path(__file__).resolve().parents[1]
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("project_root", type=Path)
@@ -303,7 +304,11 @@ def main() -> int:
     snapshot_module = load_snapshot(repo)
     data = snapshot_module.snapshot(project_root)
     if not data["is_flutter_project"]:
-        print(f"FAIL not a Flutter project: {project_root}")
+        print(_json.dumps({
+            "result": "fail",
+            "message": f"not a Flutter project: {project_root}",
+            "path": str(project_root),
+        }, ensure_ascii=False, indent=2))
         return 1
 
     profile_name, profile_reason = choose_profile(data["stack_signals"], args.profile)
@@ -315,7 +320,13 @@ def main() -> int:
     output.write_text(render_guardrails(project_root, data, profile_name, profile_reason, pubspec_hash, lib_dirs_snapshot), encoding="utf-8")
     if args.interactive:
         print_wizard_summary(project_root, data, profile_name, profile_reason, output)
-    print(f"PASS project-guardrails written: {output}")
+    print(_json.dumps({
+        "result": "pass",
+        "message": "project-guardrails written",
+        "path": str(output),
+        "profile": profile_name,
+        "profile_reason": profile_reason,
+    }, ensure_ascii=False, indent=2))
     return 0
 
 

@@ -401,9 +401,9 @@ def main() -> int:
         help="输入文件路径，省略则从 stdin 读取",
     )
     parser.add_argument(
-        "--json-output",
+        "--text-output",
         action="store_true",
-        help="以 JSON 格式输出结果",
+        help="以纯文本格式输出结果（默认 JSON）",
     )
     args = parser.parse_args()
 
@@ -412,53 +412,58 @@ def main() -> int:
             with open(args.input, encoding="utf-8") as f:
                 text = f.read()
         except OSError as exc:
-            print(f"FAIL: 无法读取文件 {args.input}: {exc}", file=sys.stderr)
+            if args.text_output:
+                print(f"FAIL: 无法读取文件 {args.input}: {exc}", file=sys.stderr)
+            else:
+                print(json.dumps({
+                    "result": "error",
+                    "role": args.role,
+                    "errors": [{"field": "_input", "reason": str(exc)}],
+                }, ensure_ascii=False))
             return 2
     else:
         text = sys.stdin.read()
 
     body = extract_checklist_block(text)
     if body is None:
-        msg = f"FAIL: 输出中未找到 ```yaml ... ``` checklist 块（角色: {args.role}）"
-        if args.json_output:
+        if args.text_output:
+            print(f"FAIL: 输出中未找到 ```yaml ... ``` checklist 块（角色: {args.role}）")
+        else:
             print(json.dumps({
                 "result": "fail",
                 "role": args.role,
                 "errors": [{"field": "_block", "reason": "missing yaml checklist block"}],
             }, ensure_ascii=False))
-        else:
-            print(msg)
         return 2
 
     try:
         data = parse_simple_yaml(body)
     except Exception as exc:
-        msg = f"FAIL: YAML 解析失败: {exc}"
-        if args.json_output:
+        if args.text_output:
+            print(f"FAIL: YAML 解析失败: {exc}")
+        else:
             print(json.dumps({
                 "result": "fail",
                 "role": args.role,
                 "errors": [{"field": "_parse", "reason": str(exc)}],
             }, ensure_ascii=False))
-        else:
-            print(msg)
         return 2
 
     errors = validate_checklist(args.role, data)
 
-    if args.json_output:
-        print(json.dumps({
-            "result": "pass" if not errors else "fail",
-            "role": args.role,
-            "errors": [{"field": e.field, "reason": e.reason} for e in errors],
-        }, ensure_ascii=False))
-    else:
+    if args.text_output:
         if not errors:
             print(f"PASS: {args.role} checklist 校验通过")
         else:
             print(f"FAIL: {args.role} checklist 校验失败 ({len(errors)} 项)")
             for e in errors:
                 print(e)
+    else:
+        print(json.dumps({
+            "result": "pass" if not errors else "fail",
+            "role": args.role,
+            "errors": [{"field": e.field, "reason": e.reason} for e in errors],
+        }, ensure_ascii=False))
 
     return 0 if not errors else 2
 
