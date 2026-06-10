@@ -5,6 +5,35 @@
 - `0.2.x` 中出现的 `legacy_project_scan.md`、`~/.flutter-forge/projects/*.rule_card.yaml` 等表述保留为当时版本的历史事实
 - 当前现行入口与项目护栏路径策略以 `references/existing_project_entry.md`、`references/existing_project_scan.md`、`references/project_guardrails_protocol.md` 为准
 
+## v0.3.4
+
+Session Hook、调试/TDD 纪律、跨宿主能力说明和 guardrails 质量评估。
+
+### 启动与宿主兼容
+
+- **Session Hook**：新增 `hooks/hooks.json` 与 `hooks/session_start.sh`，在宿主支持 SessionStart hook 时自动识别 Flutter 项目并提示触发词和 project_guardrails 状态。
+- **宿主能力矩阵扩展**：补充 Gemini CLI、OpenCode、GitHub Copilot CLI、Factory Droid 等兼容候选说明，明确待验证能力和串行降级边界。
+- **README / QUICKSTART 同步**：补充已验证宿主、兼容候选安装路径、Session Hook 说明和诊断命令。
+
+### 执行纪律与 controller 抽象
+
+- **系统化调试方法论**：新增 `references/systematic_debugging.md`，要求 S4 遇到 bug、测试失败或异常行为时先做根因调查，再实施修复。
+- **TDD 纪律传导**：新增 `references/tdd_discipline.md`，将 S1 `quality_tier` 传导到 S4 test-first 要求，polished/production 激活更严格测试纪律。
+- **forge controller 通用协议**：新增 `references/forge_controller_protocol.md`，抽象触发、路由、guardrails、阶段门禁、角色隔离和 release binding 的通用能力边界。
+- **模型选择策略**：新增 `references/model_selection.md`，为不同角色、阶段和执行策略提供轻量/标准/强模型层级建议。
+
+### Guardrails 与角色上下文
+
+- **guardrails 质量评分**：`init_project_guardrails.py` 新增 `guardrails_quality`，基于状态管理、路由、网络层、测试入口等证据输出评分、缺口和风险。
+- **角色摘要包过滤**：`controller.py generate-agent-prompt` 支持读取 session 摘要包，并按角色过滤敏感内容，避免 page_engineer 看到完整 Rubric 或 verify_agent 被实现自检污染。
+- **方案零占位符规则**：S2 改动契约、架构冻结输出和中等任务扫描结论禁止使用 `TBD`、`TODO`、`待补充` 等占位方案。
+
+### 发布校验与回归覆盖
+
+- **route golden 增强**：新增模糊 UI 优化等待态、`ff-fast` 架构升级、新页面快速策略和 `ff-a` 支付链路等路由用例。
+- **release binding 反查增强**：`validate_release_bindings.py` 支持检查 active docs 中的 binding 索引，`maintenance_map.md` 新增 P0/P1 release binding index。
+- **release checks 同步**：更新 session、guardrails、output protocol 等发布检查，覆盖新 hook、guardrails quality 和日志/状态分工。
+
 ## v0.3.3
 
 发布链路闭环 + 迭代控制信号脚本化 + 维护导航增强。

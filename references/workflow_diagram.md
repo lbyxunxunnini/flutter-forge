@@ -50,13 +50,13 @@ digraph flutter_forge_workflow {
     // 主流程
     start -> trigger;
     trigger -> exit_early [label="不匹配"];
-    trigger -> session_check [label="匹配"];
+    trigger -> enter [label="匹配"];
 
+    enter -> session_check;
     session_check -> session_match;
     session_match -> s4 [label="恢复成功\n回到记录阶段"];
-    session_match -> enter [label="不恢复"];
+    session_match -> classify [label="不恢复"];
 
-    enter -> classify;
     classify -> guardrails_check;
 
     guardrails_check -> wait [label="任务不明确"];

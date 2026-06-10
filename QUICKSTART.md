@@ -58,4 +58,10 @@ python3 scripts/init_project_guardrails.py /path/to/flutter/app --profile auto -
 - 第一次接入已有项目，先生成 project_guardrails。
 - 不确定时直接用 `ff-`，controller 会分流。
 
+## 平台兼容
+
+Flutter Forge 主要面向 Claude Code、Codex、Cursor、Trae 等已验证或主流 AI 编码工具。Gemini CLI、OpenCode、GitHub Copilot CLI 等平台属于兼容候选，需要按宿主实际 skill 发现机制试跑验证。
+
+不同工具的能力差异（子代理、并行、上下文隔离）见 [宿主子代理支持](references/host_subagent_support.md)。不支持子代理的工具自动降级为串行执行，不影响流程完整性。
+
 > 完整触发词与匹配规则：[references/trigger_words.md](references/trigger_words.md)

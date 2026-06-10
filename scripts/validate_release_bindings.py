@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import sys
 from pathlib import Path
 from typing import Any
@@ -17,6 +18,15 @@ from typing import Any
 
 def as_nonempty_list(value: Any) -> list[Any]:
     return value if isinstance(value, list) and len(value) > 0 else []
+
+
+def extract_release_binding_markers(path: Path) -> set[str]:
+    marker_pattern = re.compile(r"\brelease_binding:\s*(RB-[A-Z0-9-]+)")
+    try:
+        text = path.read_text(encoding="utf-8")
+    except OSError:
+        return set()
+    return set(marker_pattern.findall(text))
 
 
 def main() -> int:
@@ -48,6 +58,7 @@ def main() -> int:
         errors.append("registry has no bindings")
 
     seen_ids: set[str] = set()
+    declared_sources: set[str] = set()
     for index, binding in enumerate(bindings):
         if not isinstance(binding, dict):
             errors.append(f"binding[{index}] is not an object")
@@ -78,6 +89,8 @@ def main() -> int:
                     path = root / str(value)
                     if not path.exists():
                         errors.append(f"{prefix}: {field} path does not exist: {value}")
+                    elif field == "sources":
+                        declared_sources.add(str(value))
 
         release_checks = as_nonempty_list(binding.get("release_checks"))
         if not release_checks:
@@ -105,6 +118,23 @@ def main() -> int:
                 needle_text = str(needle)
                 if needle_text not in text:
                     errors.append(f"{prefix}: release check {check_file} missing needle: {needle_text}")
+
+    marker_sources = {
+        "references/maintenance_map.md",
+        *declared_sources,
+    }
+    marker_ids: set[str] = set()
+    for source in sorted(marker_sources):
+        source_path = root / source
+        if source_path.exists():
+            marker_ids.update(extract_release_binding_markers(source_path))
+
+    unknown_markers = marker_ids - seen_ids
+    missing_markers = seen_ids - marker_ids
+    for binding_id in sorted(unknown_markers):
+        errors.append(f"{binding_id}: release_binding marker has no registry binding")
+    for binding_id in sorted(missing_markers):
+        errors.append(f"{binding_id}: registry binding is missing a release_binding marker in active docs")
 
     if errors:
         for error in errors:

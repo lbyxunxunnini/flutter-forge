@@ -172,7 +172,7 @@ checklist:
 - `scope_out`：明确不做的事项
 - `key_branches`：关键分支、异常场景、边界 case
 - `non_functional`：性能、兼容性、迁移等非功能约束
-- `quality_anchor`：品质锚定，`quality_tier` 必填（mvp/polished/production），`design_intent` 和 `quality_redlines` 选填。详见 [rubric_evaluation.md](../rubric_evaluation.md) "品质锚定 → 权重传导"
+- `quality_anchor`：品质锚定，`quality_tier` 必填（mvp/polished/production），`design_intent` 和 `quality_redlines` 选填。详见 [rubric_evaluation.md](../rubric_evaluation.md) "品质锚定 → 权重传导"。`quality_tier` 直接传导到 S4 TDD 纪律：polished 激活关键路径 test-first，production 激活全面 test-first，mvp 豁免。详见 [tdd_discipline.md](../tdd_discipline.md)
 - `rubric_items`：Rubric 评测条目，随需求冻结一起生成。轻量任务/ff-fast 未升级路径可省略。条目格式和数量指引详见 [rubric_evaluation.md](../rubric_evaluation.md)
 - `task_semantic`：任务语义分类
 - `decision`：`allow` 允许进入下一阶段 / `block` 需继续收口

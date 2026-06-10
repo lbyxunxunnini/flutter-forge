@@ -9,11 +9,11 @@ import json
 print(json.load(open(".skillhub.json", encoding="utf-8"))["version"])
 PY
 )"
-readme_version="$(python3 - <<'PY'
+readme_versions="$(python3 - <<'PY'
 import re
 text = open("README.md", encoding="utf-8").read()
-match = re.search(r"当前版本：\*\*([^*]+)\*\*", text)
-print(match.group(1) if match else "")
+matches = re.findall(r"当前版本：\*\*([^*]+)\*\*", text)
+print("\n".join(matches))
 PY
 )"
 changelog_has_version="$(grep -c "^## ${version}$" CHANGELOG.md || true)"
@@ -26,7 +26,10 @@ PY
 )"
 
 [[ "$version" == "$skillhub_version" ]] || fail "VERSION ($version) != .skillhub.json ($skillhub_version)"
-[[ "$version" == "$readme_version" ]] || fail "VERSION ($version) != README current version ($readme_version)"
+[[ -n "$readme_versions" ]] || fail "README has no current version marker"
+while IFS= read -r readme_version; do
+  [[ "$version" == "$readme_version" ]] || fail "VERSION ($version) != README current version ($readme_version)"
+done <<< "$readme_versions"
 [[ "$changelog_has_version" != "0" ]] || fail "CHANGELOG.md has no section for $version"
 
 if [[ -n "$top_changelog_version" && "$top_changelog_version" != "$version" ]]; then

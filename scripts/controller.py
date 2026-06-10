@@ -84,6 +84,85 @@ def read_guardrails_summary(project_root: Path) -> str:
     return ""
 
 
+def read_summary_package(project_root: Path, session: dict[str, str]) -> tuple[str, str]:
+    summary_path = session.get("摘要包", "-")
+    if not summary_path or summary_path == "-":
+        return "-", ""
+
+    path = Path(summary_path)
+    if not path.is_absolute():
+        path = project_root / path
+    try:
+        resolved = path.resolve()
+    except Exception:
+        resolved = path
+    if not resolved.exists() or not resolved.is_file():
+        return str(path), ""
+
+    try:
+        content = resolved.read_text(encoding="utf-8")
+    except OSError:
+        return str(resolved), ""
+    return str(resolved), content[:12000]
+
+
+def filter_summary_for_role(role: str, summary: str) -> str:
+    if not summary:
+        return ""
+
+    role_sensitive_markers = {
+        "page_engineer": (
+            "rubric",
+            "rubric_items",
+            "rubric_evaluation",
+            "评分历史",
+            "前几轮评分",
+            "previous_scores",
+            "score_history",
+            "verify_agent",
+            "验证工程师评估",
+        ),
+        "verify_agent": (
+            "page_engineer_checklist",
+            "implementation_thoughts",
+            "implementation_notes",
+            "实现思路",
+            "实现自检",
+            "工程师自检",
+            "page_engineer_self_check",
+        ),
+    }
+    sensitive_markers = role_sensitive_markers.get(role)
+    if not sensitive_markers:
+        return summary
+
+    filtered: list[str] = []
+    skipping_sensitive_block = False
+
+    for line in summary.splitlines():
+        stripped = line.strip()
+        lowered = stripped.lower()
+        is_heading = stripped.startswith("#")
+        is_top_level_key = (
+            bool(stripped)
+            and not line[:1].isspace()
+            and not stripped.startswith("- ")
+            and ":" in stripped
+        )
+
+        if is_heading:
+            skipping_sensitive_block = any(marker in lowered for marker in sensitive_markers)
+        elif is_top_level_key:
+            key = lowered.split(":", 1)[0].strip()
+            skipping_sensitive_block = any(key == marker or key.startswith(f"{marker}_") for marker in sensitive_markers)
+
+        if skipping_sensitive_block:
+            continue
+        filtered.append(line)
+
+    return "\n".join(filtered).strip()
+
+
 def build_agent_prompt(
     role: str,
     role_display: str,
@@ -91,6 +170,8 @@ def build_agent_prompt(
     session: dict[str, str],
     user_input: str,
     guardrails_summary: str,
+    summary_package_path: str,
+    role_summary: str,
     phase: str,
     mode: str,
 ) -> str:
@@ -129,12 +210,19 @@ def build_agent_prompt(
     sections.append(f"- 退出许可：{session.get('退出许可', '-')}")
     sections.append(f"- 任务对象：{session.get('任务对象', '-')}")
     sections.append(f"- 工作包：{session.get('工作包', '无')}")
+    sections.append(f"- 摘要包：{summary_package_path}")
     sections.append("")
 
     if guardrails_summary:
         sections.append("## 项目护栏摘要")
         sections.append("")
         sections.append(guardrails_summary)
+        sections.append("")
+
+    if role_summary:
+        sections.append("## 角色可见摘要包")
+        sections.append("")
+        sections.append(role_summary)
         sections.append("")
 
     sections.append("## 用户输入")
@@ -145,7 +233,7 @@ def build_agent_prompt(
     sections.append("## 执行要求")
     sections.append("")
     sections.append("1. 输出前必须包含 `[f-forge] {角色名}：` 前缀日志")
-    sections.append("2. 完成前必须输出角色对应的 YAML checklist，并运行 `python3 scripts/validate_checklist.py --role {role}` 确认 PASS")
+    sections.append(f"2. 完成前必须输出角色对应的 YAML checklist，并运行 `python3 scripts/validate_checklist.py --role {role}` 确认 PASS")
     sections.append("3. 如果发现超出角色边界的问题，上报给主控而非自行处理")
     sections.append("4. 严格遵守 Iron Law：需求/方案未确认且无 auto_assumption 时禁止写实现代码")
     sections.append("")
@@ -286,6 +374,8 @@ def cmd_generate_agent_prompt(args: argparse.Namespace) -> int:
     role_display = ROLE_NAME_MAP.get(role, role)
     contract = read_role_contract(role)
     guardrails_summary = read_guardrails_summary(project_root)
+    summary_package_path, summary_package = read_summary_package(project_root, session)
+    role_summary = filter_summary_for_role(role, summary_package)
 
     # 检测恢复场景
     waiting_state = session.get("等待状态", "none")
@@ -311,6 +401,8 @@ def cmd_generate_agent_prompt(args: argparse.Namespace) -> int:
         session=session,
         user_input=args.user_input,
         guardrails_summary=guardrails_summary,
+        summary_package_path=summary_package_path,
+        role_summary=role_summary,
         phase=session.get("当前阶段", "-"),
         mode=session.get("当前模式", "-"),
     )
@@ -330,6 +422,7 @@ def cmd_generate_agent_prompt(args: argparse.Namespace) -> int:
             "project_root": str(project_root),
             "session": session,
             "guardrails_summary": guardrails_summary[:500] if guardrails_summary else "",
+            "summary_package": summary_package_path,
         },
     }
 

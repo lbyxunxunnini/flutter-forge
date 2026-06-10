@@ -44,6 +44,8 @@ NO IMPLEMENTATION WITHOUT REQUIREMENT AND DESIGN CONFIRMATION FIRST
 11. `ff-fast` 是快速执行策略：轻量优先，自动生成扫描摘要，只有发现明确风险才升级；未升级的轻量路径豁免最强写前确认等待，升级到中等及以上后按对应模式门禁执行
 12. `ff-a` 是全自动执行策略：缺口采用推荐方案继续推进，豁免最强写前确认等待；但不得自动补目标、范围、验收、约束或高风险方案选择，仅安全、不可逆、生产环境、全项目级架构切换等高风险事项按 [autonomous_mode.md](references/autonomous_mode.md) "必须中断确认的情况"节中断
 13. 本文档中所有 `scripts/` 引用均相对于 flutter-forge skill 安装目录（如 `~/.claude/skills/flutter-forge/scripts/`），非用户 Flutter 项目目录。脚本不存在或执行失败时按对应 reference 文档的降级路径处理，不因脚本缺失阻塞流程
+14. S4 实现阶段遇到 bug、测试失败或异常行为时，必须按 [systematic_debugging.md](references/systematic_debugging.md) 四阶段流程执行。禁止未调查根因就写修复代码。轻量任务豁免四阶段流程但仍需定位根因
+15. **连续执行指令**：多工作包执行期间，controller 不得在工作包之间暂停等待用户确认。所有已冻结的工作包必须连续执行完毕，直到 S5 统一收口验证时才暂停。仅当工作包执行中发现共享约束被破坏、上游方案变化导致后续工作包失效或命中高风险中断条件时才中断
 
 ## 目标治理 [Rigid]
 
@@ -56,6 +58,18 @@ NO IMPLEMENTATION WITHOUT REQUIREMENT AND DESIGN CONFIRMATION FIRST
 5. **评估者足够挑剔**：verify_agent 遵循红队铁律（铁律第 6 条），主动寻找问题。审查后没有发现任何问题本身是红旗
 6. **评估客观性**：执行者（page_engineer）不可见具体 Rubric 条目，评估者（verify_agent）不可见实现思路。信息隔离矩阵见 [agent_isolation_protocol.md](references/agent_isolation_protocol.md)
 7. **品质红线不可降级**：`quality_anchor.quality_redlines` 中的条目自动生成为 Pitfall 级 Rubric，任何模式和策略均不可豁免
+8. **TDD 纪律传导**：S1 品质锚定为 polished 或 production 时，S4 实现阶段激活 TDD 纪律。完整协议见 [tdd_discipline.md](references/tdd_discipline.md)。mvp 豁免，轻量任务和 ff-fast 未升级路径豁免
+
+## Session Hook [Flexible]
+
+宿主支持 SessionStart hook 时，`hooks/hooks.json` 会在会话启动时自动检测 Flutter 项目并注入上下文提示。用户无需知道触发词即可获得引导。
+
+Hook 行为：
+- 检测到 Flutter 项目：输出触发词提示和项目护栏状态
+- 未检测到 Flutter 项目：静默退出，不影响会话
+- Hook 失败不阻断会话启动
+
+详细实现见 `hooks/session_start.sh`。Hook 是增强项，不是协议依赖——宿主不支持 hook 时，触发词机制不受影响。
 
 ## 命中路由
 
@@ -350,7 +364,7 @@ session `iteration` 字段记录迭代状态，通过 `scripts/ff_session.sh ite
 1. **S2 完成 → 必须进入 S4**：S2 方案确认完成后，必须输出 `[f-forge] 阶段：S4 实现中` 并开始实现。不允许在 S2 输出"结论"后退出、等待或重新分析
 2. **Session 状态持久化**：每次阶段切换、等待用户输入、等待截图/文稿、等待确认或生成长文档摘要包时，必须通过 `scripts/ff_session.sh` 写入状态
 3. **验证真实性**：未记录实际验证动作与验证结果前，不得输出"已完成修改并完成验证""符合预期""允许进入 S6"
-4. **日志必须通过 ff_log.sh 输出**：手动输出的日志不会被 gate_check.py 识别，导致写操作被阻断
+4. **日志与状态分工明确**：对话可见日志由 `scripts/validate_output.sh` 校验；阶段、等待态和确认态必须通过 `scripts/ff_session.sh` 写入 session。`gate_check.py` 只消费 session 与 task gate，不消费对话日志
 
 用户要求阶段回退时，先回退再继续。
 
@@ -448,6 +462,7 @@ P0 > P1 > P2；用户显式指令 > 任何规则（除安全红线）。
 - `ff-fast` 只在未升级时保持轻量日志；升级时必须说明具体风险
 - `ff-a` 结束时输出全自动摘要，列出本轮自动采用的推荐方案
 - 中等及以上非自动写改动不得只有开始/完成日志；实现前必须用对应角色标签输出改动契约，并等待用户确认
+- **方案零占位符规则 [Rigid]**：S2 改动契约、架构冻结输出、中等任务扫描结论中，禁止使用以下表述作为具体方案：`TBD`、`TODO`、`implement later`、`fill in details`、`添加适当的错误处理`、`处理边界情况`、`后续完善`、`待补充`。每条改动点必须指明：改哪个文件/函数、改成什么行为、不改什么。违反时 controller 必须自行拦截并要求角色补全具体方案
 
 ### P1 核心规则（应当遵循）
 

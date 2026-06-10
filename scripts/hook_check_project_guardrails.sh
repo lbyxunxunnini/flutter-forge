@@ -163,6 +163,9 @@ if [ "$IS_WRITE" = "true" ]; then
     "$PROJECT_ROOT/.claude/.flutter-forge/session.md" \
     "$PROJECT_ROOT/.trae/.flutter-forge/session.md" \
     "$PROJECT_ROOT/.agents/.flutter-forge/session.md" \
+    "$PROJECT_ROOT/.gemini/.flutter-forge/session.md" \
+    "$PROJECT_ROOT/.opencode/.flutter-forge/session.md" \
+    "$PROJECT_ROOT/.copilot/.flutter-forge/session.md" \
     "$PROJECT_ROOT/.flutter-forge/session.md"; do
     if [ -f "$candidate" ]; then
       SESSION_FILE_PATH="$candidate"

@@ -15,6 +15,8 @@ tmp_guardrails="$(mktemp -t flutter-forge-guardrails.XXXXXX.yaml)"
 python3 scripts/init_project_guardrails.py tests/fixtures/flutter_sample --output "$tmp_guardrails" >/dev/null
 grep -q 'root_type: "flutter_existing"' "$tmp_guardrails" || fail "init_project_guardrails did not detect flutter_existing"
 grep -q 'project_guardrails:' "$tmp_guardrails" || fail "init_project_guardrails did not use project_guardrails root key"
+grep -q 'guardrails_quality:' "$tmp_guardrails" || fail "init_project_guardrails did not emit guardrails_quality"
+grep -q 'score: 5' "$tmp_guardrails" || fail "init_project_guardrails did not compute expected guardrails_quality score"
 grep -q '_draft' "$tmp_guardrails" && fail "init_project_guardrails still generates draft files"
 rm -f "$tmp_guardrails"
 info "init_project_guardrails validation passed"

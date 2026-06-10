@@ -38,6 +38,13 @@
     "expected_mode": "UI 优化"
   },
   {
+    "name": "vague_optimize_page_waits",
+    "prompt": "ff- 优化一下那个页面",
+    "expected_mode": "等待态",
+    "expected_guardrails_check": "wait_for_task",
+    "expected_should_load_guardrails": "false"
+  },
+  {
     "name": "ui_visual_spec_from_json_and_screenshot",
     "prompt": "ff- {\"speakers\":[{\"name\":\"A\"},{\"name\":\"B\"}]} 按截图调整双人音色 UI：头像 40x40，第二个压住第一个 8，禁用播放",
     "expected_mode": "UI 优化",
@@ -59,6 +66,15 @@
     "expected_should_load_guardrails": "true"
   },
   {
+    "name": "state_management_boundary_upgrade",
+    "prompt": "ff-fast 给订单页接入 Riverpod 状态管理",
+    "expected_mode": "架构级任务",
+    "expected_policy": "快速",
+    "expected_required_phases": "S2,S4,S5",
+    "expected_guardrails_check": "required",
+    "expected_should_load_guardrails": "true"
+  },
+  {
     "name": "feature_flow",
     "prompt": "ff- 当客态用户点击邀请 h5 中“录制”按钮拉起 app 后，按弹窗优先级、授权弹窗、有无音色和提示栏逻辑完成整条交互",
     "expected_mode": "功能开发"
@@ -67,6 +83,14 @@
     "name": "page_development",
     "prompt": "ff- 新建一个商品详情页",
     "expected_mode": "页面开发"
+  },
+  {
+    "name": "fast_new_page_development",
+    "prompt": "ff-fast 新建商品详情页，包含轮播图和规格选择",
+    "expected_mode": "页面开发",
+    "expected_policy": "快速",
+    "expected_guardrails_check": "required",
+    "expected_should_load_guardrails": "true"
   },
   {
     "name": "large_parallel_module",
@@ -86,6 +110,14 @@
     "prompt": "ff-a 新建一个商品详情页，包含轮播图、价格、规格选择和底部购买按钮，缺少的部分按推荐方案自动做完",
     "expected_mode": "页面开发",
     "expected_policy": "全自动"
+  },
+  {
+    "name": "autonomous_payment_flow_stays_feature",
+    "prompt": "ff-a 改支付弹窗触发时机并自动做完",
+    "expected_mode": "功能开发",
+    "expected_policy": "全自动",
+    "expected_guardrails_check": "required",
+    "expected_should_load_guardrails": "true"
   },
   {
     "name": "non_trigger_ff_apple",

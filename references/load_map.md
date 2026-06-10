@@ -65,6 +65,26 @@
 - [roles/verify_agent.md](roles/verify_agent.md)
 - [rubric_evaluation.md](rubric_evaluation.md)
 
+### S4 实现中遇到 bug 或异常
+
+- [systematic_debugging.md](systematic_debugging.md)
+- [engineering_heuristics.md](engineering_heuristics.md)
+
+### S4 实现中需要 TDD 纪律
+
+- [tdd_discipline.md](tdd_discipline.md)
+- [rubric_evaluation.md](rubric_evaluation.md)
+
+### 需要模型选择建议
+
+- [model_selection.md](model_selection.md)
+- [host_subagent_support.md](host_subagent_support.md)
+
+### Session Hook 配置
+
+- hooks/hooks.json
+- hooks/session_start.sh
+
 ### 需要 Rubric 评测或品质标准
 
 - [rubric_evaluation.md](rubric_evaluation.md)
@@ -109,6 +129,11 @@
 - [maintenance_map.md](maintenance_map.md)
 - [release_bindings.json](release_bindings.json)
 
+### 需要 forge 系列 controller 抽象
+
+- [forge_controller_protocol.md](forge_controller_protocol.md)
+- [maintenance_map.md](maintenance_map.md)
+
 ## 反向索引：每个参考文件被哪些上层文件引用
 
 维护时用此表检查引用完整性。新增 reference 文件时同步更新此表。
@@ -137,8 +162,12 @@
 | routing_and_navigation.md | load_map.md |
 | roles/verify_agent.md | load_map.md |
 | rubric_evaluation.md | SKILL.md（目标治理）、roles/verify_agent.md（评分协议）、roles/requirement_analyst.md（Rubric 生成）、agent_isolation_protocol.md（隔离对象）、load_map.md |
+| systematic_debugging.md | SKILL.md（核心原则第 14 条）、load_map.md |
+| tdd_discipline.md | SKILL.md（目标治理第 8 条）、roles/page_engineer.md（test-first 条款）、load_map.md |
+| model_selection.md | host_subagent_support.md（第 10 节）、load_map.md |
 | agent_isolation_protocol.md | SKILL.md（角色隔离执行 + 目标治理信息隔离）、load_map.md |
 | trigger_words.md | SKILL.md（命中路由）、README.md、QUICKSTART.md、CHEATSHEET.md、load_map.md |
 | workflow_diagram.md | SKILL.md（按需加载）、load_map.md |
 | maintenance_map.md | load_map.md |
 | release_bindings.json | maintenance_map.md、load_map.md、rubric_evaluation.md 相关 release 绑定、scripts/validate_release_bindings.py |
+| forge_controller_protocol.md | load_map.md、maintenance_map.md |

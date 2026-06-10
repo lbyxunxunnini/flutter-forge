@@ -89,6 +89,24 @@ Project guardrails 不只是记忆文件，而是 **项目初始化状态标记 
 
 项目一旦存在真实 guardrails 文件，就视为已经被 Flutter Forge 接管。
 
+## 初始化质量评分
+
+`scripts/init_project_guardrails.py` 生成 guardrails 时，必须在 `project_guardrails.project.guardrails_quality` 写入初始化质量评分：
+
+- `score`：1-5，基于扫描证据计算，不允许手填伪造
+- `quality_confidence`：`low | medium | high`，描述当前 guardrails 初始化可信度
+- `evidence`：触发评分的关键证据，如状态管理、路由、网络、测试入口
+- `missing`：缺失的关键证据项
+- `risks`：由缺失证据推导出的接入风险
+
+评分只用于暴露早期假设风险，不直接替代 guardrails 是否存在的判断。是否能介入仍由项目根状态和正式 guardrails 路径决定。
+
+评分原则：
+
+- 能识别状态管理、路由、网络层并有测试入口时，通常可达到 `4-5`
+- 缺少两个以上关键证据时，最高不应超过 `3`
+- `lean_mvp_profile` 只能说明没有强主流栈证据，不能当作高置信度架构结论
+
 ## 输出规则
 
 只有在**真实 guardrails 文件存在且路径可明确指出**时，才允许输出 `project_guardrails：已加载`，并且应同时输出 `guardrails 路径：...`

@@ -258,6 +258,14 @@ printf '%s\n' \
   '[f-forge] 主控：任务描述不明确，请描述你想做什么（例如：新建页面、修改现有功能、修复 bug）。' \
   | scripts/validate_output.sh >/dev/null
 
+printf '%s\n' \
+  '[f-forge] 进入 controller' \
+  '[f-forge] 模式：页面开发' \
+  '[f-forge] 主控：恢复等待，上一轮正在等待截图，已接入用户补充材料并继续页面开发 / S2。' \
+  '[f-forge] 阶段：S2 方案确认' \
+  '[f-forge] UI 设计师：基于补充截图继续冻结头像叠放和禁用播放规则。' \
+  | scripts/validate_output.sh >/dev/null
+
 if printf '%s\n' \
   '[f-forge] 进入 controller' \
   '[f-forge] project_guardrails 已初始化：.claude/.flutter-forge/projects/app.project_guardrails.yaml' \

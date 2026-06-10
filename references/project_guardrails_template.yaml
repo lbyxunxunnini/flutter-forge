@@ -5,6 +5,13 @@ project_guardrails:
     status: "new|existing"
     root_type: "flutter_existing|empty_new"
     overall_confidence: "low|medium|high"
+    guardrails_quality:
+      score: 1
+      max_score: 5
+      quality_confidence: "low|medium|high"
+      evidence: []
+      missing: []
+      risks: []
     source_rules: []  # guardrails 内容来源，如 [".trae/rules/rules.md", "project scan"]
 
   team_rules:

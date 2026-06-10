@@ -131,6 +131,85 @@ def evidence_lines(info: dict[str, object], indent: str = "      ") -> str:
     return "\n".join(lines)
 
 
+def yaml_string_list(items: list[str], indent: str = "      ") -> str:
+    if not items:
+        return f'{indent}- "none"'
+    return "\n".join(f'{indent}- "{item}"' for item in items)
+
+
+def compute_guardrails_quality(
+    signals: dict[str, object],
+    data: dict[str, object],
+    profile_name: str,
+) -> dict[str, object]:
+    critical_categories = {
+        "state_management": "state management",
+        "routing": "routing",
+        "networking": "network layer",
+    }
+    optional_categories = {
+        "serialization": 0.5,
+        "dependency_injection": 0.5,
+        "localization": 0.25,
+    }
+
+    score = 1.0
+    missing: list[str] = []
+    evidence: list[str] = [f"profile: {profile_name}"]
+
+    for category, label in critical_categories.items():
+        signal = best_signal(signals, category)
+        if signal:
+            name, info = signal
+            confidence = str(info.get("confidence", "low"))
+            if confidence in {"high", "medium"}:
+                score += 1.0
+                evidence.append(f"{label}: {name} ({confidence})")
+            else:
+                missing.append(label)
+        else:
+            missing.append(label)
+
+    for category, weight in optional_categories.items():
+        signal = best_signal(signals, category)
+        if signal:
+            name, info = signal
+            confidence = str(info.get("confidence", "low"))
+            if confidence in {"high", "medium"}:
+                score += weight
+                evidence.append(f"{category}: {name} ({confidence})")
+
+    if data.get("test_entries"):
+        score += 0.5
+        evidence.append(f"tests: {len(data['test_entries'])} entries")
+    else:
+        missing.append("test entries")
+
+    numeric_score = min(5, max(1, round(score)))
+    critical_missing_count = sum(1 for item in missing if item in set(critical_categories.values()))
+    if critical_missing_count >= 2:
+        numeric_score = min(numeric_score, 3)
+
+    if numeric_score >= 4 and critical_missing_count == 0:
+        quality_confidence = "high"
+    elif numeric_score >= 3:
+        quality_confidence = "medium"
+    else:
+        quality_confidence = "low"
+
+    risks = [f"missing {item}" for item in missing]
+    if profile_name == "lean_mvp_profile" and critical_missing_count:
+        risks.append("lean profile inferred because dominant stack evidence is incomplete")
+
+    return {
+        "score": numeric_score,
+        "quality_confidence": quality_confidence,
+        "missing": missing,
+        "risks": risks,
+        "evidence": evidence[:8],
+    }
+
+
 def render_guardrails(project_root: Path, data: dict[str, object], profile_name: str, profile_reason: str, pubspec_hash: str = "-", lib_dirs_snapshot: list[str] | None = None) -> str:
     signals = data["stack_signals"]
     state = best_signal(signals, "state_management")
@@ -147,6 +226,7 @@ def render_guardrails(project_root: Path, data: dict[str, object], profile_name:
     di_name, di_info = di if di else ("", {"confidence": "low", "evidence": []})
     localization_name, loc_info = localization if localization else ("", {"confidence": "low", "evidence": []})
     defaults = profile_defaults(profile_name)
+    guardrails_quality = compute_guardrails_quality(signals, data, profile_name)
 
     project_name = project_root.name.replace("-", "_")
     return f"""project_guardrails:
@@ -155,7 +235,17 @@ def render_guardrails(project_root: Path, data: dict[str, object], profile_name:
     type: "flutter"
     status: "existing"
     root_type: "flutter_existing"
-    overall_confidence: "medium"
+    overall_confidence: "{guardrails_quality['quality_confidence']}"
+    guardrails_quality:
+      score: {guardrails_quality['score']}
+      max_score: 5
+      quality_confidence: "{guardrails_quality['quality_confidence']}"
+      evidence:
+{yaml_string_list(guardrails_quality['evidence'], "        ")}
+      missing:
+{yaml_string_list(guardrails_quality['missing'], "        ")}
+      risks:
+{yaml_string_list(guardrails_quality['risks'], "        ")}
     source_rules:
       - "project_snapshot"
       - "flutter_stack_scan"

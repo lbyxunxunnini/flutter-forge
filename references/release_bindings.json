@@ -30,7 +30,7 @@
       "release_checks": [
         {
           "file": "scripts/release_checks/guardrails.sh",
-          "needles": ["empty_new", "non_flutter", "init_project_guardrails validation passed"]
+          "needles": ["empty_new", "non_flutter", "guardrails_quality", "init_project_guardrails validation passed"]
         }
       ],
       "positive_cases": ["empty_new and flutter_existing are accepted where appropriate"],

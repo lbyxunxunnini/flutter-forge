@@ -13,11 +13,19 @@
 | APM-TOOL-009 | P1 | fixed | requirement checklist 未强制 `quality_tier` 和 Rubric 条目 | `validate_checklist.py` 校验 `quality_anchor.quality_tier`，并复用 `validate_rubric.py` 校验 `rubric_items`；有效 fixture PASS，缺失反例 FAIL |
 | APM-TOOL-010 | P1 | fixed | release gate 断言期待旧语义 gate 名，与 `gate_check.py` 当前 Gxx 协议不一致 | `scripts/release_checks/gates.sh` 改为断言 `G05/G10/G11/G12/G13/G09`；`bash scripts/release_checks/gates.sh` PASS |
 | APM-TOOL-011 | P2 | fixed | docs sync 将 archive 历史建议中的未实现脚本当作当前 release 阻断 | `validate_docs_sync.py` 仅对活跃文档强制脚本引用存在；archive 仍做链接校验；`python3 scripts/validate_docs_sync.py` PASS |
+| APM-WORKFLOW-010 | P1 | fixed | 主流程图将 session 恢复检查放在进入日志之前，与 P0 输出协议冲突 | `workflow_diagram.md` 改为触发后先输出进入日志再做 session 恢复；引用扫描无旧边；`bash scripts/release_checks/output_protocol.sh` PASS |
+| APM-WORKFLOW-011 | P1 | fixed | `controller.py generate-agent-prompt` 不读取摘要包，验证工程师拿不到真实 Rubric 和代码文件路径 | `controller.py` 读取 session `摘要包` 并按角色过滤；release session 检查覆盖 verify_agent 可见 Rubric、page_engineer 不泄露具体 Rubric |
+| APM-OUTPUT-002 | P1 | fixed | 等待态恢复示例 `[f-forge] 恢复等待` 被 `validate_output.sh` 判为非法角色 | 恢复/等待事件统一为 `[f-forge] 主控：...`；session/output release 检查通过；引用扫描无旧恢复态格式 |
+| APM-TOOL-012 | P1 | fixed | `VERSION`、`.skillhub.json`、README 版本不一致导致 release gate 失败 | 统一当前版本为 `v0.3.3`；metadata release check 改为扫描 README 所有当前版本标记；`bash scripts/release_checks/metadata.sh` PASS |
+| APM-TOOL-013 | P1 | fixed | SKILL.md 强制引用不存在的 `ff_log.sh`，且错误声称 `gate_check.py` 消费日志 | 硬规则改为真实链路：可见日志由 `validate_output.sh` 校验，状态由 `ff_session.sh` 持久化，`gate_check.py` 只消费 session/task gate |
+| APM-TOOL-014 | P2 | fixed | release metadata 只检查 README 第一个当前版本标记，后续旧版本文本会漏过 | `scripts/release_checks/metadata.sh` 改为扫描所有 `当前版本：**...**` 并逐个与 `VERSION` 比对 |
 
 ### Candidate Rules
 
 - CR-2026-06-10-001: 文档声明为 P0/P1 的门禁必须有脚本级正反例；仅写在 SKILL/reference 中不算落地。
 - CR-2026-06-10-002: release check 与工具返回 schema 必须共享同一 gate ID 协议，避免实现迁移后发布链路漂移。
+- CR-2026-06-10-003: 可视化流程图中的执行顺序必须与 P0 启动/日志协议一致；流程图不能作为“解释性文档”绕过启动顺序验收。
+- CR-2026-06-10-004: 角色隔离文档要求的上下文过滤必须有 `generate-agent-prompt` 级正反例，证明评估者拿到 Rubric、执行者不拿到具体 Rubric。
 
 ## flutter-forge — 2026-05-18
 

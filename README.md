@@ -4,7 +4,7 @@
 
 Flutter Forge 是一个面向 Flutter 开发的结构化 AI 协作工作流 skill。它不是代码生成器，而是一个**项目内的编排与决策层**：在动手写代码之前，先理解项目上下文、收口设计方案、统一工程规则。
 
-GitHub: [lbyxunxunnini/flutter-forge](https://github.com/lbyxunxunnini/flutter-forge) · License: MIT · 当前版本：**v0.3.3**
+GitHub: [lbyxunxunnini/flutter-forge](https://github.com/lbyxunxunnini/flutter-forge) · License: MIT · 当前版本：**v0.3.4**
 
 ---
 
@@ -51,7 +51,7 @@ ff- 这是一个迭代中的 Flutter 项目。先扫描项目结构并初始化 
 ## 适合 / 不适合
 
 **适合**
-- 用 Claude Code、Codex、Cursor、Trae 等 AI 编码工具长期维护 Flutter 项目
+- 用 Claude Code、Codex、Cursor、Trae 等已验证或主流 AI 编码工具长期维护 Flutter 项目
 - 项目有固定的目录、命名、状态管理或组件复用规则
 - 经常把 PRD、设计图、页面需求交给 AI 拆解
 - 希望 AI 先扫描项目，再决定复用还是新写
@@ -91,7 +91,22 @@ npx skills add lbyxunxunnini/flutter-forge -a trae -a codex
 git clone https://github.com/lbyxunxunnini/flutter-forge ~/.claude/skills/flutter-forge
 ```
 
-可替换为 `~/.trae/skills/`、`~/.agents/skills/`、`~/.cc-switch/skills/`、`~/.codex/skills/`。
+可替换为已验证宿主的 skill 目录，如 `~/.trae/skills/`、`~/.agents/skills/`、`~/.cc-switch/skills/`、`~/.codex/skills/`。
+
+以下路径是兼容候选，需按宿主实际 skill 发现机制试跑验证后使用：`~/.gemini/skills/`、`~/.opencode/skills/`、`~/.copilot/skills/`。子代理、Hook、上下文隔离等能力差异见 [references/host_subagent_support.md](references/host_subagent_support.md)。
+
+### Session Hook（可选）
+
+Claude Code 用户可启用 Session Hook，打开 Flutter 项目时自动检测 forge 安装状态并输出 bootstrap 提示：
+
+```bash
+# 安装后自动生效（hooks/hooks.json 配置 SessionStart 事件）
+# 非 Flutter 项目静默退出，不影响启动速度
+```
+
+Hook 会在以下情况输出提示：
+- Flutter 项目 + forge 已安装 → 输出触发词和护栏状态
+- Flutter 项目 + forge 未安装 → 输出安装建议
 
 ### 更新
 
@@ -113,6 +128,7 @@ flutter-forge/
 ├── CHEATSHEET.md
 ├── CONTRIBUTING.md
 ├── references/
+├── hooks/
 ├── memory/
 ├── scripts/
 ├── flutter-skills/
@@ -379,6 +395,11 @@ npx skills list
 ls ~/.claude/skills/flutter-forge/SKILL.md 2>/dev/null && echo "OK" || echo "未找到"
 ls ~/.trae/skills/flutter-forge/SKILL.md 2>/dev/null && echo "OK" || echo "未找到"
 ls ~/.codex/skills/flutter-forge/SKILL.md 2>/dev/null && echo "OK" || echo "未找到"
+
+# 兼容候选路径，需结合宿主实际 skill 发现机制验证
+ls ~/.gemini/skills/flutter-forge/SKILL.md 2>/dev/null && echo "OK" || echo "未找到"
+ls ~/.opencode/skills/flutter-forge/SKILL.md 2>/dev/null && echo "OK" || echo "未找到"
+ls ~/.copilot/skills/flutter-forge/SKILL.md 2>/dev/null && echo "OK" || echo "未找到"
 ```
 
 ## 本地验证
@@ -416,7 +437,7 @@ python3 scripts/validate_docs_sync.py
 
 ## 当前状态
 
-当前版本：**v0.3.2**（详见 [VERSION](VERSION) 与 [CHANGELOG](CHANGELOG.md)）。版本号从 `v0.1.0` 起重置加 `v` 前缀，与历史无 `v` 的 `0.x.x` 系列隔离，避免新读者混淆。
+当前版本：**v0.3.4**（详见 [VERSION](VERSION) 与 [CHANGELOG](CHANGELOG.md)）。版本号从 `v0.1.0` 起重置加 `v` 前缀，与历史无 `v` 的 `0.x.x` 系列隔离，避免新读者混淆。
 
 当前已具备：完整文档、任务路由、project_guardrails、角色协作、官方 Flutter skills 委托策略和本地发布检查。
 
@@ -460,9 +481,3 @@ python3 scripts/validate_docs_sync.py
 相关链接：
 - [flutter/skills 仓库](https://github.com/flutter/skills)
 - [Agent skills for Flutter and Dart](https://docs.flutter.dev/ai/agent-skills)
-
-## 版本
-
-当前版本：**v0.3.2** · 完整变更记录见 [CHANGELOG.md](CHANGELOG.md)。
-
-> 历史版本要点已迁移到 CHANGELOG，README 不再单独列出。

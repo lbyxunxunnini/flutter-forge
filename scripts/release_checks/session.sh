@@ -47,10 +47,54 @@ printf '%s\n' "$artifact_resume_output" | python3 -c "import json,sys; d=json.lo
 printf '%s\n' "$artifact_resume_output" | python3 -c "import json,sys; d=json.load(sys.stdin); assert d.get('reason')=='artifact_reply', f'expected artifact_reply, got {d.get(\"reason\")}'" || fail "ff_session attachment resume reason mismatch"
 scripts/ff_session.sh --project-root "$tmp_resume_project" consume-resume --user-input "方案A" >/dev/null
 grep -q '^- 等待状态：none' "$tmp_resume_project/.claude/.flutter-forge/session.md" || fail "ff_session did not clear waiting_state after consume-resume"
-grep -q '\[f-forge\] 等待：等待用户确认改动契约' "$tmp_resume_project/.flutter-forge/runtime/session_events.log" || fail "ff_session did not append waiting event"
-grep -q '\[f-forge\] 恢复等待：已消费用户补充输入，继续当前阶段。' "$tmp_resume_project/.flutter-forge/runtime/session_events.log" || fail "ff_session did not append resume-consumed event"
+grep -q '\[f-forge\] 主控：等待，等待用户确认改动契约' "$tmp_resume_project/.flutter-forge/runtime/session_events.log" || fail "ff_session did not append waiting event"
+grep -q '\[f-forge\] 主控：恢复等待，已消费用户补充输入，继续当前阶段。' "$tmp_resume_project/.flutter-forge/runtime/session_events.log" || fail "ff_session did not append resume-consumed event"
 rm -rf "$tmp_resume_project"
 info "session resume and event logging validation passed"
+
+tmp_prompt_project="$(mktemp -d -t flutter-forge-prompt.XXXXXX)"
+scripts/ff_session.sh --project-root "$tmp_prompt_project" init --track execution --phase S5 --mode 页面开发 >/dev/null
+summary_file="$tmp_prompt_project/summary.md"
+cat > "$summary_file" <<'EOF'
+需求冻结摘要包:
+- 目标: 商品详情页
+rubric_items:
+- id: UNIQUE-RUBRIC-999
+  criterion: verify unique business rule
+previous_scores:
+- SCORE-HISTORY-SECRET
+page_engineer_checklist:
+- SELF-CHECK-SECRET
+implementation_thoughts:
+- IMPLEMENTATION-THOUGHT-SECRET
+code_files:
+- lib/unique_product_page.dart
+EOF
+scripts/ff_session.sh --project-root "$tmp_prompt_project" update \
+  --summary_package "$summary_file" \
+  --current_work_unit "商品详情页" \
+  --work_unit_status 待验证 \
+  --verification_status 验证中 >/dev/null
+verify_prompt_output="$(python3 scripts/controller.py generate-agent-prompt --project-root "$tmp_prompt_project" --role verify_agent --user-input "继续验证商品详情页")"
+printf '%s\n' "$verify_prompt_output" | grep -q 'UNIQUE-RUBRIC-999' || fail "controller prompt did not include Rubric items for verify_agent"
+printf '%s\n' "$verify_prompt_output" | grep -q 'SCORE-HISTORY-SECRET' || fail "controller prompt did not include score history for verify_agent"
+printf '%s\n' "$verify_prompt_output" | grep -q 'lib/unique_product_page.dart' || fail "controller prompt did not include code files for verify_agent"
+if printf '%s\n' "$verify_prompt_output" | grep -q 'SELF-CHECK-SECRET'; then
+  fail "controller prompt leaked page_engineer self-check to verify_agent"
+fi
+if printf '%s\n' "$verify_prompt_output" | grep -q 'IMPLEMENTATION-THOUGHT-SECRET'; then
+  fail "controller prompt leaked implementation thoughts to verify_agent"
+fi
+page_prompt_output="$(python3 scripts/controller.py generate-agent-prompt --project-root "$tmp_prompt_project" --role page_engineer --user-input "继续实现商品详情页")"
+if printf '%s\n' "$page_prompt_output" | grep -q 'UNIQUE-RUBRIC-999'; then
+  fail "controller prompt leaked concrete Rubric items to page_engineer"
+fi
+if printf '%s\n' "$page_prompt_output" | grep -q 'SCORE-HISTORY-SECRET'; then
+  fail "controller prompt leaked score history to page_engineer"
+fi
+printf '%s\n' "$page_prompt_output" | grep -q 'lib/unique_product_page.dart' || fail "controller prompt stripped non-sensitive summary context from page_engineer"
+rm -rf "$tmp_prompt_project"
+info "controller prompt summary package filtering validation passed"
 
 tmp_iteration_project="$(mktemp -d -t flutter-forge-iteration.XXXXXX)"
 tmp_iteration_name="$(basename "$tmp_iteration_project")"

@@ -129,7 +129,7 @@ scripts/validate_output.sh --require-complete --require-s4 --expect-autonomous /
 等待用户截图、文稿或确认前，必须先通过 `ff_session.sh wait` 写入等待态。恢复时输出：
 
 ```text
-[f-forge] 恢复等待：上一轮正在等待截图，已接入用户补充材料并继续页面开发 / S2。
+[f-forge] 主控：恢复等待，上一轮正在等待截图，已接入用户补充材料并继续页面开发 / S2。
 ```
 
 如果启用 `ff-fast`，模式日志前先输出：

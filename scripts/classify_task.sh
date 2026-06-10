@@ -113,6 +113,11 @@ elif echo "$INPUT" | grep -qE '迭代中.*Flutter 项目|已有.*Flutter 项目|
   mode="启动握手"
   confidence="high"
   matched_by="startup_handshake_keywords"
+# 1b. 等待态：只有模糊指代，没有可执行对象或验收口径
+elif echo "$TASK_TEXT" | grep -qE '^(优化|改|调整|处理|看一下|弄一下)(一下)?[[:space:]]*(这个|那个|当前|上面)?[[:space:]]*(页面|模块|功能|流程)?$|^(优化|改|调整)(一下)?[[:space:]]*(这个|那个|当前|上面)[[:space:]]*(页面|模块|功能|流程)'; then
+  mode="等待态"
+  confidence="high"
+  matched_by="vague_task_reference"
 # 2. 直通模式：环境/打包/CI/CD/闲聊（文档类需求走功能开发）
 elif echo "$INPUT" | grep -qE '安装说明|CHANGELOG|LICENSE|贡献指南|环境|打包|CI|CD|lint|格式化|git'; then
   mode="直通模式"
@@ -135,6 +140,12 @@ elif echo "$INPUT" | grep -qE '简化|抽出|抽取|复用|减少分支|统一�
   mode="架构级任务"
   confidence="high"
   matched_by="structural_refactor_keywords"
+# 5b. 架构级任务（状态管理 / 路由 / DI 接入会影响项目边界）
+elif echo "$INPUT" | grep -qE '状态管理|Provider|Bloc|Riverpod|GetX|路由表|路由接入|导航栈|依赖注入|DI' \
+  && echo "$INPUT" | grep -qE '接入|迁移|改造|重构|统一|替换|状态管理|Provider|Bloc|Riverpod|GetX|路由'; then
+  mode="架构级任务"
+  confidence="high"
+  matched_by="architecture_boundary_keywords"
 # 5. 架构级任务
 elif echo "$INPUT" | grep -qE '包体积|重构|迁移|依赖清理|性能优化|代码审查|i18n|a11y|国际化|无障碍'; then
   mode="架构级任务"

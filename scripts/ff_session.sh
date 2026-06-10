@@ -267,9 +267,9 @@ event_line_for_change() {
       ;;
     waiting)
       if [ "$after" = "none" ]; then
-        printf '[f-forge] 恢复等待：已消费用户补充输入，继续当前阶段。\n'
+        printf '[f-forge] 主控：恢复等待，已消费用户补充输入，继续当前阶段。\n'
       else
-        printf '[f-forge] 等待：%s\n' "$(waiting_state_label "$after")"
+        printf '[f-forge] 主控：等待，%s\n' "$(waiting_state_label "$after")"
       fi
       ;;
     confirmation)

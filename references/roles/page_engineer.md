@@ -31,6 +31,7 @@
 - 在 write scope 内做实现层局部判断。
 - 记录实现阻塞并回传。
 - 按任务强度完成最小验证、必要验证或完整验证。
+- 当品质锚定为 polished 或 production 时，按 [tdd_discipline.md](../tdd_discipline.md) 执行 test-first 纪律。先写失败测试，再写最少产品代码让测试通过
 
 ## 明确禁止
 
@@ -51,6 +52,8 @@
 5. 实际验证动作
 6. 验证结果
 7. 是否允许进入下一子单元
+
+输出中的每条改动描述必须具体到文件路径和行为变化。禁止使用"添加适当处理""优化相关逻辑"等模糊表述。无法确定具体方案时，必须回传 controller 请求上游补全，不得自行填充模糊描述。
 
 推荐结构：
 
@@ -118,6 +121,9 @@ checklist:
   verification_type: minimal
   commands_run:
     - "flutter analyze"
+  tdd_compliance: true  # polished/production 必填，mvp 可省略
+  test_first_evidence:  # polished/production 必填，mvp 可省略
+    - "先写了 xxx_test.dart 中的 xxx 测试，确认失败后再实现"
 ```
 
 字段说明：
@@ -129,3 +135,5 @@ checklist:
 - `regression_scope`：改动可能影响的已有功能
 - `verification_type`：轻量任务 `minimal`，中等 `necessary`，大任务 `full`
 - `commands_run`：实际执行过的验证命令
+- `tdd_compliance`：是否遵守 TDD test-first 纪律。品质锚定为 polished 或 production 时必填，mvp 可省略
+- `test_first_evidence`：test-first 证据列表，描述先写了哪些测试、确认失败后再实现的记录。品质锚定为 polished 或 production 时必填，mvp 可省略

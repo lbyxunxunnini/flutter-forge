@@ -19,6 +19,9 @@ def read_session(project_root: Path) -> dict[str, str]:
         project_root / ".claude/.flutter-forge/session.md",
         project_root / ".trae/.flutter-forge/session.md",
         project_root / ".agents/.flutter-forge/session.md",
+        project_root / ".gemini/.flutter-forge/session.md",
+        project_root / ".opencode/.flutter-forge/session.md",
+        project_root / ".copilot/.flutter-forge/session.md",
         project_root / ".flutter-forge/session.md",
     ]
     session_path = next((path for path in candidates if path.exists()), None)

@@ -19,8 +19,35 @@
 | 角色 checklist / Rubric | [roles/requirement_analyst.md](roles/requirement_analyst.md), [roles/verify_agent.md](roles/verify_agent.md), [rubric_evaluation.md](rubric_evaluation.md) | [validate_checklist.py](../scripts/validate_checklist.py), [validate_rubric.py](../scripts/validate_rubric.py), [validate_rubric_evaluation.py](../scripts/validate_rubric_evaluation.py) | [checklists.sh](../scripts/release_checks/checklists.sh), [rubric_evaluation.sh](../scripts/release_checks/rubric_evaluation.sh) | `bash scripts/release_checks/checklists.sh` + `bash scripts/release_checks/rubric_evaluation.sh` |
 | 角色隔离 / 写入边界 | [agent_isolation_protocol.md](agent_isolation_protocol.md), [roles/](roles) | [controller.py](../scripts/controller.py), [gate_check.py](../scripts/gate_check.py) | [gates.sh](../scripts/release_checks/gates.sh) | `bash scripts/release_checks/gates.sh` |
 | 文档链接 / 脚本引用 | [load_map.md](load_map.md), [maintenance_map.md](maintenance_map.md), 用户入口文档 | [validate_docs_sync.py](../scripts/validate_docs_sync.py) | [output_protocol.sh](../scripts/release_checks/output_protocol.sh) | `python3 scripts/validate_docs_sync.py` |
+| 调试方法论 | [systematic_debugging.md](systematic_debugging.md), [engineering_heuristics.md](engineering_heuristics.md), [SKILL.md](../SKILL.md)（核心原则第 14 条） | [validate_output.sh](../scripts/validate_output.sh) | [output_protocol.sh](../scripts/release_checks/output_protocol.sh) | `python3 scripts/validate_docs_sync.py` |
+| TDD 纪律 | [tdd_discipline.md](tdd_discipline.md), [SKILL.md](../SKILL.md)（目标治理第 8 条）, [roles/page_engineer.md](roles/page_engineer.md) | [validate_checklist.py](../scripts/validate_checklist.py) | [checklists.sh](../scripts/release_checks/checklists.sh) | `bash scripts/release_checks/checklists.sh` |
+| 模型选择策略 | [model_selection.md](model_selection.md), [host_subagent_support.md](host_subagent_support.md) | - | - | `python3 scripts/validate_docs_sync.py` |
+| forge controller 通用协议 | [forge_controller_protocol.md](forge_controller_protocol.md), [task_runtime_prompt.md](task_runtime_prompt.md), [agent_isolation_protocol.md](agent_isolation_protocol.md) | [classify_task.sh](../scripts/classify_task.sh), [gate_check.py](../scripts/gate_check.py), [ff_session.sh](../scripts/ff_session.sh), [controller.py](../scripts/controller.py) | [guardrails.sh](../scripts/release_checks/guardrails.sh), [gates.sh](../scripts/release_checks/gates.sh), [session.sh](../scripts/release_checks/session.sh) | `python3 scripts/route_golden_tests.py` + `bash scripts/release_checks/session.sh` |
 | P0/P1 release 绑定 | [release_bindings.json](release_bindings.json), [maintenance_map.md](maintenance_map.md) | [validate_release_bindings.py](../scripts/validate_release_bindings.py) | [release_bindings.sh](../scripts/release_checks/release_bindings.sh) | `python3 scripts/validate_release_bindings.py` |
 | 发布校验框架 | [maintenance_map.md](maintenance_map.md), [release_bindings.json](release_bindings.json) | [validate_release.sh](../scripts/validate_release.sh), [release_checks/](../scripts/release_checks) | 对应 `release_checks/*.sh` | `bash scripts/validate_release.sh` |
+
+### P0/P1 release binding index
+
+新增或修改 P0/P1 硬规则时，必须同时完成三件事：
+
+1. 在 [release_bindings.json](release_bindings.json) 增加或更新绑定。
+2. 在对应 `scripts/release_checks/*.sh` 或 golden fixture 增加正反例断言。
+3. 在本索引保留对应的 `release_binding:` 标记，确保 `python3 scripts/validate_release_bindings.py` 能反查到 active docs。
+
+当前绑定清单：
+
+- release_binding: RB-ROUTE-001 — 触发词与路由边界
+- release_binding: RB-GUARDRAILS-001 — 项目根状态与 guardrails 状态
+- release_binding: RB-GATE-001 — S4 前写入门禁
+- release_binding: RB-GATE-002 — 核心任务定义与退出锁门禁
+- release_binding: RB-SESSION-001 — 等待态与恢复
+- release_binding: RB-SESSION-002 — 迭代控制决策
+- release_binding: RB-OUTPUT-001 — 可见输出协议
+- release_binding: RB-AUTONOMOUS-001 — 全自动模式边界
+- release_binding: RB-CHECKLIST-001 — 角色 checklist 与 Rubric
+- release_binding: RB-RUBRIC-EVAL-001 — Rubric 评分证据协议
+- release_binding: RB-DOCS-001 — 文档链接与脚本引用同步
+- release_binding: RB-BINDINGS-001 — release binding 注册表完整性
 
 ## 1. 改阶段门禁
 
