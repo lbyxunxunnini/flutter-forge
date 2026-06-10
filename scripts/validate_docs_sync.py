@@ -113,7 +113,11 @@ def main() -> int:
         if path.exists():
             errors.extend(validate_links(root, path))
 
-    errors.extend(validate_script_references(root, docs))
+    active_docs = [
+        path for path in docs
+        if "references/archive" not in path.relative_to(root).as_posix()
+    ]
+    errors.extend(validate_script_references(root, active_docs))
 
     readme = root / "README.md"
     for required in REQUIRED_README_LINKS:

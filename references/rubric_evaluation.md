@@ -87,13 +87,17 @@ rubric:
     level: Important
     criterion: "列表项布局层次清晰，信息密度合理"
     verification: "截图检查，无元素重叠、文字截断、间距异常"
+    verification_method: screenshot_observation  # runtime_observation / screenshot_observation / interactive_observation / code_review_only
 
   - id: L4-001
     layer: interaction
     level: Optional
     criterion: "下拉刷新有平滑动画过渡"
     verification: "触发下拉刷新，检查动画流畅度和回弹效果"
+    verification_method: interactive_observation
 ```
+
+`verification_method` 是 L3/L4 条目的证据类型标记。S1 生成 Rubric 时可以给出预期方法；S5 实际评分时必须记录真实采用的方法。若验证阶段没有截图、设备运行、浏览器或模拟器交互证据，L3/L4 评分必须降级为 `code_review_only`，不能写成“看起来正常”。
 
 ### 条目数量指引
 
@@ -133,6 +137,12 @@ rubric_evaluation:
       score: 2
       evidence: "连续快速下拉刷新触发了 3 次重复请求"
       improvement_hint: "添加 loading 态阻断或在请求期间禁用 RefreshIndicator"
+    - id: L3-001
+      result: WARN
+      score: 4
+      verification_method: code_review_only
+      evidence: "未进行视觉验证；基于代码审查确认使用约束布局且未发现固定宽度"
+      limitation: "无截图或设备运行证据，不能背书最终视觉观感"
 ```
 
 ### 评分规则
@@ -142,6 +152,8 @@ rubric_evaluation:
 - `essential_pass_rate` = Essential 条目中评分 ≥ 3 的比例
 - `pitfall_violations` = Pitfall 条目中评分 < 3 的数量
 - `layer_scores` = 各层条目的加权平均分
+- L3/L4 或 `ui`/`interaction` 评分明细必须包含 `verification_method`
+- `verification_method: code_review_only` 时，`evidence` 或 `limitation` 必须明确写出未进行视觉/交互验证及证据限制
 
 ### 评分与迭代循环联动
 
@@ -185,7 +197,7 @@ rubric_evaluation:
 
 - **轻量任务 / ff-fast 未升级**：跳过 Rubric 评测，使用原有 Mandatory Checklist
 - **中等任务**：生成精简 Rubric（4-6 条，每层至少 1 条），仅 Essential + Pitfall
-- **无截图能力时**：L3/L4 条目标注 `verification_method: code_review_only`，评分基于代码审查推断，评估报告中注明"未进行视觉验证"
+- **无截图/运行/交互证据时**：L3/L4 评分明细必须标注 `verification_method: code_review_only`，评分只能基于代码审查推断，评估报告中必须注明"未进行视觉验证"或"未进行交互验证"；不得把代码推断包装成真实视觉观察
 
 ## 与其他文件的关系
 
@@ -194,4 +206,5 @@ rubric_evaluation:
 - `SKILL.md`：门禁 G17/G18 基于 Rubric 评分驱动迭代循环
 - `references/session_management.md`：session `iteration` 字段记录迭代状态
 - `scripts/validate_rubric.py`：校验 Rubric 条目完整性
+- `scripts/validate_rubric_evaluation.py`：校验 S5 Rubric 评分块，强制 L3/L4 证据方式和 `code_review_only` 降级说明
 - `references/agent_isolation_protocol.md`：Rubric 条目对 page_engineer 不可见

@@ -70,6 +70,7 @@
 - [rubric_evaluation.md](rubric_evaluation.md)
 - [roles/verify_agent.md](roles/verify_agent.md)（Rubric 评分协议）
 - [roles/requirement_analyst.md](roles/requirement_analyst.md)（Rubric 生成 + 品质锚定）
+- [release_bindings.json](release_bindings.json)（Rubric P0/P1 release 反例绑定）
 
 ### 需要决策、提问或阶段门禁细则
 
@@ -106,6 +107,7 @@
 ### 需要维护者修改导航
 
 - [maintenance_map.md](maintenance_map.md)
+- [release_bindings.json](release_bindings.json)
 
 ## 反向索引：每个参考文件被哪些上层文件引用
 
@@ -139,3 +141,4 @@
 | trigger_words.md | SKILL.md（命中路由）、README.md、QUICKSTART.md、CHEATSHEET.md、load_map.md |
 | workflow_diagram.md | SKILL.md（按需加载）、load_map.md |
 | maintenance_map.md | load_map.md |
+| release_bindings.json | maintenance_map.md、load_map.md、rubric_evaluation.md 相关 release 绑定、scripts/validate_release_bindings.py |

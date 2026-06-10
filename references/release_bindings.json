@@ -1,0 +1,194 @@
+{
+  "version": 1,
+  "description": "P0/P1 hard-rule bindings. Every binding must point to executable release checks with both positive and negative coverage.",
+  "bindings": [
+    {
+      "id": "RB-ROUTE-001",
+      "severity": "P1",
+      "rule": "Trigger words must match only at the first token boundary and must not match ff-apple or ff-fastlane.",
+      "sources": ["references/trigger_words.md", "SKILL.md"],
+      "runtime": ["scripts/classify_task.sh", "scripts/route_golden_tests.py"],
+      "release_checks": [
+        {
+          "file": "scripts/release_checks/guardrails.sh",
+          "needles": ["route_golden_tests.py"]
+        },
+        {
+          "file": "tests/route_golden_cases.json",
+          "needles": ["non_trigger_ff_apple", "non_trigger_ff_fastlane"]
+        }
+      ],
+      "positive_cases": ["valid ff-/ff-fast/ff-a route golden cases pass"],
+      "negative_cases": ["ff-apple and ff-fastlane do not trigger fast/autonomous policies"]
+    },
+    {
+      "id": "RB-GUARDRAILS-001",
+      "severity": "P1",
+      "rule": "Project root state and project_guardrails status must decide whether flutter-forge can intervene.",
+      "sources": ["SKILL.md", "references/project_guardrails_protocol.md", "references/task_runtime_prompt.md"],
+      "runtime": ["scripts/detect_project_root_state.py", "scripts/check_project_guardrails.sh", "scripts/init_project_guardrails.py"],
+      "release_checks": [
+        {
+          "file": "scripts/release_checks/guardrails.sh",
+          "needles": ["empty_new", "non_flutter", "init_project_guardrails validation passed"]
+        }
+      ],
+      "positive_cases": ["empty_new and flutter_existing are accepted where appropriate"],
+      "negative_cases": ["non_flutter is disabled and missing/stale guardrails are not treated as loaded"]
+    },
+    {
+      "id": "RB-GATE-001",
+      "severity": "P1",
+      "rule": "Implementation writes before S4 must be blocked unless an explicit light-task exception applies.",
+      "sources": ["SKILL.md", "references/task_runtime_prompt.md", "references/decision_and_question_protocol.md"],
+      "runtime": ["scripts/gate_check.py", "scripts/hook_check_project_guardrails.sh"],
+      "release_checks": [
+        {
+          "file": "scripts/release_checks/gates.sh",
+          "needles": ["G05", "sessionless light task"]
+        }
+      ],
+      "positive_cases": ["confirmed S4 writes and safe sessionless light implementation writes are allowed"],
+      "negative_cases": ["pre-S4 writes and light-task router/state/core writes are blocked"]
+    },
+    {
+      "id": "RB-GATE-002",
+      "severity": "P1",
+      "rule": "Core task definition, current work unit, scope risk, plan conflict, and mode-exit locks must block unsafe progress.",
+      "sources": ["SKILL.md", "references/session_management.md", "references/decision_and_question_protocol.md"],
+      "runtime": ["scripts/gate_check.py", "scripts/controller.py"],
+      "release_checks": [
+        {
+          "file": "scripts/release_checks/gates.sh",
+          "needles": ["G10", "G11", "G12", "G13", "G09"]
+        }
+      ],
+      "positive_cases": ["valid S4 write and autonomous confirmation exemption are allowed"],
+      "negative_cases": ["unconfirmed core definition, missing work unit, scope risk, plan conflict, and premature S6 exit are blocked"]
+    },
+    {
+      "id": "RB-SESSION-001",
+      "severity": "P1",
+      "rule": "Waiting state, attachment resume, and confirmation resume must persist and restore through ff_session.sh.",
+      "sources": ["SKILL.md", "references/session_management.md", "references/phase_checkpoint.md"],
+      "runtime": ["scripts/ff_session.sh", "scripts/controller.py"],
+      "release_checks": [
+        {
+          "file": "scripts/release_checks/session.sh",
+          "needles": ["waiting_state", "resume_match", "attachment-only resume"]
+        }
+      ],
+      "positive_cases": ["waiting state is persisted and matching replies resume the session"],
+      "negative_cases": ["wrong or missing waiting-state fields fail session validation"]
+    },
+    {
+      "id": "RB-SESSION-002",
+      "severity": "P1",
+      "rule": "G17/G18 iteration control must produce executable decision hints, including marginal-stall exits.",
+      "sources": ["SKILL.md", "references/session_management.md", "references/rubric_evaluation.md"],
+      "runtime": ["scripts/ff_session.sh"],
+      "release_checks": [
+        {
+          "file": "scripts/release_checks/session.sh",
+          "needles": ["marginal_stall", "force_back_to_implementation"]
+        }
+      ],
+      "positive_cases": ["passing scores can allow completion and normal low scores continue iteration"],
+      "negative_cases": ["essential/pitfall failures force implementation and repeated low marginal improvement yields marginal_stall"]
+    },
+    {
+      "id": "RB-OUTPUT-001",
+      "severity": "P0",
+      "rule": "Visible workflow output must include entry, mode, phase, role, and completion logs in legal order.",
+      "sources": ["SKILL.md", "references/skill_visibility.md", "references/task_runtime_prompt.md"],
+      "runtime": ["scripts/validate_output.sh"],
+      "release_checks": [
+        {
+          "file": "scripts/release_checks/output_protocol.sh",
+          "needles": ["missing entry log", "missing completion log", "invalid full phase name", "bare role result"]
+        }
+      ],
+      "positive_cases": ["light, medium, heavy, UI, and autonomous valid outputs pass"],
+      "negative_cases": ["missing entry/completion, bad phase names, bare roles, and missing contracts fail"]
+    },
+    {
+      "id": "RB-AUTONOMOUS-001",
+      "severity": "P1",
+      "rule": "ff-a may skip write-contract waiting but must keep high-risk interruption, validation, and final autonomous summary.",
+      "sources": ["SKILL.md", "references/autonomous_mode.md", "references/task_runtime_prompt.md"],
+      "runtime": ["scripts/classify_task.sh", "scripts/gate_check.py", "scripts/validate_output.sh"],
+      "release_checks": [
+        {
+          "file": "scripts/release_checks/output_protocol.sh",
+          "needles": ["expect-autonomous", "全自动摘要"]
+        },
+        {
+          "file": "scripts/release_checks/gates.sh",
+          "needles": ["exempt autonomous policy"]
+        }
+      ],
+      "positive_cases": ["autonomous output with summary passes and autonomous write-contract exemption is allowed"],
+      "negative_cases": ["missing autonomous startup or summary fails output validation"]
+    },
+    {
+      "id": "RB-CHECKLIST-001",
+      "severity": "P0",
+      "rule": "Role checklist output must be structured and requirement_analyst must include quality_tier and Rubric items before allow.",
+      "sources": ["SKILL.md", "references/roles/requirement_analyst.md", "references/rubric_evaluation.md"],
+      "runtime": ["scripts/validate_checklist.py", "scripts/validate_rubric.py"],
+      "release_checks": [
+        {
+          "file": "scripts/release_checks/checklists.sh",
+          "needles": ["missing quality_tier", "missing rubric_items"]
+        }
+      ],
+      "positive_cases": ["complete requirement_analyst fixture passes"],
+      "negative_cases": ["allow without quality_tier or without Rubric items fails"]
+    },
+    {
+      "id": "RB-RUBRIC-EVAL-001",
+      "severity": "P1",
+      "rule": "L3/L4 Rubric evaluation must declare verification_method, and unavailable visual or interaction evidence must be downgraded to code_review_only with an explicit evidence limitation.",
+      "sources": ["references/rubric_evaluation.md", "references/roles/verify_agent.md"],
+      "runtime": ["scripts/validate_rubric_evaluation.py"],
+      "release_checks": [
+        {
+          "file": "scripts/release_checks/rubric_evaluation.sh",
+          "needles": ["code_review_only", "missing verification_method", "without evidence limitation"]
+        }
+      ],
+      "positive_cases": ["L3/L4 code_review_only evaluation with explicit visual or interaction limitation passes"],
+      "negative_cases": ["L3/L4 missing verification_method fails, and code_review_only without evidence limitation fails"]
+    },
+    {
+      "id": "RB-DOCS-001",
+      "severity": "P1",
+      "rule": "Active documentation links and active script references must stay synchronized with the repository.",
+      "sources": ["references/load_map.md", "references/maintenance_map.md"],
+      "runtime": ["scripts/validate_docs_sync.py"],
+      "release_checks": [
+        {
+          "file": "scripts/release_checks/output_protocol.sh",
+          "needles": ["validate_docs_sync.py"]
+        }
+      ],
+      "positive_cases": ["active documentation references existing files and scripts"],
+      "negative_cases": ["missing active links or script references fail docs sync"]
+    },
+    {
+      "id": "RB-BINDINGS-001",
+      "severity": "P1",
+      "rule": "Every P0/P1 hard-rule binding must declare source docs, runtime surface, release check files, and positive/negative coverage.",
+      "sources": ["references/maintenance_map.md", "references/release_bindings.json"],
+      "runtime": ["scripts/validate_release_bindings.py"],
+      "release_checks": [
+        {
+          "file": "scripts/release_checks/release_bindings.sh",
+          "needles": ["validate_release_bindings.py"]
+        }
+      ],
+      "positive_cases": ["complete binding registry passes"],
+      "negative_cases": ["missing source, missing release check, missing needle, or missing positive/negative cases fails"]
+    }
+  ]
+}

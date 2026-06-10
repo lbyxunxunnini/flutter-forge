@@ -33,7 +33,7 @@ PY
 
 gate_output="$(python3 scripts/gate_check.py --project-root "$tmp_gate_project" --target-path lib/features/order/detail_page.dart --mode observe)"
 printf '%s\n' "$gate_output" | grep -q '"decision": "would_block"' || fail "gate_check did not report would_block before S4"
-printf '%s\n' "$gate_output" | grep -q '"gate": "phase_progression"' || fail "gate_check did not report phase gate"
+printf '%s\n' "$gate_output" | grep -q '"gate": "G05"' || fail "gate_check did not report phase gate"
 
 gate_config_output="$(python3 scripts/gate_check.py --project-root "$tmp_gate_project" --target-path pubspec.yaml --mode observe)"
 printf '%s\n' "$gate_config_output" | grep -q '"decision": "would_block"' || fail "gate_check did not block project config before S4"
@@ -54,7 +54,7 @@ gate_core_status=$?
 set -e
 [ "$gate_core_status" -eq 2 ] || fail "gate_check did not return blocking exit code for core_definition"
 printf '%s\n' "$gate_core_output" | grep -q '"decision": "block"' || fail "gate_check did not block unconfirmed core task definition"
-printf '%s\n' "$gate_core_output" | grep -q '"gate": "core_definition"' || fail "gate_check did not report core_definition gate"
+printf '%s\n' "$gate_core_output" | grep -q '"gate": "G10"' || fail "gate_check did not report core_definition gate"
 
 scripts/ff_session.sh --project-root "$tmp_gate_project" update --scope_status 已确认 >/dev/null
 scripts/ff_session.sh --project-root "$tmp_gate_project" update --current_work_unit - --work_unit_status 未冻结 >/dev/null
@@ -64,7 +64,7 @@ gate_work_unit_status=$?
 set -e
 [ "$gate_work_unit_status" -eq 2 ] || fail "gate_check did not return blocking exit code for current_work_unit"
 printf '%s\n' "$gate_work_unit_output" | grep -q '"decision": "block"' || fail "gate_check did not block missing current work unit"
-printf '%s\n' "$gate_work_unit_output" | grep -q '"gate": "current_work_unit"' || fail "gate_check did not report current_work_unit gate"
+printf '%s\n' "$gate_work_unit_output" | grep -q '"gate": "G11"' || fail "gate_check did not report current_work_unit gate"
 
 scripts/ff_session.sh --project-root "$tmp_gate_project" update --current_work_unit 订单详情页主体改动 --work_unit_status 已冻结 >/dev/null
 scripts/ff_session.sh --project-root "$tmp_gate_project" update --scope_risk 已发现 >/dev/null
@@ -74,7 +74,7 @@ gate_scope_risk_status=$?
 set -e
 [ "$gate_scope_risk_status" -eq 2 ] || fail "gate_check did not return blocking exit code for scope_expansion"
 printf '%s\n' "$gate_scope_risk_output" | grep -q '"decision": "block"' || fail "gate_check did not block scope expansion risk"
-printf '%s\n' "$gate_scope_risk_output" | grep -q '"gate": "scope_expansion"' || fail "gate_check did not report scope_expansion gate"
+printf '%s\n' "$gate_scope_risk_output" | grep -q '"gate": "G12"' || fail "gate_check did not report scope_expansion gate"
 
 scripts/ff_session.sh --project-root "$tmp_gate_project" update --scope_risk 无 --plan_conflict 已发现待回退 >/dev/null
 set +e
@@ -83,7 +83,7 @@ gate_plan_conflict_status=$?
 set -e
 [ "$gate_plan_conflict_status" -eq 2 ] || fail "gate_check did not return blocking exit code for plan_conflict"
 printf '%s\n' "$gate_plan_conflict_output" | grep -q '"decision": "block"' || fail "gate_check did not block plan conflict"
-printf '%s\n' "$gate_plan_conflict_output" | grep -q '"gate": "plan_conflict"' || fail "gate_check did not report plan_conflict gate"
+printf '%s\n' "$gate_plan_conflict_output" | grep -q '"gate": "G13"' || fail "gate_check did not report plan_conflict gate"
 
 scripts/ff_session.sh --project-root "$tmp_gate_project" update --plan_conflict 无 >/dev/null
 scripts/ff_session.sh --project-root "$tmp_gate_project" update --confirmation_status 未确认 >/dev/null
@@ -112,12 +112,12 @@ gate_mode_exit_status=$?
 set -e
 [ "$gate_mode_exit_status" -eq 2 ] || fail "gate_check did not return blocking exit code for mode_exit"
 printf '%s\n' "$gate_mode_exit_output" | grep -q '"decision": "block"' || fail "gate_check did not block premature S6 exit"
-printf '%s\n' "$gate_mode_exit_output" | grep -q '"gate": "mode_exit"' || fail "gate_check did not report mode_exit gate"
+printf '%s\n' "$gate_mode_exit_output" | grep -q '"gate": "G09"' || fail "gate_check did not report mode_exit gate"
 
 controller_exit_output="$(python3 scripts/controller.py run --project-root "$tmp_gate_project" --user-input "继续" --target-path AGENT-PM-REVIEW.md)"
 printf '%s\n' "$controller_exit_output" | grep -q '"next_action": "resume_current_phase"' || fail "controller did not prefer session resume for unfinished task"
 printf '%s\n' "$controller_exit_output" | grep -q '"gate": {' || fail "controller did not return gate payload for premature exit"
-printf '%s\n' "$controller_exit_output" | grep -q '"gate": "mode_exit"' || fail "controller did not surface mode_exit gate"
+printf '%s\n' "$controller_exit_output" | grep -q '"gate": "G09"' || fail "controller did not surface mode_exit gate"
 
 scripts/ff_session.sh --project-root "$tmp_gate_project" update --phase S4 --change_contract "允许改 detail_page.dart" --confirmation_status 用户已确认 --goal_status 已确认 --scope_status 已确认 --acceptance_status 已确认 --constraint_status 已确认 --current_work_unit 订单详情页主体改动 --work_unit_status 已冻结 --verification_status 未验证 --mode_lock 激活 --exit_permission 禁止 --recent_action '[f-forge] 阶段：S4 实现中' >/dev/null
 hook_input='{"tool_name":"Write","tool_input":{"file_path":"lib/features/order/detail_page.dart"}}'
@@ -142,3 +142,19 @@ printf '%s\n' "$controller_output" | grep -q '"decision": "allow"' || fail "cont
 
 rm -rf "$tmp_gate_project"
 info "gate and controller validation passed"
+
+tmp_light_project="$(mktemp -d -t flutter-forge-light-gate.XXXXXX)"
+tmp_light_name="$(basename "$tmp_light_project")"
+mkdir -p "$tmp_light_project/lib/router" "$tmp_light_project/.flutter-forge/projects"
+printf 'name: %s\n' "$tmp_light_name" > "$tmp_light_project/pubspec.yaml"
+printf 'project_guardrails:\n  project:\n    name: "%s"\n    root_type: "flutter_existing"\n' "$tmp_light_name" > "$tmp_light_project/.flutter-forge/projects/${tmp_light_name}.project_guardrails.yaml"
+scripts/classify_task.sh --project-root "$tmp_light_project" --write-gate "ff-fast 把登录页按钮文案改成立即开始" >/dev/null
+
+sessionless_light_allow="$(python3 scripts/gate_check.py --project-root "$tmp_light_project" --target-path lib/login_page.dart --mode enforce)"
+printf '%s\n' "$sessionless_light_allow" | grep -q '"decision": "allow"' || fail "gate_check did not allow sessionless light task implementation write"
+
+sessionless_light_router="$(python3 scripts/gate_check.py --project-root "$tmp_light_project" --target-path lib/router/app_router.dart --mode observe)"
+printf '%s\n' "$sessionless_light_router" | grep -q '"decision": "would_block"' || fail "gate_check allowed sessionless light task router write"
+
+rm -rf "$tmp_light_project"
+info "sessionless light task gate validation passed"

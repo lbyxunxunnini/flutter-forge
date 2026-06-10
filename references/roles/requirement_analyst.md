@@ -149,6 +149,18 @@ checklist:
       layer: robustness
       level: Pitfall
       criterion: "必须避免的反模式"
+    - id: L2-002
+      layer: robustness
+      level: Pitfall
+      criterion: "异常路径必须有可恢复反馈"
+    - id: L3-001
+      layer: ui
+      level: Important
+      criterion: "页面布局层级清晰且无明显遮挡"
+    - id: L4-001
+      layer: interaction
+      level: Important
+      criterion: "关键操作有明确反馈"
   task_semantic: page
   decision: allow
 ```

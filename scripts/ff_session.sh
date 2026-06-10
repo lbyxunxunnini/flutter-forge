@@ -731,20 +731,70 @@ cmd_iteration_update() {
   echo "essential_pass_rate: ${essential_pass_rate:-N/A}"
   echo "pitfall_violations: ${pitfall_violations:-N/A}"
 
-  # 输出迭代决策建议
-  if [ -n "$essential_pass_rate" ] && [ -n "$pitfall_violations" ]; then
-    local force_back="false"
-    if [ "$pitfall_violations" -gt 0 ] 2>/dev/null; then
-      force_back="true"
-    fi
-    # essential_pass_rate < 1.0 check
-    local epr_int
-    epr_int=$(python3 -c "print(1 if float('${essential_pass_rate}') < 1.0 else 0)" 2>/dev/null || echo "0")
-    if [ "$epr_int" = "1" ]; then
-      force_back="true"
-    fi
-    if [ "$force_back" = "true" ]; then
-      echo "decision_hint: force_back_to_implementation"
+  # 输出迭代决策建议。G17/G18 的控制信号必须由脚本给出，不能只靠 LLM 自觉消费文档。
+  local decision_output
+  decision_output="$(ROUND_SCORE="$round_score" ESSENTIAL_PASS_RATE="$essential_pass_rate" PITFALL_VIOLATIONS="$pitfall_violations" HISTORY="$(get_field "迭代评分历史")" CURRENT_ROUND="$current_round" MAX_ROUNDS="$(get_field "迭代最大轮次")" SCORE_THRESHOLD="$(get_field "迭代目标评分")" python3 - <<'PY'
+import os
+
+def to_float(value, default=None):
+    try:
+        return float(value)
+    except Exception:
+        return default
+
+def to_int(value, default=0):
+    try:
+        return int(value)
+    except Exception:
+        return default
+
+round_score = to_float(os.environ.get("ROUND_SCORE", ""))
+essential_pass_rate = to_float(os.environ.get("ESSENTIAL_PASS_RATE", ""))
+pitfall_violations = to_int(os.environ.get("PITFALL_VIOLATIONS", ""), 0)
+current_round = to_int(os.environ.get("CURRENT_ROUND", ""), 0)
+max_rounds = to_int(os.environ.get("MAX_ROUNDS", ""), 5)
+score_threshold = to_float(os.environ.get("SCORE_THRESHOLD", ""), 4.0)
+
+history_raw = os.environ.get("HISTORY", "-")
+scores = []
+for part in history_raw.split(","):
+    value = to_float(part.strip())
+    if value is not None:
+        scores.append(value)
+
+hint = ""
+exit_reason = "-"
+
+if essential_pass_rate is not None and (essential_pass_rate < 1.0 or pitfall_violations > 0):
+    hint = "force_back_to_implementation"
+elif round_score is not None:
+    if round_score >= score_threshold:
+        hint = "allow_completion"
+        exit_reason = "score_reached"
+    elif current_round >= max_rounds:
+        hint = "max_rounds_reached"
+        exit_reason = "max_rounds"
+    else:
+        deltas = [round(scores[i] - scores[i - 1], 2) for i in range(1, len(scores))]
+        low_stall = len(deltas) >= 2 and deltas[-1] <= 0.1 and deltas[-2] <= 0.1
+        if low_stall:
+            hint = "marginal_stall"
+            exit_reason = "marginal_stall"
+        else:
+            hint = "continue_iteration"
+
+if hint:
+    print(f"decision_hint: {hint}")
+if exit_reason != "-":
+    print(f"exit_reason: {exit_reason}")
+PY
+)"
+  if [ -n "$decision_output" ]; then
+    printf '%s\n' "$decision_output"
+    local exit_reason
+    exit_reason="$(printf '%s\n' "$decision_output" | awk -F': ' '/^exit_reason:/ {print $2; exit}')"
+    if [ -n "$exit_reason" ]; then
+      update_field "迭代退出原因" "$exit_reason"
     fi
   fi
 }

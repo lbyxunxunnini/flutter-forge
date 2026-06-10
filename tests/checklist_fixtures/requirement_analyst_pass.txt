@@ -16,6 +16,32 @@ checklist:
     - "筛选无结果"
   non_functional:
     - "首屏加载 < 2s"
+  quality_anchor:
+    quality_tier: "polished"
+    design_intent: "清晰的业务列表体验"
+    quality_redlines:
+      - "不允许空数据白屏"
+  rubric_items:
+    - id: L1-001
+      layer: functional
+      level: Essential
+      criterion: "订单列表正确渲染历史订单并展示状态字段"
+    - id: L2-001
+      layer: robustness
+      level: Pitfall
+      criterion: "空数据时展示空态，不允许白屏或布局塌陷"
+    - id: L2-002
+      layer: robustness
+      level: Pitfall
+      criterion: "网络错误时提供可重试反馈，不允许静默失败"
+    - id: L3-001
+      layer: ui
+      level: Important
+      criterion: "列表信息层级清晰，筛选结果易于扫描"
+    - id: L4-001
+      layer: interaction
+      level: Important
+      criterion: "筛选和刷新操作有明确加载反馈"
   task_semantic: page
   decision: allow
 ```

@@ -29,6 +29,8 @@ import sys
 from dataclasses import dataclass
 from typing import Any
 
+from validate_rubric import validate_rubric_items
+
 
 # ---------- Schema ----------
 
@@ -263,13 +265,38 @@ def parse_simple_yaml(body: str) -> dict[str, Any]:
                                 break
                             if cur_indent == list_indent and cur_stripped.startswith("- "):
                                 item_raw = cur_stripped[2:]
-                                items.append(parse_scalar(item_raw))
-                                k += 1
+                                if ":" in item_raw and not item_raw.startswith('"'):
+                                    item_key, _, item_val = item_raw.partition(":")
+                                    item_dict: dict[str, Any] = {item_key.strip(): parse_scalar(item_val)}
+                                    k += 1
+                                    while k < len(lines):
+                                        cont = lines[k]
+                                        cont_stripped = cont.strip()
+                                        if not cont_stripped or cont_stripped.startswith("#"):
+                                            k += 1
+                                            continue
+                                        cont_indent = get_indent(cont)
+                                        if cont_indent <= list_indent:
+                                            break
+                                        if ":" in cont_stripped and not cont_stripped.startswith("- "):
+                                            ck, _, cv = cont_stripped.partition(":")
+                                            item_dict[ck.strip()] = parse_scalar(cv)
+                                            k += 1
+                                        else:
+                                            break
+                                    items.append(item_dict)
+                                else:
+                                    items.append(parse_scalar(item_raw))
+                                    k += 1
                             elif cur_indent > list_indent:
                                 # 多行列表项续行，追加到上一项
                                 if items:
                                     prev = items[-1]
-                                    items[-1] = f"{prev} {cur_stripped}" if isinstance(prev, str) else cur_stripped
+                                    if isinstance(prev, str):
+                                        items[-1] = f"{prev} {cur_stripped}"
+                                    elif isinstance(prev, dict) and ":" in cur_stripped:
+                                        ck, _, cv = cur_stripped.partition(":")
+                                        prev[ck.strip()] = parse_scalar(cv)
                                 k += 1
                             else:
                                 break
@@ -376,6 +403,27 @@ def validate_checklist(role: str, data: dict[str, Any]) -> list[ValidationError]
     for spec in schema:
         value = data.get(spec.name)
         errors.extend(validate_field(spec, value))
+
+    if role == "requirement_analyst":
+        quality_anchor = data.get("quality_anchor")
+        if isinstance(quality_anchor, dict):
+            tier = quality_anchor.get("quality_tier")
+            if tier not in {"mvp", "polished", "production"}:
+                errors.append(ValidationError(
+                    "quality_anchor.quality_tier",
+                    "必须为 mvp / polished / production 之一",
+                ))
+
+        if data.get("decision") == "allow":
+            rubric_items = data.get("rubric_items")
+            if not isinstance(rubric_items, list) or not rubric_items:
+                errors.append(ValidationError(
+                    "rubric_items",
+                    "S1 放行必须生成 Rubric 条目；轻量任务/ff-fast 未升级路径不应调用 requirement_analyst 放行",
+                ))
+            else:
+                for rubric_error in validate_rubric_items(rubric_items):
+                    errors.append(ValidationError(f"rubric_items.{rubric_error.item_id}", rubric_error.reason))
 
     # 不识别的字段给出 warning（不导致失败）
     schema_names = {s.name for s in schema}

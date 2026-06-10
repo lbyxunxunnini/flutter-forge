@@ -140,6 +140,12 @@ rubric_evaluation:
       score: 1
       evidence: "空数据时渲染了空白 Container，无空态提示"
       improvement_hint: "添加 EmptyState widget"
+    - id: L3-001
+      result: WARN
+      score: 4
+      verification_method: code_review_only
+      evidence: "未进行视觉验证；基于代码审查确认使用约束布局且未发现固定宽度"
+      limitation: "无截图或设备运行证据，不能背书最终视觉观感"
 ```
 
 **评分与 decision 的联动**：
@@ -148,7 +154,14 @@ rubric_evaluation:
 - `total_score < score_threshold` 且未达退出条件 → `decision` 为 `back_to_implementation`
 - `total_score >= score_threshold` 且 `essential_pass_rate == 1.0` 且 `pitfall_violations == 0` → `decision` 可以为 `pass`
 
-**降级**：轻量任务 / ff-fast 未升级路径跳过 Rubric 评估，仅输出 Mandatory Checklist。
+**Rubric 证据方式**：
+
+- L3/L4 或 `ui`/`interaction` 明细必须包含 `verification_method`。
+- 合法值：`runtime_observation`、`screenshot_observation`、`interactive_observation`、`code_review_only`。
+- 没有截图、设备运行、浏览器、模拟器或真实交互证据时，L3/L4 必须降级为 `verification_method: code_review_only`。
+- `code_review_only` 必须在 `evidence` 或 `limitation` 中说明"未进行视觉验证"或"未进行交互验证"，不得把代码审查推断写成真实观察结论。
+
+**降级路径**：轻量任务 / ff-fast 未升级路径跳过 Rubric 评估，仅输出 Mandatory Checklist。
 
 ## 主动测试协议
 

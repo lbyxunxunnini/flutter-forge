@@ -10,6 +10,7 @@ from __future__ import annotations
 import argparse
 import json
 import sys
+import time
 from pathlib import Path
 
 
@@ -101,6 +102,31 @@ def exempt_by_policy(task_gate: dict[str, object], mode: str) -> bool:
     return False
 
 
+def task_gate_is_current(task_gate: dict[str, object], project_root: Path) -> bool:
+    try:
+        gate_root = Path(str(task_gate.get("project_root", ""))).resolve()
+    except Exception:
+        return False
+    if gate_root != project_root:
+        return False
+    try:
+        checked_at = int(task_gate.get("checked_at", 0))
+    except Exception:
+        return False
+    age = int(time.time()) - checked_at
+    return 0 <= age <= 300
+
+
+def sessionless_light_write_allowed(task_gate: dict[str, object], project_root: Path, target_kind: str) -> bool:
+    if not task_gate_is_current(task_gate, project_root):
+        return False
+    if str(task_gate.get("mode", "")) != "轻量任务":
+        return False
+    if str(task_gate.get("guardrails_check", "")) != "on_demand":
+        return False
+    return target_kind == "implementation"
+
+
 def build_result(decision: str, gate: str, reason: str, target_kind: str, session: dict[str, str]) -> dict[str, object]:
     return {
         "decision": decision,
@@ -133,6 +159,9 @@ def main() -> int:
 
     if not session:
         if target_kind in IMPLEMENTATION_TARGETS:
+            if sessionless_light_write_allowed(task_gate, project_root, target_kind):
+                print(json.dumps(build_result("allow", "G00", "轻量任务 task gate 允许普通实现文件无 session 写入", target_kind, session), ensure_ascii=False))
+                return 0
             decision = "would_block" if args.mode == "observe" else "block"
             print(json.dumps(build_result(decision, "G01", "session 不存在，必须先调用 ff_session.sh init 初始化 session", target_kind, session), ensure_ascii=False))
             return 0 if decision == "would_block" else 2

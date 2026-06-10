@@ -51,3 +51,23 @@ grep -q '\[f-forge\] 等待：等待用户确认改动契约' "$tmp_resume_proje
 grep -q '\[f-forge\] 恢复等待：已消费用户补充输入，继续当前阶段。' "$tmp_resume_project/.flutter-forge/runtime/session_events.log" || fail "ff_session did not append resume-consumed event"
 rm -rf "$tmp_resume_project"
 info "session resume and event logging validation passed"
+
+tmp_iteration_project="$(mktemp -d -t flutter-forge-iteration.XXXXXX)"
+tmp_iteration_name="$(basename "$tmp_iteration_project")"
+mkdir -p "$tmp_iteration_project/.claude/.flutter-forge/projects"
+printf 'project_guardrails:\n  project:\n    name: "%s"\n    root_type: "flutter_existing"\n' "$tmp_iteration_name" > "$tmp_iteration_project/.claude/.flutter-forge/projects/${tmp_iteration_name}.project_guardrails.yaml"
+scripts/ff_session.sh --project-root "$tmp_iteration_project" init --track execution --phase S5 --mode 页面开发 >/dev/null
+
+force_back_output="$(scripts/ff_session.sh --project-root "$tmp_iteration_project" iteration-update --round-score 3.50 --essential-pass-rate 0.8 --pitfall-violations 0 --score-threshold 4.0 --max-rounds 5)"
+printf '%s\n' "$force_back_output" | grep -q 'decision_hint: force_back_to_implementation' || fail "ff_session did not emit force_back_to_implementation for failed essential pass rate"
+
+scripts/ff_session.sh --project-root "$tmp_iteration_project" reset >/dev/null
+scripts/ff_session.sh --project-root "$tmp_iteration_project" init --track execution --phase S5 --mode 页面开发 >/dev/null
+scripts/ff_session.sh --project-root "$tmp_iteration_project" iteration-update --round-score 3.80 --essential-pass-rate 1.0 --pitfall-violations 0 --score-threshold 4.0 --max-rounds 5 >/dev/null
+scripts/ff_session.sh --project-root "$tmp_iteration_project" iteration-update --round-score 3.85 --essential-pass-rate 1.0 --pitfall-violations 0 --score-threshold 4.0 --max-rounds 5 >/dev/null
+marginal_stall_output="$(scripts/ff_session.sh --project-root "$tmp_iteration_project" iteration-update --round-score 3.89 --essential-pass-rate 1.0 --pitfall-violations 0 --score-threshold 4.0 --max-rounds 5)"
+printf '%s\n' "$marginal_stall_output" | grep -q 'decision_hint: marginal_stall' || fail "ff_session did not emit marginal_stall for repeated low marginal improvement"
+grep -q '^- 迭代退出原因：marginal_stall' "$tmp_iteration_project/.claude/.flutter-forge/session.md" || fail "ff_session did not persist marginal_stall exit reason"
+
+rm -rf "$tmp_iteration_project"
+info "iteration decision hint validation passed"

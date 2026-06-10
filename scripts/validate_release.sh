@@ -9,6 +9,9 @@ for check in \
   scripts/release_checks/guardrails.sh \
   scripts/release_checks/session.sh \
   scripts/release_checks/gates.sh \
+  scripts/release_checks/checklists.sh \
+  scripts/release_checks/rubric_evaluation.sh \
+  scripts/release_checks/release_bindings.sh \
   scripts/release_checks/output_protocol.sh
 do
   bash "$check"

@@ -5,6 +5,43 @@
 - `0.2.x` 中出现的 `legacy_project_scan.md`、`~/.flutter-forge/projects/*.rule_card.yaml` 等表述保留为当时版本的历史事实
 - 当前现行入口与项目护栏路径策略以 `references/existing_project_entry.md`、`references/existing_project_scan.md`、`references/project_guardrails_protocol.md` 为准
 
+## v0.3.3
+
+发布链路闭环 + 迭代控制信号脚本化 + 维护导航增强。
+
+基于 agent-pm 审查发现的 5 个 P1/P2 issue，系统性修复发布链路、迭代控制、checklist 校验问题，并增强维护导航。
+
+### 发布链路闭环（APM-TOOL-009/010/011）
+
+- **release_bindings.json**：新增 P0/P1 硬规则绑定文件，每个 binding 指向可执行的 release check 并要求正反例覆盖
+- **validate_release_bindings.py**：新增 release bindings 验证脚本，校验 binding 结构完整性、release check 文件存在、正反例非空
+- **release_checks/checklists.sh**：新增 checklist release 检查，验证 requirement_analyst 的 quality_tier 和 rubric_items 校验
+- **release_checks/release_bindings.sh**：新增 release bindings release 检查
+- **release_checks/rubric_evaluation.sh**：新增 rubric evaluation release 检查
+- **gates.sh 门禁 ID 对齐**：断言从旧语义改为 G05/G10/G11/G12/G13/G09，与 gate_check.py 当前协议一致
+- **validate_docs_sync.py**：仅对活跃文档强制脚本引用存在，archive 做链接校验
+
+### 迭代控制信号脚本化（APM-GOV-007）
+
+- **ff_session.sh iteration-update**：输出结构化决策信号（continue_iteration / marginal_stall / max_rounds_reached / allow_completion），低改善三轮自动输出 marginal_stall 并写入退出原因
+- **gate_check.py 轻量任务放行**：300 秒内当前项目的轻量 task gate 放行普通 implementation 文件，router/state/core/config 仍阻断
+
+### Checklist 校验增强（APM-TOOL-009）
+
+- **validate_checklist.py**：requirement_analyst schema 新增 quality_anchor（dict）和 rubric_items（list）字段校验，支持 dict 类型解析
+- **requirement_analyst_pass.txt**：更新测试 fixture，包含 quality_anchor 和完整 Rubric 条目
+
+### Rubric 证据方式规范
+
+- **verify_agent.md**：新增 verification_method 字段说明（runtime_observation / screenshot_observation / interactive_observation / code_review_only），L3/L4 无截图/设备证据时必须降级为 code_review_only
+- **rubric_evaluation.md**：L3/L4 条目新增 verification_method 标记
+
+### 维护导航增强
+
+- **maintenance_map.md**：新增"改动前先判定能力域"表，覆盖 10 个能力域的文档权威源、执行脚本、release 断言位置、最小验收命令
+- **load_map.md**：新增 release_bindings.json 引用
+- **issue-ledger.md**：记录 5 个已修复 issue（APM-WORKFLOW-009, APM-GOV-007, APM-TOOL-009/010/011）和 2 条候选规则
+
 ## v0.3.2
 
 目标治理体系引入 + 工作流 bug 修复。

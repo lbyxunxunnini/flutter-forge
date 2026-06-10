@@ -2,6 +2,23 @@
 
 本文件记录 `agent-pm` 审查发现的问题生命周期，避免后续审查重复报告已处理问题。
 
+## flutter-forge — 2026-06-10
+
+### Fixed
+
+| issue_id | severity | status | summary | verification |
+|---|---:|---|---|---|
+| APM-WORKFLOW-009 | P1 | fixed | 轻量任务在已有 guardrails 项目中因无 session 被 G01 阻断 | `gate_check.py` 对 300 秒内当前项目的轻量 task gate 放行普通 implementation 文件；router/state/core/config 仍阻断；手动回归和 hook 回归通过 |
+| APM-GOV-007 | P1 | fixed | G18 边际效益退出条件只在文档中定义，`iteration-update` 不输出停顿/退出信号 | `ff_session.sh iteration-update` 输出 `continue_iteration` / `marginal_stall` / `max_rounds_reached` / `allow_completion`，低改善三轮回归输出 `marginal_stall` 并写入退出原因 |
+| APM-TOOL-009 | P1 | fixed | requirement checklist 未强制 `quality_tier` 和 Rubric 条目 | `validate_checklist.py` 校验 `quality_anchor.quality_tier`，并复用 `validate_rubric.py` 校验 `rubric_items`；有效 fixture PASS，缺失反例 FAIL |
+| APM-TOOL-010 | P1 | fixed | release gate 断言期待旧语义 gate 名，与 `gate_check.py` 当前 Gxx 协议不一致 | `scripts/release_checks/gates.sh` 改为断言 `G05/G10/G11/G12/G13/G09`；`bash scripts/release_checks/gates.sh` PASS |
+| APM-TOOL-011 | P2 | fixed | docs sync 将 archive 历史建议中的未实现脚本当作当前 release 阻断 | `validate_docs_sync.py` 仅对活跃文档强制脚本引用存在；archive 仍做链接校验；`python3 scripts/validate_docs_sync.py` PASS |
+
+### Candidate Rules
+
+- CR-2026-06-10-001: 文档声明为 P0/P1 的门禁必须有脚本级正反例；仅写在 SKILL/reference 中不算落地。
+- CR-2026-06-10-002: release check 与工具返回 schema 必须共享同一 gate ID 协议，避免实现迁移后发布链路漂移。
+
 ## flutter-forge — 2026-05-18
 
 ### Fixed
