@@ -304,71 +304,7 @@ S5 验证通过后进入 S6。S6 不是一个需要执行动作的阶段，而�
 
 所有门禁由 `scripts/gate_check.py` 强制执行，写操作前 hook 自动检查，不满足条件直接阻断。
 
-| 门禁 | 编号 | 触发条件 | 阻断原因 |
-|------|------|---------|---------|
-| session 不存在 | G01 | 写入实现类文件时 session 不存在 | 必须先调用 `ff_session.sh init` 初始化 session |
-| 阶段未进入 S4 | G05 | 当前阶段 C0-C3/S0-S3 且未满足 S2→S4 条件 | 禁止写入实现类文件 |
-| S2→S4 强制推进 | G06 | S2 已确认且改动契约已冻结，但写入非实现类 | 必须先进入 S4 |
-| S5 验证阶段 | G07 | S5 阶段写入实现类文件 | 禁止写入，只允许测试和元数据 |
-| 角色边界 | G08 | 活跃代理写入其职责范围外的文件 | 禁止越权写入 |
-| 工作模式锁 | G09 | S6 阶段但工作模式锁激活且退出许可未打开 | 禁止 S6 收口 |
-| 核心定义未冻结 | G10 | 目标/范围/验收/约束任一未确认 | 禁止进入实现 |
-| 子单元未冻结 | G11 | 当前子单元未设置或状态非已冻结/实现中/待验证/已通过 | 禁止进入实现 |
-| 超范围风险 | G12 | session 中超范围风险=已发现 | 必须先回退到 S2/S3 |
-| 计划冲突 | G13 | session 中计划冲突状态=已发现待回退 | 必须先回退对应确认阶段 |
-| 验证未通过 | G14 | S5 阶段写入收口元数据但验证状态未通过 | 禁止写入收口元数据 |
-| 改动契约缺失 | G15 | 中等及以上模式但改动契约未冻结 | 必须先设置改动契约 |
-| 改动契约未确认 | G16 | 改动契约已设置但未获用户确认 | 必须等待用户确认 |
-| S5 迭代循环 | G17 | S5 验证完成，`essential_pass_rate < 1.0` 或 `pitfall_violations > 0` | 强制回退 S4，附带结构化改进建议（列出 FAIL 的 Rubric 条目）；session `iteration.current_round` +1 |
-| S5 边际效益 | G18 | S5 验证完成，`total_score < score_threshold` 且 `marginal_improvement ≤ 0.1` 连续 2 轮 | 暂停迭代，输出边际效益警告并询问用户：继续迭代 / 接受当前结果 / 重新规划 |
-| S5→S2 回退 | G12b | verify_agent `decision=back_to_design` | 回退到 S2，重置设计阶段状态，触发 G06（设计冻结检查）；session `iteration` 重置 |
-
-**豁免规则**：
-- `ff-a` 全自动策略：豁免 G15、G16
-- 直通模式/轻量任务：豁免 G05-G18
-- 非实现类文件（metadata/test/other）：豁免大部分门禁
-- `ff-fast` 未升级轻量路径：豁免 G17、G18（无 Rubric 评测则无迭代循环）
-
-**S5 评分驱动迭代循环**：
-
-verify_agent 在 S5 阶段输出 Rubric 评分后，controller 按以下逻辑决定迭代方向（详见 [rubric_evaluation.md](references/rubric_evaluation.md)）：
-
-```
-verify_agent 评分完成
-  │
-  ├── essential_pass_rate < 1.0 或 pitfall_violations > 0
-  │     → [G17] 强制回退 S4，附带结构化改进建议
-  │
-  ├── total_score < score_threshold
-  │     │
-  │     ├── current_round < max_rounds 且 marginal_improvement > 0.1
-  │     │     → 回退 S4，传递 FAIL 条目作为改进重点
-  │     │
-  │     ├── marginal_improvement ≤ 0.1（连续 2 轮）
-  │     │     → [G18] 边际效益警告，询问用户：
-  │     │       继续迭代 / 接受当前结果 / 重新规划
-  │     │
-  │     └── current_round >= max_rounds
-  │           → 最大轮次警告，询问用户：
-  │             增加轮次 / 接受当前结果
-  │
-  └── total_score >= score_threshold 且 essential_pass_rate == 1.0
-        且 pitfall_violations == 0 且 decision == pass
-        → 允许进入 S6
-```
-
-session `iteration` 字段记录迭代状态，通过 `scripts/ff_session.sh iteration-update` 操作。
-
-**硬规则补充**：
-
-1. **S2 完成 → 必须进入 S4**：S2 方案确认完成后，必须输出 `[f-forge] 阶段：S4 实现中` 并开始实现。不允许在 S2 输出"结论"后退出、等待或重新分析
-2. **Session 状态持久化**：每次阶段切换、等待用户输入、等待截图/文稿、等待确认或生成长文档摘要包时，必须通过 `scripts/ff_session.sh` 写入状态
-3. **验证真实性**：未记录实际验证动作与验证结果前，不得输出"已完成修改并完成验证""符合预期""允许进入 S6"
-4. **日志与状态分工明确**：对话可见日志由 `scripts/validate_output.sh` 校验；阶段、等待态和确认态必须通过 `scripts/ff_session.sh` 写入 session。`gate_check.py` 只消费 session 与 task gate，不消费对话日志
-
-用户要求阶段回退时，先回退再继续。
-
-详细阶段转换条件见 [decision_and_question_protocol.md](references/decision_and_question_protocol.md) 第 5 节。
+**门禁矩阵、豁免规则、S5 评分驱动迭代循环和硬规则补充**见 [gate_definitions.md](references/gate_definitions.md)。
 
 ## 误路由纠正
 
@@ -378,59 +314,7 @@ session `iteration` 字段记录迭代状态，通过 `scripts/ff_session.sh ite
 
 `[f-forge]` 是工作流状态行的必选前缀。所有日志必须以 `[f-forge]` 开头。
 
-### 日志类型与输出时机（P0 强制）
-
-| 日志类型 | 输出时机 | 格式 | 是否必须 |
-|---------|---------|------|---------|
-| 进入日志 | 命中触发词后第一行 | `[f-forge] 进入 controller` | **必须** |
-| 模式日志 | 路由判定完成后立即输出 | `[f-forge] 模式：<模式名>` 或 `[f-forge] <模式名专用格式>` | **必须** |
-| 阶段日志 | 每次阶段变化时 | `[f-forge] 阶段：<阶段名>` | **必须** |
-| S3跳过说明 | S2→S4 跳过 S3 时 | `[f-forge] 主控：首批范围足够小，跳过 S3 拆分任务冻结，直接进入 S4 实现。` | **必须** |
-| 角色结果日志 | 角色完成分析/扫描后 | `[f-forge] <角色名>：<结果摘要>` | 按需 |
-| 完成日志 | 任务结束时 | `[f-forge] 本轮完成：<完成内容>` | **必须** |
-
-### 模式专用格式
-
-| 模式 | 专用格式 |
-|------|---------|
-| 直通模式 | `[f-forge] 直通模式：快速处理` |
-| 轻量任务 | `[f-forge] 页面工程师：轻量任务，直接执行` |
-| 中等任务 | `[f-forge] 页面工程师：中等任务，先扫描后执行` |
-| 功能开发 | `[f-forge] 模式：功能开发` |
-| 页面开发 | `[f-forge] 模式：页面开发` |
-| UI 优化 | `[f-forge] 模式：UI 优化` |
-| 架构级任务 | `[f-forge] 模式：架构级任务` |
-| 新项目共创 | `[f-forge] 模式：新项目共创` |
-
-### 阶段名称对照
-
-| 阶段 | 日志中的名称 |
-|------|-------------|
-| C0 | `C0 想法收口` |
-| C1 | `C1 方向共创` |
-| C2 | `C2 工程定型` |
-| C3 | `C3 首批范围冻结` |
-| S1 | `S1 需求确认` |
-| S2 | `S2 方案确认` |
-| S3 | `S3 拆分任务冻结` |
-| S4 | `S4 实现中` |
-| S5 | `S5 验证中` |
-
-### 角色标签
-
-`需求分析师` / `UI 设计师` / `架构设计师` / `页面工程师` / `验证工程师`
-
-### 强制规则
-
-1. **进入日志最先输出（P0）**：命中触发词后，在执行任何脚本调用、文件读取、判定动作之前，必须先输出 `[f-forge] 进入 controller`。不输出不允许继续执行
-2. **模式日志紧跟进入日志（P0）**：路由判定完成后必须立即输出模式日志，不得延迟或省略。不输出不允许继续执行
-3. **阶段日志在阶段变化时输出（P0）**：每次进入新阶段必须先输出阶段日志，再执行该阶段的工作。不输出不允许进入该阶段
-4. **S3跳过必须说明（P0）**：从 S2 直接进入 S4 时，必须在 S4 阶段日志之前输出跳过说明。不输出不允许进入 S4
-5. **完成日志在任务结束时输出（P0）**：任务完成时必须输出完成日志。不输出不允许退出 flutter-forge
-6. **禁止冗余日志**：不要每读一个文件或每调一次工具就插一条 `[f-forge]`
-7. **禁止虚假角色**：没参与的角色不要强行出现
-
-完整模板和示例见 [skill_visibility.md](references/skill_visibility.md)。
+**日志类型、输出时机、模式专用格式、阶段名称对照和强制规则**见 [logging_format.md](references/logging_format.md)。
 
 ## 按需加载
 
@@ -442,6 +326,7 @@ P0 > P1 > P2；用户显式指令 > 任何规则（除安全红线）。
 
 ### P0 硬规则（违反即错误）
 
+**过程控制规则**：
 - 阶段门禁（详见上方"阶段门禁"节）
 - 角色边界（impl 不重定义需求，ui 不决定状态管理，requirement 不给架构结论）
 - 角色宣布放行/完成前，必须输出结构化 YAML checklist 并运行 `python3 scripts/validate_checklist.py --role <role_name>` 确认 `PASS`；checklist 是结构化校验产物，不计入轻量 / ff-fast 的 `[f-forge]` 日志条数限制
@@ -457,12 +342,19 @@ P0 > P1 > P2；用户显式指令 > 任何规则（除安全红线）。
 - 角色标签精确归属对应角色
 - 大文档先压缩摘要包
 - session 阶段切换时写入对应阶段日志
-- 大任务结束时判断项目护栏出口  
+- 大任务结束时判断项目护栏出口
 - UI 信息不足时先向用户索取，不得跳过或自行拍板
 - `ff-fast` 只在未升级时保持轻量日志；升级时必须说明具体风险
 - `ff-a` 结束时输出全自动摘要，列出本轮自动采用的推荐方案
 - 中等及以上非自动写改动不得只有开始/完成日志；实现前必须用对应角色标签输出改动契约，并等待用户确认
 - **方案零占位符规则 [Rigid]**：S2 改动契约、架构冻结输出、中等任务扫描结论中，禁止使用以下表述作为具体方案：`TBD`、`TODO`、`implement later`、`fill in details`、`添加适当的错误处理`、`处理边界情况`、`后续完善`、`待补充`。每条改动点必须指明：改哪个文件/函数、改成什么行为、不改什么。违反时 controller 必须自行拦截并要求角色补全具体方案
+
+**目标治理规则**：
+- **品质锚定必须确认**：S1 需求确认阶段必须与用户确认 `quality_tier`（mvp/polished/production），未确认不得放行进入 S2。详见 [rubric_evaluation.md](references/rubric_evaluation.md)
+- **Rubric 评分必须输出**：S5 验证阶段必须输出 Rubric 评分结果，未评分不得放行进入 S6。详见 [rubric_evaluation.md](references/rubric_evaluation.md)
+- **迭代循环必须有退出**：S5 迭代循环受 `max_rounds`、`score_threshold` 和边际效益三重约束，不允许无限循环。详见 [gate_definitions.md](references/gate_definitions.md)
+- **评估者必须挑剔**：verify_agent 遵循红队铁律，主动寻找问题。审查后没有发现任何问题本身是红旗
+- **评估客观性**：执行者（page_engineer）不可见具体 Rubric 条目，评估者（verify_agent）不可见实现思路。详见 [agent_isolation_protocol.md](references/agent_isolation_protocol.md)
 
 ### P1 核心规则（应当遵循）
 

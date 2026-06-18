@@ -98,6 +98,12 @@
 - [fast_mode.md](fast_mode.md)
 - [autonomous_mode.md](autonomous_mode.md)
 - [phase_checkpoint.md](phase_checkpoint.md)
+- [gate_definitions.md](gate_definitions.md)
+
+### 需要输出日志格式
+
+- [logging_format.md](logging_format.md)
+- [skill_visibility.md](skill_visibility.md)
 
 ### 需要可见性标记或当前大任务状态规则
 
@@ -171,3 +177,5 @@
 | maintenance_map.md | load_map.md |
 | release_bindings.json | maintenance_map.md、load_map.md、rubric_evaluation.md 相关 release 绑定、scripts/validate_release_bindings.py |
 | forge_controller_protocol.md | load_map.md、maintenance_map.md |
+| gate_definitions.md | SKILL.md（阶段门禁）、load_map.md |
+| logging_format.md | SKILL.md（输出日志）、load_map.md |

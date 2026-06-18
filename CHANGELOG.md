@@ -5,6 +5,42 @@
 - `0.2.x` 中出现的 `legacy_project_scan.md`、`~/.flutter-forge/projects/*.rule_card.yaml` 等表述保留为当时版本的历史事实
 - 当前现行入口与项目护栏路径策略以 `references/existing_project_entry.md`、`references/existing_project_scan.md`、`references/project_guardrails_protocol.md` 为准
 
+## v0.3.5
+
+SKILL.md 精简 + 目标治理规则增强 + 按需加载优化。
+
+基于 agent-pm 审查发现的 2 个 P2 issue（APM-DESIGN-001、APM-GOV-001），系统性精简 SKILL.md 体积、增强目标治理规则、优化按需加载架构。
+
+### SKILL.md 精简（APM-DESIGN-001）
+
+- **阶段门禁拆分**：将 SKILL.md 中的"阶段门禁"章节（门禁矩阵、豁免规则、S5 迭代循环、硬规则补充）拆分到 `references/gate_definitions.md`，SKILL.md 保留指向 reference 的链接
+- **输出日志拆分**：将 SKILL.md 中的"输出日志"章节（日志类型、输出时机、模式专用格式、阶段名称对照、强制规则）拆分到 `references/logging_format.md`，SKILL.md 保留指向 reference 的链接
+- **体积优化**：SKILL.md 从 482 行减少到 373 行（减少 109 行），接近 350 行建议上限
+
+### 目标治理规则增强（APM-GOV-001）
+
+- **P0 硬规则新增目标治理规则**：在 P0 硬规则中新增 5 条目标治理规则：
+  1. 品质锚定必须确认：S1 需求确认阶段必须与用户确认 `quality_tier`，未确认不得放行进入 S2
+  2. Rubric 评分必须输出：S5 验证阶段必须输出 Rubric 评分结果，未评分不得放行进入 S6
+  3. 迭代循环必须有退出：S5 迭代循环受 `max_rounds`、`score_threshold` 和边际效益三重约束
+  4. 评估者必须挑剔：verify_agent 遵循红队铁律，主动寻找问题
+  5. 评估客观性：执行者不可见具体 Rubric 条目，评估者不可见实现思路
+- **规则比例改善**：过程控制/目标治理比例从约 7:1 改善到约 4.2:1（21 条过程控制 + 5 条目标治理），目标治理占比从约 12.5% 提升到约 19.2%
+
+### 按需加载优化
+
+- **load_map.md 更新**：新增 `gate_definitions.md` 和 `logging_format.md` 的映射关系
+- **反向索引更新**：在 load_map.md 的反向索引中新增 gate_definitions.md 和 logging_format.md 的引用关系
+
+### 变更文件清单
+
+- `SKILL.md`：精简阶段门禁和输出日志章节，新增目标治理 P0 硬规则
+- `VERSION`：v0.3.4 → v0.3.5
+- `CHANGELOG.md`：新增 v0.3.5 变更说明
+- `references/gate_definitions.md`：新建，包含门禁矩阵、豁免规则、S5 迭代循环、硬规则补充
+- `references/logging_format.md`：新建，包含日志类型、输出时机、模式专用格式、阶段名称对照、强制规则
+- `references/load_map.md`：新增 gate_definitions.md 和 logging_format.md 的映射关系
+
 ## v0.3.4
 
 Session Hook、调试/TDD 纪律、跨宿主能力说明和 guardrails 质量评估。
